@@ -344,6 +344,10 @@ class Submission(Model):
         ('TLE', 'Time Limit Exceed'),
         ('MLE', 'Memory Limit Exceed'),
         ('OLE', 'Output Limit Exceed'),
+
+        ('IW', 'Invalid Word'),
+        ('LLE', 'Length Limit Exceed'),
+
         ('RD', 'Running Done'),
         ('JD', 'Judging'),
         ('WA', 'Wrong Answer'),

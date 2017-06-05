@@ -15,6 +15,12 @@ PgSession = sessionmaker(bind=pg_models.engine)
 pg_session = PgSession()
 
 
+# 接收题目题元更新消息，将SDUSTOJ中的题目按测试数据分拆为一至多个HUSTOJ中的题目写入HUSTOJ的数据库，
+# 将测试数据或特殊评测代码发送至Client写入评测机文件系统。
+# SDUSTOJ中的题目将依照测试数据生成HUSTOJ题目，一组数据一个题目。
+# 接收消息与向Client发送消息均通过Redis的队列实现。
+
+
 class Function(object):
     @staticmethod
     def func(cmd):
@@ -44,4 +50,5 @@ def handler(command):
     func_class.func(command)
 
 
+# 启动一项服务，轮询从sdustoj来的指令队列。
 get_command(handler)

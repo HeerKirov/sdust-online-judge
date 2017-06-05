@@ -3,19 +3,21 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.types import LargeBinary, BigInteger
+from sqlalchemy.types import LargeBinary, BigInteger, String
 from sqlalchemy.dialects.postgresql import JSONB
 
 from conf import pg_db
 
-engine = create_engine('postgresql+psycopg2://%s:%s@%s/%s' % (
+engine = create_engine('postgresql+psycopg2://%s:%s@%s/%s' % (  # psql的engine
     pg_db['user'],
     pg_db['password'],
     pg_db['host'],
     pg_db['database']
 ), pool_size=20)
 
-_Base = declarative_base()
+_Base = declarative_base()  # sqlalchemy 方面的一个base。
+
+# 看起来下面的类都是映射了表结构。似乎是sdustoj的表结构。
 
 
 class Judge(_Base):
@@ -91,8 +93,24 @@ class Limit(_Base):
 
     time_limit = Column(Integer)
     memory_limit = Column(Integer)
+    length_limit = Column(Integer)
 
     deleted = Column(Boolean)
+
+
+class Environment(_Base):
+    __tablename__ = 'rest_api_environment'
+
+    id = Column(BigInteger, primary_key=True)
+    judge_id = Column(String)
+
+
+class InvalidWord(_Base):
+    __tablename__ = 'rest_api_invalidword'
+
+    id = Column(BigInteger, primary_key=True)
+    word = Column(String)
+    problem_id = Column(BigInteger)
 
 
 class Submission(_Base):

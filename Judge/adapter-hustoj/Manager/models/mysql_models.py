@@ -6,14 +6,14 @@ from sqlalchemy.types import Text
 
 from conf import mysql_db
 
-engine = create_engine('mysql+pymysql://%s:%s@%s/%s?charset=utf8' % (
+engine = create_engine('mysql+pymysql://%s:%s@%s/%s?charset=utf8' % (  # mysql的引擎
     mysql_db['user'],
     mysql_db['password'],
     mysql_db['host'],
     mysql_db['database']
 ), pool_size=20)
 
-_Base = declarative_base()
+_Base = declarative_base()  # 一个基？
 
 
 class CompileInfo(_Base):
@@ -24,6 +24,8 @@ class CompileInfo(_Base):
 
     def __repr__(self):
         return '<CompileInfo %s>' % (self.solution_id, )
+
+# 这一部分表似乎是在映射hustoj的表结构。
 
 
 class Problem(_Base):

@@ -24,7 +24,9 @@ queue = 'hustoj'
 # 订阅SDUSTOJ哪些编程环境的提交消息
 subscribe = [
     'gcc',
-    'g++'
+    'g++',
+    'java',
+    'python',
 ]
 
 # 该评测机在SDUSTOJ中的ID
@@ -58,7 +60,7 @@ local_queue = {
 
 # 向HUSTOJ更新提交时将提交挂在哪一HUSTOJ用户下
 user = {
-    'user_id': 'korosensei'
+    'user_id': 'admin'
 }
 
 
@@ -67,7 +69,9 @@ user = {
 # SDUSTOJ编程环境ID到HUSTOJ语言编号的映射
 language = {
     'gcc': 0,
-    'g++': 1
+    'g++': 1,
+    'java': 3,
+    'python': 6,
 }
 
 # HUSTOJ的结果编号到SDUSTOJ提交状态的映射
