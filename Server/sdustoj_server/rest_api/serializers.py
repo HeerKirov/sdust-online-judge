@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, SlugRelatedField, CharField, PrimaryKeyRelatedField
+from rest_framework.serializers import ModelSerializer, SlugRelatedField, CharField, PrimaryKeyRelatedField, FloatField
 from rest_framework.serializers import ListField
 from rest_framework.serializers import FileField
 from rest_framework.serializers import ValidationError
@@ -473,9 +473,11 @@ class ProblemSerializers:
                 test_out = CharField(write_only=True, allow_null=True, max_length=_INPUT_MAX, default="",
                                      style={'base_template': 'textarea.html'})
 
+                weight = FloatField(write_only=True, allow_null=True, default=1, required=False)
+
                 class Meta:
                     model = TestData
-                    fields = ('test_in', 'test_out', 'title', 'introduction')
+                    fields = ('test_in', 'test_out', 'title', 'introduction', 'weight')
 
             class SpecialJudgeField(ModelSerializer):
                 code = CharField(write_only=True, allow_null=True, max_length=_INPUT_MAX, default="",
@@ -581,6 +583,7 @@ class ProblemSerializers:
                     t_introduction = td.get('introduction')
                     test_in = td.get('test_in')
                     test_out = td.get('test_out')
+                    weight = td.get('weight')
                     data = TestData(
                         creator=creator,
                         updater=updater,
@@ -594,8 +597,8 @@ class ProblemSerializers:
                         test_out=test_out.encode('utf-8'),
                         meta_problem=meta_problem
                     )
-                    test_data_bulk_create.append(data)
-                TestData.objects.bulk_create(test_data_bulk_create)
+                    test_data_bulk_create.append((data, weight))
+                TestData.objects.bulk_create((d for d, _ in test_data_bulk_create))
                 # == 创建题目及组件 ==============================
                 # 创建题目
                 is_special_judge = validated_data.pop('is_special_judge', False)
@@ -674,14 +677,15 @@ class ProblemSerializers:
                     problem.save()
                 # 建立题目与测试数据的关系
                 pt_relation = []
-                for test_data in test_data_bulk_create:
+                for test_data, test_data_weight in test_data_bulk_create:
                     pt_relation.append(ProblemTestData(
                         creator=creator,
                         updater=updater,
                         available=available,
                         deleted=deleted,
                         problem=problem,
-                        test_data=test_data
+                        test_data=test_data,
+                        weight=test_data_weight
                     ))
                 ProblemTestData.objects.bulk_create(pt_relation)
                 # 建立题目、限制和评测机之间的关系（哪些评测机能评测这道题）
@@ -784,13 +788,14 @@ class SubmissionSerializers:
         code = CharField(allow_null=False, max_length=_INPUT_MAX, write_only=True,
                          style={'base_template': 'textarea.html'})
         status_word = CharField(source='get_status_display', read_only=True)
+        score = FloatField(read_only=True)
 
         class Meta:
             model = Submission
             exclude = ('problem', 'client', 'judge')
             read_only_fields = ('time', 'memory', 'length',
                                 'status', 'finished',
-                                'submit_time', 'update_time', 'ip')
+                                'submit_time', 'update_time', 'ip', 'score')
 
         def create(self, validated_data):
             code = validated_data.pop('code')
@@ -831,12 +836,14 @@ class SubmissionSerializers:
                          style={'base_template': 'textarea.html'})
         status_word = CharField(source='get_status_display', read_only=True)
 
+        score = FloatField(read_only=True)
+
         class Meta:
             model = Submission
             exclude = ('problem', )
             read_only_fields = ('time', 'memory', 'length',
                                 'user', 'status', 'finished',
-                                'submit_time', 'update_time', 'ip', 'judge')
+                                'submit_time', 'update_time', 'ip', 'judge', 'score')
 
         def create(self, validated_data):
             code = validated_data.pop('code')
@@ -871,13 +878,14 @@ class SubmissionSerializers:
         compile_info = SlugRelatedField(many=False, read_only=True, slug_field='info')
         test_data_status = SlugRelatedField(many=False, read_only=True, slug_field='status')
         code = SlugRelatedField(many=False, read_only=True, slug_field='code')
+        score = FloatField(read_only=True)
 
         class Meta:
             model = Submission
             exclude = ('problem', 'judge', 'client')
             read_only_fields = ('time', 'memory', 'length',
                                 'user', 'contest', 'status', 'finished',
-                                'submit_time', 'update_time', 'ip')
+                                'submit_time', 'update_time', 'ip', 'score')
 
         def update(self, instance, validated_data):
             ret = super().update(instance, validated_data)
@@ -897,13 +905,14 @@ class SubmissionSerializers:
     class SubmissionAdminInstanceSerializer(ModelSerializer):
         problem_id = PrimaryKeyRelatedField(source='problem', many=False, allow_null=False, read_only=True)
         environment = SlugRelatedField(many=False, read_only=True, slug_field='name')
+        score = FloatField(read_only=True)
 
         class Meta:
             model = Submission
             exclude = ('problem', )
             read_only_fields = ('time', 'memory', 'length',
                                 'user', 'contest', 'status', 'finished',
-                                'submit_time', 'update_time', 'ip', 'judge', 'client')
+                                'submit_time', 'update_time', 'ip', 'judge', 'client', 'score')
 
         def update(self, instance, validated_data):
             ret = super().update(instance, validated_data)

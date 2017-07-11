@@ -24,7 +24,7 @@ SATable.DRFTable({
     { name: 'creator', type: 'text', placeholder: '请输入创建者用户名', caption: '创建者' },
     { name: 'updater', type: 'text', placeholder: '请输入更新者用户名', caption: '更新者' }
   ],
-  column: [
+  column: [ //??? 这是个什么?
     { name: "id", caption: "ID", sort: true, type: "link", key: "id", ordering: 1 },
     { name: "test_data", caption: "选用数据ID", sort: true, type: "link", key: "id", ordering: 0 },
     { name: "create_time", caption: "创建", sort: true, type: "datetime", ordering: 0 },
@@ -34,6 +34,7 @@ SATable.DRFTable({
   columns: [
     { name: 'id', caption: 'ID', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'problem_meta_problem_test' meta_problem.id problem.id %}', key: 'id' } },
     { name: 'test_data', caption: '选用数据ID', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'problem_meta_test' meta_problem.id %}', key: 'id' } },
+    { name: 'weight', caption: '评分权重', sort: false, type: 'Number' },
     { name: 'update_time', caption: '更新时间', sort: true, type: 'Datetime' },
     { name: "available", caption: "可用", type: 'Boolean' },
   ],

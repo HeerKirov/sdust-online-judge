@@ -1,6 +1,6 @@
 from django.db.models import Model, CASCADE, SET_NULL
 
-from django.db.models import BigAutoField, IntegerField
+from django.db.models import BigAutoField, IntegerField, FloatField
 from django.db.models import BooleanField
 from django.db.models import CharField, TextField
 from django.db.models import DateTimeField
@@ -10,7 +10,8 @@ from django.db.models import GenericIPAddressField
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField, ArrayField
 
-from config import OJ_SETTINGS
+from config import OJ_SETTINGS, OJ_STATUS_SCORE
+from math import floor
 
 _INPUT_MAX = OJ_SETTINGS['test_data_input_max_size']
 
@@ -306,6 +307,8 @@ class ProblemTestData(Resource):
     problem = ForeignKey(Problem, related_name='test_data_rel', to_field='id')
     # 测试数据
     test_data = ForeignKey(TestData, related_name='problems_rel', to_field='id')
+    # 测试数据在该题目中的分数权重
+    weight = FloatField(default=1)
 
     def __str__(self):
         return 'ProblemTestData relation %s of Problem %s, Test Data %s' % (
@@ -390,6 +393,27 @@ class Submission(Model):
 
     # 哪一个评测机评测了这条提交
     judge = ForeignKey('Judge', related_name='submissions', to_field='id', null=True)
+
+    # 提交完成度
+    @property
+    def score(self):
+        if hasattr(self, 'test_data_status'):
+            test_data_weight = {}  # 记录每一条关联测试数据的权重信息([t_id] = weight)
+            problem_test_data_relation = self.problem.test_data_rel  # 全部的题目-测试数据关系
+            for relation in problem_test_data_relation.all():
+                test_data_weight[int(relation.test_data.id)] = relation.weight  # 添加新记录
+
+            weight_sum = 0
+            score_sum = 0
+            for s_id, status in self.test_data_status.status.items():
+                score = OJ_STATUS_SCORE[status['status']]  # 获取完成度(0~100)
+                weight = abs(test_data_weight[int(s_id)])  # 获取权重值(Number)的绝对值
+                score_sum += score * weight
+                weight_sum += weight
+            return floor(score_sum / weight_sum) if weight_sum != 0 else 0
+
+        else:
+            return 0
 
 
 # -- Components --------------------------------------------------------------------------------------------------------
