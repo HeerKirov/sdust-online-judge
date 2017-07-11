@@ -1,5 +1,6 @@
 {% extends "adminBasic.html" %}
 {% load staticfiles %}
+{% load utils %}
 
 {% block title %}提交记录{% endblock %}
 
@@ -81,7 +82,7 @@
               <th>时间</th>
               <th>内存</th>
               <th>状态</th>
-
+              <th>完成度</th>
             </tr>
           </thead>
           <tbody>
@@ -91,7 +92,7 @@
               <td>{{ j.time }}</td>
               <td>{{ j.memory }}</td>
               <td>{{ j.status }}</td>
-
+              <td>{{ OJ_STATUS_SCORE | key:j.status }}</td>
             </tr>
           {% endfor %}
           </tbody>

@@ -6,7 +6,7 @@ from rest_api.permissions import GROUP_NAME_JUDGE_ADMIN, GROUP_NAME_CLIENT_ADMIN
 from rest_api.models import *
 from django.contrib.auth.models import Group
 
-from config import OJ_SETTINGS
+from config import OJ_SETTINGS, OJ_STATUS_SCORE
 
 MAX_INPUT_SIZE = OJ_SETTINGS['test_data_input_max_size']
 
@@ -759,7 +759,8 @@ def problem_submission_info(request, sid):
 
     return render(request, 'submission/instance.html', {
         'user': info,
-        'submission': submission
+        'submission': submission,
+        'OJ_STATUS_SCORE': OJ_STATUS_SCORE
     })
 
 

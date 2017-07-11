@@ -10,7 +10,7 @@ from django.db.models import GenericIPAddressField
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField, ArrayField
 
-from config import OJ_SETTINGS, OJ_STATUS_SCORE
+from config import OJ_SETTINGS, OJ_STATUS_SCORE, OJ_SCORE_SETTING, OJ_FINAL_STATUS
 from math import floor
 
 _INPUT_MAX = OJ_SETTINGS['test_data_input_max_size']
@@ -381,6 +381,8 @@ class Submission(Model):
 
     # 状态，由各组测试数据的状态合成的总状态
     status = CharField(max_length=4, default='PD', choices=STATUS_CHOICES)
+    # 完成度信息
+    score_info = FloatField(default=None, null=True)
     # 是否完成了评测
     finished = BooleanField(default=False)
 
@@ -397,21 +399,37 @@ class Submission(Model):
     # 提交完成度
     @property
     def score(self):
+        if self.score_info is None:
+            return self.refresh_score()
+        else:
+            return self.score_info
+
+    # 刷新提交完成度。数值会自动刷新到数据库并保存。如果刷新失败则不会保存且返回0。
+    def refresh_score(self):
         if hasattr(self, 'test_data_status'):
             test_data_weight = {}  # 记录每一条关联测试数据的权重信息([t_id] = weight)
             problem_test_data_relation = self.problem.test_data_rel  # 全部的题目-测试数据关系
-            for relation in problem_test_data_relation.all():
+            test_data_count = problem_test_data_relation.count()  # 测试数据数目
+            for relation in problem_test_data_relation.all():  # 惰性查询：性能损耗点
                 test_data_weight[int(relation.test_data.id)] = relation.weight  # 添加新记录
 
             weight_sum = 0
             score_sum = 0
-            for s_id, status in self.test_data_status.status.items():
-                score = OJ_STATUS_SCORE[status['status']]  # 获取完成度(0~100)
+            final_sum = 0
+            for s_id, status in self.test_data_status.status.items():  # 遍历：性能损耗点
+                status_name = status['status']
+                if status_name in OJ_FINAL_STATUS:
+                    final_sum += 1
+                score = OJ_STATUS_SCORE[status_name]  # 获取完成度(0~100)
                 weight = abs(test_data_weight[int(s_id)])  # 获取权重值(Number)的绝对值
                 score_sum += score * weight
                 weight_sum += weight
-            return floor(score_sum / weight_sum) if weight_sum != 0 else 0
-
+            if test_data_count != final_sum:  # 在测试数据的实际数目不等的状态下，判定该题目还没有判完，退出判定。
+                return 0
+            final_score = floor(score_sum / weight_sum) if weight_sum != 0 else 0
+            self.score_info = final_score if final_score >= OJ_SCORE_SETTING['threshold_score'] else 0
+            self.save()
+            return self.score_info
         else:
             return 0
 
