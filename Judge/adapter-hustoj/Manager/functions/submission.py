@@ -3,6 +3,7 @@ from datetime import datetime
 
 from models import pg_models, mysql_models
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
 
 from conf import language, user, try_max, judger, status as status_map, final_status, priority
 
@@ -22,6 +23,7 @@ mysql_session = MysqlSession()
 
 
 def update(**kwargs):
+    global mysql_session, pg_session
     # 可以看出来该函数的作用是：根据获得的提交ID，将此提交同步到hustoj上进行评测。
     # 同时，还将这次提交的状态加入本地的解析队列，使问题等待被解析回填到sdustoj上。
     sid = int(kwargs['sid'])  # 获得本次提交的ID
@@ -85,7 +87,12 @@ def update(**kwargs):
         tried += 1
         for pt in problem_test:  # 循环遍历所有的测试数据。
             title = get_problem_title(pt.problem_id, pt.test_data_id)  # 按照规范获取该测试数据对应的题目的title
-            problem = mysql_session.query(mysql_models.Problem).filter_by(title=title).first()
+            try:
+                problem = mysql_session.query(mysql_models.Problem).filter_by(title=title).first()
+            except OperationalError:
+                # MySQL数据库因为长连接断开。重连一次。
+                mysql_session = MysqlSession()
+                problem = None
             # 从hustoj数据库查询每一组测试数据对应的题目
             if problem is None:
                 # 若未找到题目，可能是题目尚未更新，更新题目后重新生成
@@ -146,12 +153,13 @@ def _handler(sid):  # 处理某个提交。
 
     test_status = pg_session.query(pg_models.TestDataStatus).filter_by(submission_id=sid).first()
     # 查询在sdustoj上的该提交的提交状态。
-    info = test_status.status  # 获得这个提交状态。这个提交状态是一个json结构表。目测包含如下信息：
+    info = test_status.status  # 获得这个提交状态。这个提交状态是一个json结构表的字典表。包含如下信息：
     # status： 提交状态
     # time：耗时
     # memory： 空间
 
     finished = True
+    # 这一部分用来从所有的测试数据中得出最长用时/最大内存/最高优先级的结果状态。
     max_time = -1
     max_memory = -1
     max_status = 4
