@@ -23,7 +23,7 @@ admin_patterns = [
 org_patterns = [
     url(r'^$', OrganizationAdminPages.Organization.list, name='web-organization'),
     url(r'^create/', OrganizationAdminPages.Organization.create, name='web-organization-create'),
-url(r'^info/(\S+)/', OrganizationAdminPages.Organization.instance, name='web-organization-instance'),
+    url(r'^info/(\S+)/', OrganizationAdminPages.Organization.instance, name='web-organization-instance'),
 ]
 
 url_patterns = [

@@ -2,17 +2,17 @@
 
 # 数据库的设定
 PG_SETTINGS = {
-    'host': 'localhost',
+    'host': '120.25.229.109',
     'port': '5432',
     'db': 'sdustoj_client',
-    'user': 'korosensei',
-    'password': 'big_boss'
+    'user': 'ojuser',
+    'password': '262144'
 }
 
 REDIS_SETTINGS = {
-    'host': '192.168.221.132',
+    'host': '120.25.229.109',
     'port': '6379',
-    'password': 'hust',
+    'password': '262144',
     'db': 1
 }
 

@@ -103,10 +103,40 @@ class UserViewSets(object):
             ordering_fields = ('username', 'name', 'sex', 'last_login',
                                'creator', 'updater', 'create_time', 'update_time')
 
+        class OrgAdminAdminViewSet(ListResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').filter(is_staff=True).filter(identities__ORG_ADMIN=True).order_by('username')
+            serializer_class = UserSerializers.ListOrgAdmin
+            permission_classes = (IsUserAdmin,)
+            search_fields = ('username', 'name')
+            ordering_fields = ('username', 'name', 'sex', 'last_login',
+                               'creator', 'updater', 'create_time', 'update_time')
+
+        class UserAdminAdminViewSet(ListResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').filter(is_staff=True).\
+                filter(identities__USER_ADMIN=True).order_by('username')
+            serializer_class = UserSerializers.ListUserAdmin
+            permission_classes = (IsUserAdmin,)
+            search_fields = ('username', 'name')
+            ordering_fields = ('username', 'name', 'sex', 'last_login',
+                               'creator', 'updater', 'create_time', 'update_time')
+
     class AdminInstance(object):
         class AdminAdminViewSet(InstanceResourceViewSet):
             queryset = getattr(UserProfile, 'objects').filter(is_staff=True).order_by('username')
             serializer_class = UserSerializers.InstanceAdmin
+            permission_classes = (IsUserAdmin,)
+            lookup_field = 'username'
+
+        class OrgAdminAdminViewSet(InstanceResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').filter(is_staff=True).filter(identities__ORG_ADMIN=True).order_by('username')
+            serializer_class = UserSerializers.InstanceOrgAdmin
+            permission_classes = (IsUserAdmin,)
+            lookup_field = 'username'
+
+        class UserAdminAdminViewSet(InstanceResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').filter(is_staff=True).\
+                filter(identities__USER_ADMIN=True).order_by('username')
+            serializer_class = UserSerializers.InstanceUserAdmin
             permission_classes = (IsUserAdmin,)
             lookup_field = 'username'
 

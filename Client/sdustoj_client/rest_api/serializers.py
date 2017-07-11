@@ -171,6 +171,171 @@ class UserSerializers(object):
             ret.update_identities()
             return instance
 
+    class ListOrgAdmin(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_username(value):
+            return Utils.validate_username(value)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it in SITE_IDENTITY_CHOICES:
+                    ret[it] = True
+            return ret
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+        def create(self, validated_data):
+            validated_data['identities'] = {IdentityChoices.org_admin: True}  # validated_data.pop('get_identities', {})
+            profile = UserProfile.create_profile(**validated_data)
+            profile.update_identities()
+            return profile
+
+    class InstanceOrgAdmin(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it in SITE_IDENTITY_CHOICES:
+                    ret[it] = True
+            return ret
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+        def update(self, instance, validated_data):
+            if 'password' in validated_data:
+                instance.user.set_password(validated_data.pop('password'))
+                instance.user.save()
+            # validated_data['identities'] = validated_data.pop('get_identities', {})
+            ret = super().update(instance, validated_data)
+            ret.update_identities()
+            return instance
+
+    class ListUserAdmin(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_username(value):
+            return Utils.validate_username(value)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it in SITE_IDENTITY_CHOICES:
+                    ret[it] = True
+            return ret
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+        def create(self, validated_data):
+            validated_data['identities'] = {IdentityChoices.user_admin: True}
+            profile = UserProfile.create_profile(**validated_data)
+            profile.update_identities()
+            return profile
+
+    class InstanceUserAdmin(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it in SITE_IDENTITY_CHOICES:
+                    ret[it] = True
+            return ret
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+        def update(self, instance, validated_data):
+            if 'password' in validated_data:
+                instance.user.set_password(validated_data.pop('password'))
+                instance.user.save()
+            ret = super().update(instance, validated_data)
+            ret.update_identities()
+            return instance
+
 
 class OrganizationSerializers(object):
     class Organization(object):

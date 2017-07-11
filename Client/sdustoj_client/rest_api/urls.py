@@ -15,9 +15,18 @@ admin_router.register(
 admin_router.register(
     r'admins', UserViewSets.AdminInstance.AdminAdminViewSet, base_name='admin-admin')
 admin_router.register(
+    r'user-admins', UserViewSets.AdminList.UserAdminAdminViewSet, base_name='admin-user-admin')
+admin_router.register(
+    r'user-admins', UserViewSets.AdminInstance.UserAdminAdminViewSet, base_name='admin-user-admin')
+admin_router.register(
+    r'org-admins', UserViewSets.AdminList.OrgAdminAdminViewSet, base_name='admin-org-admin')
+admin_router.register(
+    r'org-admins', UserViewSets.AdminInstance.OrgAdminAdminViewSet, base_name='admin-org-admin')
+admin_router.register(
     r'users', UserViewSets.UserList.UserAdminViewSet, base_name='admin-user')
 admin_router.register(
     r'users', UserViewSets.UserInstance.UserAdminViewSet, base_name='admin-user')
+
 admin_router.register(
     r'organizations', OrganizationViewSets.OrganizationList.OrganizationAdminViewSet, base_name='admin-organization')
 admin_router.register(
