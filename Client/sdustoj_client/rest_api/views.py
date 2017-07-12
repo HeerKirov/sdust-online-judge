@@ -232,7 +232,15 @@ class OrganizationViewSets(object):
 
         # 所有相关机构
         class OrganizationViewSet(ListReadonlyNestedViewSet):
-            pass
+            queryset = getattr(Organization, 'objects').exclude(name='ROOT').order_by('id')
+            # serializer_class = OrganizationSerializers.Organization.ListAdmin
+            permission_classes = (IsOrgAdmin,)
+            search_fields = ('name', 'caption')
+            ordering_fields = ('name', 'caption', 'parent',
+                               'number_organizations',
+                               'number_students',
+                               'number_teachers',
+                               'number_admins')
 
     class OrganizationInstance(object):
         # admin - 所有机构
