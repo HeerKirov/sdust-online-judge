@@ -460,7 +460,6 @@ class UserSerializers(object):
 
         def create(self, validated_data):
             organization = validated_data['organization']
-            validated_data['identities'] = {IdentityChoices.edu_admin: [organization.name]}
             profile = UserProfile.create_profile(**validated_data)
             edu_admin = EduAdmin(
                 user=profile.user,
@@ -501,7 +500,223 @@ class UserSerializers(object):
         def validate_identities(value):
             ret = {}
             for it in value:
-                if it in ORG_IDENTITY_CHOICES:
+                if it == IdentityChoices.edu_admin:
+                    ret[it] = True
+            return ret
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses', 'is_staff')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+        def update(self, instance, validated_data):
+            if 'password' in validated_data:
+                instance.user.set_password(validated_data.pop('password'))
+                instance.user.save()
+            ret = super().update(instance, validated_data)
+            ret.update_identities()
+            return instance
+
+
+class OrgUserSerializers(object):
+    # 教务管理员
+    class ListEduAdmin(serializers.ModelSerializer):
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses', 'is_staff')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+    # 教务管理员
+    class InstanceEduAdmin(serializers.ModelSerializer):
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses', 'is_staff')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+    # 教师
+    class ListTeacher(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_username(value):
+            return Utils.validate_username(value)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it == IdentityChoices.teacher:
+                    ret[it] = True
+            return ret
+
+        def create(self, validated_data):
+            organization = validated_data['organization']
+            profile = UserProfile.create_profile(**validated_data)
+            teacher = Teacher(
+                user=profile.user,
+                profile=profile,
+                username=profile.username,
+                organization=organization
+            )
+            teacher.save()
+            profile.update_identities()
+            return profile
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses', 'is_staff')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+    # 教师
+    class InstanceTeacher(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it == IdentityChoices.teacher:
+                    ret[it] = True
+            return ret
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses', 'is_staff')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+        def update(self, instance, validated_data):
+            if 'password' in validated_data:
+                instance.user.set_password(validated_data.pop('password'))
+                instance.user.save()
+            ret = super().update(instance, validated_data)
+            ret.update_identities()
+            return instance
+
+    # 学生
+    class ListStudent(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_username(value):
+            return Utils.validate_username(value)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it == IdentityChoices.student:
+                    ret[it] = True
+            return ret
+
+        def create(self, validated_data):
+            organization = validated_data['organization']
+            profile = UserProfile.create_profile(**validated_data)
+            student = Student(
+                user=profile.user,
+                profile=profile,
+                username=profile.username,
+                organization=organization
+            )
+            student.save()
+            profile.update_identities()
+            return profile
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses', 'is_staff')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+    # 学生
+    class InstanceStudent(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it == IdentityChoices.student:
                     ret[it] = True
             return ret
 
@@ -565,6 +780,32 @@ class OrganizationSerializers(object):
                                     'number_problems',
                                     'creator', 'create_time', 'updater', 'update_time')
 
+        class List(serializers.ModelSerializer):
+            parent = serializers.SlugRelatedField(
+                read_only=True, allow_null=False, default=getattr(Organization, 'objects').get(name='ROOT'),
+                slug_field='name'
+            )
+            parent_caption = serializers.SlugRelatedField(
+                read_only=True,
+                source='parent',
+                slug_field='caption'
+            )
+
+            class Meta:
+                model = Organization
+                exclude = ('id', 'categories', )
+                read_only_fields = ('number_organizations',
+                                    'number_students',
+                                    'number_teachers',
+                                    'number_admins',
+                                    'number_course_meta',
+                                    'number_courses',
+                                    'number_course_groups',
+                                    'number_categories',
+                                    'number_problems',
+                                    'parent', 'parent_caption'
+                                    'creator', 'create_time', 'updater', 'update_time')
+
         class InstanceAdmin(serializers.ModelSerializer):
             parent = serializers.SlugRelatedField(
                 allow_null=False, default=getattr(Organization, 'objects').get(name='ROOT'),
@@ -607,6 +848,33 @@ class OrganizationSerializers(object):
                                     'number_problems',
                                     'creator', 'create_time', 'updater', 'update_time')
 
+        class Instance(serializers.ModelSerializer):
+            parent = serializers.SlugRelatedField(
+                read_only=True, allow_null=False, default=getattr(Organization, 'objects').get(name='ROOT'),
+                slug_field='name'
+            )
+            parent_caption = serializers.SlugRelatedField(
+                read_only=True,
+                source='parent',
+                slug_field='caption'
+            )
+
+            class Meta:
+                model = Organization
+                exclude = ('id', 'categories', )
+                read_only_fields = ('name',
+                                    'number_organizations',
+                                    'number_students',
+                                    'number_teachers',
+                                    'number_admins',
+                                    'number_course_meta',
+                                    'number_courses',
+                                    'number_course_groups',
+                                    'number_categories',
+                                    'number_problems',
+                                    'parent', 'parent_caption',
+                                    'creator', 'create_time', 'updater', 'update_time')
+
 
 class CategorySerializers(object):
     class Category(object):
@@ -623,8 +891,13 @@ class CategorySerializers(object):
             category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category')
 
             def create(self, validated_data):
-                organization = validated_data['organization']
-                if organization.categories.filter(id=validated_data['category'].id).exists():
+                organization = validated_data['organization']  # 得到parent的org
+                goal_category_id = validated_data['category'].id  # 欲添加的题库的id
+                available_id = [i['id'] for i in organization.available_categories().values('id')]
+                if goal_category_id not in available_id:
+                    # 如果想要添加的题库不在可添加的题库内
+                    raise ValidationError('category is not available.')
+                elif organization.categories.filter(id=goal_category_id).exists():
                     raise ValidationError('category exists.')
                 validated_data = dict_sub(validated_data, 'category', 'organization')
                 return super().create(validated_data)

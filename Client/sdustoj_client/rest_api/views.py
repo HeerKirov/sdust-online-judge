@@ -5,15 +5,19 @@ from django.shortcuts import get_object_or_404
 
 from .models import *
 from . import permissions
-from .serializers import PersonalSerializers, UserSerializers
+from .serializers import PersonalSerializers, UserSerializers, OrgUserSerializers
 from .serializers import OrganizationSerializers, CategorySerializers
-from .utils import UserDisabled, AlreadyLogin
+from .utils import UserDisabled, AlreadyLogin, OrgNestedMixin
 from .utils import ListResourceViewSet, InstanceResourceViewSet
+from .utils import ListReadonlyResourceViewSet, InstanceReadonlyResourceViewSet, ListReadonlyNestedResourceViewSet
 from .utils import ListNestedResourceViewSet, InstanceNestedResourceViewSet, InstanceReadonlyNestedResourceViewSet
 from .utils import ListNestedViewSet, ListReadonlyNestedViewSet, InstanceNestedViewSet, InstanceDeleteNestedViewSet
-from .permissions import IsRoot, IsUserAdmin, IsOrgAdmin
+from .permissions import IsRoot, IsUserAdmin, IsOrgAdmin, IsStudent, IsTeacher, IsEduAdmin, IsAnyOrg, IsAnyOrgReadonly
+from .permissions import IsStudentReadonly, IsTeacherReadonly, IsEduAdminReadonly, IsTeacherReadonlyOrEduAdmin
+from .permissions import IsStudentReadonlyOrEduAdmin
 
 
+# 个人api
 class PersonalViewSets(object):
     class Login(object):
         class LoginViewSet(viewsets.ViewSet):
@@ -78,6 +82,7 @@ class PersonalViewSets(object):
             lookup_field = 'username'
 
 
+# 用户api
 class UserViewSets(object):
     class RootList(object):
         # admin - 超级管理员
@@ -151,6 +156,7 @@ class UserViewSets(object):
             permission_classes = (IsUserAdmin,)
             lookup_field = 'username'
 
+    # admin用户管理部分的用户
     class UserList(object):
         # admin - 所有用户
         class UserAdminViewSet(ListResourceViewSet):
@@ -161,8 +167,8 @@ class UserViewSets(object):
             ordering_fields = ('username', 'name', 'sex', 'last_login',
                                'creator', 'updater', 'create_time', 'update_time')
 
-        # admin - 教务管理员
-        class EduAdminViewSet(ListNestedResourceViewSet):
+        # admin - 教务管理员 - deep2
+        class EduAdminViewSet(OrgNestedMixin, ListNestedResourceViewSet):
             queryset = getattr(UserProfile, 'objects').order_by('username')
             serializer_class = UserSerializers.ListEduAdmin
             permission_classes = (IsOrgAdmin,)
@@ -170,19 +176,10 @@ class UserViewSets(object):
             ordering_fields = ('username', 'name', 'sex', 'last_login',
                                'creator', 'updater', 'create_time', 'update_time')
 
-            def _set_queryset(self, **kwargs):
-                parent_queryset = Organization.objects.all()
-                parent_lookup = 'admin_organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
-                parent_related_name = 'identities__EDU_ADMIN__contains'  # 在当前models中，上级model的关联名
-                parent_pk = 'name'  # 上级model的主键名
+            parent_lookup = 'admin_organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'identities__%s__contains' % (IdentityChoices.edu_admin,)  # 在当前models中，上级model的关联名
 
-                lookup = kwargs[parent_lookup]  # parent的id名,即org的name
-                parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})  # parent Org 的model
-                org_id = parent.id
-                self.queryset = self.queryset.filter(**{parent_related_name: org_id}).all()
-
-                return 'organization', parent  # 返回的元组将在下级的serializer等地方被应用。
-
+    # admin用户管理部分的用户
     class UserInstance(object):
         # admin - 所有用户
         class UserAdminViewSet(InstanceResourceViewSet):
@@ -191,26 +188,87 @@ class UserViewSets(object):
             permission_classes = (IsUserAdmin,)
             lookup_field = 'username'
 
-        # admin - 教务管理员
-        class EduAdminViewSet(InstanceNestedResourceViewSet):
+        # admin - 教务管理员 - deep2
+        class EduAdminViewSet(OrgNestedMixin, InstanceNestedResourceViewSet):
             queryset = getattr(UserProfile, 'objects').order_by('username')
             serializer_class = UserSerializers.InstanceEduAdmin
             permission_classes = (IsOrgAdmin,)
             lookup_field = 'username'
 
-            def _set_queryset(self, **kwargs):
-                parent_queryset = Organization.objects.all()
-                parent_lookup = 'admin_organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
-                parent_related_name = 'identities__EDU_ADMIN__contains'  # 在当前models中，上级model的关联名
-                parent_pk = 'name'  # 上级model的主键名
+            parent_lookup = 'admin_organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'identities__%s__contains' % (IdentityChoices.edu_admin,)  # 在当前models中，上级model的关联名
 
-                lookup = kwargs[parent_lookup]  # parent的id名
-                parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})
-                self.queryset = self.queryset.filter(**{parent_related_name: lookup}).all()
+    # org部分下属的用户
+    class OrgUserList(object):
+        # 教务管理员 - deep2
+        class EduAdminViewSet(OrgNestedMixin, ListReadonlyNestedResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').order_by('username')
+            serializer_class = OrgUserSerializers.ListEduAdmin
+            permission_classes = (IsEduAdminReadonly,)
+            search_fields = ('username', 'name')
+            ordering_fields = ('username', 'name', 'sex', 'last_login',
+                               'creator', 'updater', 'create_time', 'update_time')
 
-                return 'organization', parent
+            parent_lookup = 'organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'identities__%s__contains' % (IdentityChoices.edu_admin,)  # 在当前models中，上级model的关联名
+
+        # 教师 - deep2
+        class TeacherViewSet(OrgNestedMixin, ListNestedResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').order_by('username')
+            serializer_class = OrgUserSerializers.ListTeacher
+            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            search_fields = ('username', 'name')
+            ordering_fields = ('username', 'name', 'sex', 'last_login',
+                               'creator', 'updater', 'create_time', 'update_time')
+
+            parent_lookup = 'organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'identities__%s__contains' % (IdentityChoices.teacher,)  # 在当前models中，上级model的关联名
+
+        # 学生 - deep2
+        class StudentViewSet(OrgNestedMixin, ListNestedResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').order_by('username')
+            serializer_class = OrgUserSerializers.ListStudent
+            permission_classes = (IsStudentReadonlyOrEduAdmin,)
+            search_fields = ('username', 'name')
+            ordering_fields = ('username', 'name', 'sex', 'last_login',
+                               'creator', 'updater', 'create_time', 'update_time')
+
+            parent_lookup = 'organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'identities__%s__contains' % (IdentityChoices.student,)  # 在当前models中，上级model的关联名
+
+    # org部分下属的用户
+    class OrgUserInstance(object):
+        # 教务管理员 - deep2
+        class EduAdminViewSet(OrgNestedMixin, InstanceReadonlyNestedResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').order_by('username')
+            serializer_class = UserSerializers.InstanceEduAdmin
+            permission_classes = (IsEduAdminReadonly,)
+            lookup_field = 'username'
+
+            parent_lookup = 'organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'identities__%s__contains' % (IdentityChoices.edu_admin,)  # 在当前models中，上级model的关联名
+
+        # 教师 - deep2
+        class TeacherViewSet(OrgNestedMixin, InstanceNestedResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').order_by('username')
+            serializer_class = OrgUserSerializers.InstanceTeacher
+            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            lookup_field = 'username'
+
+            parent_lookup = 'organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'identities__%s__contains' % (IdentityChoices.teacher,)  # 在当前models中，上级model的关联名
+
+        # 学生 - deep2
+        class StudentViewSet(OrgNestedMixin, InstanceNestedResourceViewSet):
+            queryset = getattr(UserProfile, 'objects').order_by('username')
+            serializer_class = OrgUserSerializers.InstanceStudent
+            permission_classes = (IsStudentReadonlyOrEduAdmin,)
+            lookup_field = 'username'
+            parent_lookup = 'organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'identities__%s__contains' % (IdentityChoices.student,)  # 在当前models中，上级model的关联名
 
 
+# 机构api
 class OrganizationViewSets(object):
     class OrganizationList(object):
         # admin - 所有机构
@@ -231,16 +289,25 @@ class OrganizationViewSets(object):
                 return instance
 
         # 所有相关机构
-        class OrganizationViewSet(ListReadonlyNestedViewSet):
+        class OrganizationViewSet(ListReadonlyResourceViewSet):
             queryset = getattr(Organization, 'objects').exclude(name='ROOT').order_by('id')
-            # serializer_class = OrganizationSerializers.Organization.ListAdmin
-            permission_classes = (IsOrgAdmin,)
+            serializer_class = OrganizationSerializers.Organization.List
+            permission_classes = (IsAnyOrgReadonly,)
             search_fields = ('name', 'caption')
             ordering_fields = ('name', 'caption', 'parent',
                                'number_organizations',
                                'number_students',
                                'number_teachers',
                                'number_admins')
+
+            def get_queryset(self):
+                user = self.request.user
+                profile = getattr(user, 'profile')
+                if profile is not None:
+                    organizations = profile.get_organizations()
+                    return organizations
+                else:
+                    return self.queryset
 
     class OrganizationInstance(object):
         # admin - 所有机构
@@ -264,8 +331,11 @@ class OrganizationViewSets(object):
                 parent.update_numbers()
 
         # 所有相关机构
-        class OrganizationViewSet(InstanceReadonlyNestedResourceViewSet):
-            pass
+        class OrganizationViewSet(InstanceReadonlyResourceViewSet):
+            queryset = getattr(Organization, 'objects').exclude(name='ROOT').order_by('id')
+            serializer_class = OrganizationSerializers.Organization.Instance
+            permission_classes = (IsAnyOrgReadonly,)
+            lookup_field = 'name'
 
 
 class CategoryViewSet(object):
@@ -290,31 +360,25 @@ class CategoryViewSet(object):
             ordering_fields = ('name', 'number_problem')
             search_fields = ('name',)
 
+            parent_queryset = Organization.objects.all()
+            parent_lookup = 'admin_organization_pk'
+            parent_pk = 'name'
+            parent_related_name = 'organization'
+
             def _set_queryset(self, **kwargs):
                 # 有关可以使用的题库的选定规则：
                 # 机构使用的题库，仅显示与该机构有直接关联的题库；
                 # 机构可以使用的题库，仅显示该机构还没添加、但是(上级机构添加了的题库|上级机构是root时的所有题库).
-                parent_queryset = Organization.objects.all()
-                parent_lookup = 'admin_organization_pk'
-                parent_pk = 'name'
-                parent_related_name = 'organization'
+                parent_queryset = getattr(self, 'parent_queryset')
+                parent_lookup = getattr(self, 'parent_lookup')
+                parent_pk = getattr(self, 'parent_pk')
+                parent_related_name = getattr(self, 'parent_related_name')
 
                 lookup = kwargs[parent_lookup]  # 查询得到隶属org的name
                 parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})  # 查询得到该org
                 exist_id = [i.id for i in parent.categories.all()]  # 获得该org旗下的所有的已用题库的id-list
-                org_root = Organization.objects.filter(name='ROOT').first()  # 获得org内的root机构
-                if org_root.id == parent.id:
-                    # 这表示选定的机构是root机构，虽然通常不应该出现这种状态
-                    # 不过你可以使用所有的题库
-                    self.queryset = Category.objects
-                elif parent.parent is not None and parent.parent.id == org_root.id:
-                    # 上级机构是root机构，这表示该机构有权使用所有的题库
-                    self.queryset = Category.objects
-                elif parent.parent is not None:
-                    # 更一般的情况。只能使用上级机构使用的题库
-                    self.queryset = parent.parent.categories
-                else:  # 没有上级机构。防止出错添加这个判定
-                    self.queryset = Category.objects
+
+                self.queryset = parent.available_categories()
                 # 然后，从圈定的范围内筛选出所有可用的题库。
                 self.queryset = self.queryset.exclude(id__in=exist_id).all()
 

@@ -63,6 +63,27 @@ api_router.register(
     r'personal-info', PersonalViewSets.Personal.PersonalViewSet, base_name='api-personal-info')
 api_router.register(
     r'personal-password', PersonalViewSets.Personal.PasswordViewSet, base_name='api-personal-password')
+api_router.register(
+    r'organizations', OrganizationViewSets.OrganizationList.OrganizationViewSet, base_name='api-organization')
+api_router.register(
+    r'organizations', OrganizationViewSets.OrganizationInstance.OrganizationViewSet, base_name='api-organization')
+
+# --------
+api_organization_router = NestedSimpleRouter(api_router, r'organizations', lookup='organization')
+api_organization_router.register(
+    r'admins', UserViewSets.OrgUserList.EduAdminViewSet, base_name='api-organization-edu-admins')
+api_organization_router.register(
+    r'admins', UserViewSets.OrgUserInstance.EduAdminViewSet, base_name='api-organization-edu-admins')
+api_organization_router.register(
+    r'teachers', UserViewSets.OrgUserList.TeacherViewSet, base_name='api-organization-teacher')
+api_organization_router.register(
+    r'teachers', UserViewSets.OrgUserInstance.TeacherViewSet, base_name='api-organization-teacher')
+api_organization_router.register(
+    r'students', UserViewSets.OrgUserList.StudentViewSet, base_name='api-organization-student')
+api_organization_router.register(
+    r'students', UserViewSets.OrgUserInstance.StudentViewSet, base_name='api-organization-student')
+# --------
 
 api_patterns = []
 api_patterns += api_router.urls
+api_patterns += api_organization_router.urls
