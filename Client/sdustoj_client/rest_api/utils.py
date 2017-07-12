@@ -208,6 +208,13 @@ class InstanceNestedResourceViewSet(RetrieveNestedMixin,
     pass
 
 
+class InstanceReadonlyNestedResourceViewSet(RetrieveNestedMixin,
+                                            ExtraDataMixin,
+                                            NestedMixin,
+                                            viewsets.GenericViewSet):
+    pass
+
+
 class InstanceDeleteNestedResourceViewSet(RetrieveNestedMixin,
                                           DestroyNestedMixin,
                                           ExtraDataMixin,

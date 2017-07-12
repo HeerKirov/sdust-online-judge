@@ -94,8 +94,8 @@ class PersonalSerializers(object):
 
 
 class UserSerializers(object):
-    # admin - 所有管理员
-    class ListAdmin(serializers.ModelSerializer):
+    # admin - 所有root
+    class ListRoot(serializers.ModelSerializer):
         password = serializers.CharField(max_length=128, write_only=True)
         identities = serializers.ListField(child=serializers.CharField(),
                                            source='get_identities',
@@ -136,6 +136,89 @@ class UserSerializers(object):
             profile.update_identities()
             return profile
 
+    # admin - 所有root
+    class InstanceRoot(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it in SITE_IDENTITY_CHOICES:
+                    ret[it] = True
+            return ret
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+        def update(self, instance, validated_data):
+            if 'password' in validated_data:
+                instance.user.set_password(validated_data.pop('password'))
+                instance.user.save()
+            validated_data['identities'] = validated_data.pop('get_identities', {})
+            ret = super().update(instance, validated_data)
+            ret.update_identities()
+            return instance
+
+    # admin - 所有管理员
+    class ListAdmin(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True)
+
+        @staticmethod
+        def validate_username(value):
+            return Utils.validate_username(value)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it in ADMIN_IDENTITY_CHOICES:
+                    ret[it] = True
+            return ret
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+        def create(self, validated_data):
+            validated_data['identities'] = validated_data.pop('get_identities', {})
+            profile = UserProfile.create_profile(**validated_data)
+            profile.update_identities()
+            return profile
+
     # admin - 所有管理员
     class InstanceAdmin(serializers.ModelSerializer):
         password = serializers.CharField(max_length=128, write_only=True)
@@ -156,7 +239,7 @@ class UserSerializers(object):
         def validate_identities(value):
             ret = {}
             for it in value:
-                if it in SITE_IDENTITY_CHOICES:
+                if it in ADMIN_IDENTITY_CHOICES:
                     ret[it] = True
             return ret
 
@@ -202,7 +285,7 @@ class UserSerializers(object):
         def validate_identities(value):
             ret = {}
             for it in value:
-                if it in SITE_IDENTITY_CHOICES:
+                if it == IdentityChoices.org_admin:
                     ret[it] = True
             return ret
 
@@ -241,7 +324,7 @@ class UserSerializers(object):
         def validate_identities(value):
             ret = {}
             for it in value:
-                if it in SITE_IDENTITY_CHOICES:
+                if it == IdentityChoices.org_admin:
                     ret[it] = True
             return ret
 
@@ -287,7 +370,7 @@ class UserSerializers(object):
         def validate_identities(value):
             ret = {}
             for it in value:
-                if it in SITE_IDENTITY_CHOICES:
+                if it == IdentityChoices.user_admin:
                     ret[it] = True
             return ret
 
@@ -326,7 +409,7 @@ class UserSerializers(object):
         def validate_identities(value):
             ret = {}
             for it in value:
-                if it in SITE_IDENTITY_CHOICES:
+                if it == IdentityChoices.user_admin:
                     ret[it] = True
             return ret
 
@@ -371,7 +454,7 @@ class UserSerializers(object):
         def validate_identities(value):
             ret = {}
             for it in value:
-                if it in ORG_IDENTITY_CHOICES:
+                if it == IdentityChoices.edu_admin:
                     ret[it] = True
             return ret
 

@@ -9,7 +9,7 @@ from .serializers import PersonalSerializers, UserSerializers
 from .serializers import OrganizationSerializers, CategorySerializers
 from .utils import UserDisabled, AlreadyLogin
 from .utils import ListResourceViewSet, InstanceResourceViewSet
-from .utils import ListNestedResourceViewSet, InstanceNestedResourceViewSet
+from .utils import ListNestedResourceViewSet, InstanceNestedResourceViewSet, InstanceReadonlyNestedResourceViewSet
 from .utils import ListNestedViewSet, ListReadonlyNestedViewSet, InstanceNestedViewSet, InstanceDeleteNestedViewSet
 from .permissions import IsRoot, IsUserAdmin, IsOrgAdmin
 
@@ -84,7 +84,7 @@ class UserViewSets(object):
         class RootAdminViewSet(ListResourceViewSet):
             queryset = getattr(UserProfile, 'objects').filter(
                 is_staff=True, identities__ROOT=True).order_by('username')
-            serializer_class = UserSerializers.ListAdmin
+            serializer_class = UserSerializers.ListRoot
             permission_classes = (IsRoot,)
             search_fields = ('username', 'name')
             ordering_fields = ('username', 'name', 'sex', 'last_login',
@@ -95,7 +95,7 @@ class UserViewSets(object):
         class RootAdminViewSet(InstanceResourceViewSet):
             queryset = getattr(UserProfile, 'objects').filter(
                 is_staff=True, identities__ROOT=True).order_by('username')
-            serializer_class = UserSerializers.InstanceAdmin
+            serializer_class = UserSerializers.InstanceRoot
             permission_classes = (IsRoot,)
             lookup_field = 'username'
 
@@ -230,6 +230,10 @@ class OrganizationViewSets(object):
                 instance.parent.update_numbers()
                 return instance
 
+        # 所有相关机构
+        class OrganizationViewSet(ListReadonlyNestedViewSet):
+            pass
+
     class OrganizationInstance(object):
         # admin - 所有机构
         class OrganizationAdminViewSet(InstanceResourceViewSet):
@@ -250,6 +254,10 @@ class OrganizationViewSets(object):
                 parent = instance.parent
                 super().perform_destroy(instance)
                 parent.update_numbers()
+
+        # 所有相关机构
+        class OrganizationViewSet(InstanceReadonlyNestedResourceViewSet):
+            pass
 
 
 class CategoryViewSet(object):

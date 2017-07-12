@@ -74,6 +74,14 @@ IDENTITY_CHOICES = (
     IdentityChoices.student
 )
 
+ROOT_IDENTITY_CHOICES = (
+    IdentityChoices.root,
+)
+ADMIN_IDENTITY_CHOICES = (
+    IdentityChoices.user_admin,
+    IdentityChoices.org_admin
+)
+
 SITE_IDENTITY_CHOICES = (
     IdentityChoices.root,
     IdentityChoices.user_admin,
