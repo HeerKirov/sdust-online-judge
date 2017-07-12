@@ -185,7 +185,34 @@ class UserAdminPages(object):
         @staticmethod
         def instance(request, username):
             return Utils.Render.user_admin(request, 'user/admin/instance.html', {'u': username})
+#new********************************************************************************************************************
 
+    class UserAdmin(object):
+        @staticmethod
+        def list(request):
+            return Utils.Render.user_admin(request, 'user/user-admin/list.html')
+
+        @staticmethod
+        def create(request):
+            return Utils.Render.user_admin(request, 'user/user-admin/create.html')
+
+        @staticmethod
+        def instance(request, username):
+            return Utils.Render.user_admin(request, 'user/user-admin/instance.html', {'u': username})
+
+    class OrgAdmin(object):
+        @staticmethod
+        def list(request):
+            return Utils.Render.user_admin(request, 'user/org-admin/list.html')
+
+        @staticmethod
+        def create(request):
+            return Utils.Render.user_admin(request, 'user/org-admin/create.html')
+
+        @staticmethod
+        def instance(request, username):
+            return Utils.Render.user_admin(request, 'user/org-admin/instance.html', {'u': username})
+#endnew ****************************************************************************************************************
 
 class OrganizationAdminPages(object):
     class Organization(object):
