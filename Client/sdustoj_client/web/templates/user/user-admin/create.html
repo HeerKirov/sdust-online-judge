@@ -1,0 +1,138 @@
+{% extends "user/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}创建用户管理员{% endblock %}
+
+{% block nav_user_admin %}active{% endblock %}
+
+{% block sub_content %}
+<div class="container">
+  <div class="col-xs-12">
+    <div id="all-user"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+SATable.SimpleAjaxForm({
+  id: 'all-user',
+  method: 'POST',
+  toSuccess: '{% url 'web-admin-useradmin' %}',
+  url: '{% url 'admin-user-admin-list' %}',
+  items: [
+    {
+      name: 'available',
+      caption: '可用',
+      type: 'Boolean',
+      defaultTrue: true
+    },
+    {
+      name: 'is_staff',
+      caption: '管理员',
+      type: 'Boolean',
+      defaultTrue: true
+    },
+    {
+      name: 'identities',
+      caption: '权限',
+      type: 'Select',
+      typeInfo: {
+        many: true,
+        choices: [
+{#          { text: '超级管理员', value: 'ROOT' },#}
+          { text: '用户管理员', value: 'USER_ADMIN' },
+{#          { text: '机构管理员', value: 'ORG_ADMIN' },#}
+        ]
+      }
+    },
+    {
+      name: 'username',
+      caption: '用户名',
+      type: 'Text',
+      typeInfo: {
+        max_length: 150
+      }
+    },
+    {
+      name: 'name',
+      caption: '姓名',
+      type: 'Text',
+      typeInfo: {
+        max_length: 150
+      }
+    },
+    {
+      name: 'password',
+      caption: '密码',
+      type: 'Password',
+      typeInfo: {
+        max_length: 128,
+        confirm: true
+      }
+    },
+    {
+      name: 'sex',
+      caption: '性别',
+      type: 'Select',
+      typeInfo: {
+        many: false,
+        choices: [
+          { text: '保密', value: 'SECRET' },
+          { text: '男', value: 'MALE' },
+          { text: '女', value: 'FEMALE' }
+        ]
+      }
+    },
+    {
+      name: 'phone',
+      caption: '电话',
+      type: 'Text',
+      typeInfo: {
+        max_length: 32
+      }
+    },
+    {
+      name: 'email',
+      caption: '邮箱',
+      type: 'Email',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+    {
+      name: 'github',
+      caption: 'Github',
+      type: 'Text',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+    {
+      name: 'qq',
+      caption: 'QQ',
+      type: 'Text',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+    {
+      name: 'wechat',
+      caption: '微信',
+      type: 'Text',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+    {
+      name: 'blog',
+      caption: '博客',
+      type: 'Text',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+  ]
+})
+</script>
+{% endblock %}
