@@ -351,6 +351,22 @@ class Organization(Resource):
 
         self.save()
 
+    def available_categories(self):
+        """
+        获得所有该机构可用的题库的查询集。
+        :return: QuerySet<[Category]>
+        """
+        org_root = Organization.objects.filter(name='ROOT').first()  # 获得org内的root机构
+        if org_root.id == self.id:
+            pass
+        elif self.parent is not None:
+            if self.parent.id == org_root.id:
+                pass
+            else:
+                pass
+        else:
+            pass
+
     def __str__(self):
         return '<Organization %s: %s>' % (self.name, self.caption)
 

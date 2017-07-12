@@ -291,14 +291,31 @@ class CategoryViewSet(object):
             search_fields = ('name',)
 
             def _set_queryset(self, **kwargs):
+                # 有关可以使用的题库的选定规则：
+                # 机构使用的题库，仅显示与该机构有直接关联的题库；
+                # 机构可以使用的题库，仅显示该机构还没添加、但是(上级机构添加了的题库|上级机构是root时的所有题库).
                 parent_queryset = Organization.objects.all()
                 parent_lookup = 'admin_organization_pk'
                 parent_pk = 'name'
                 parent_related_name = 'organization'
 
-                lookup = kwargs[parent_lookup]
-                parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})
-                exist_id = [i.id for i in parent.categories.all()]
+                lookup = kwargs[parent_lookup]  # 查询得到隶属org的name
+                parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})  # 查询得到该org
+                exist_id = [i.id for i in parent.categories.all()]  # 获得该org旗下的所有的已用题库的id-list
+                org_root = Organization.objects.filter(name='ROOT').first()  # 获得org内的root机构
+                if org_root.id == parent.id:
+                    # 这表示选定的机构是root机构，虽然通常不应该出现这种状态
+                    # 不过你可以使用所有的题库
+                    self.queryset = Category.objects
+                elif parent.parent is not None and parent.parent.id == org_root.id:
+                    # 上级机构是root机构，这表示该机构有权使用所有的题库
+                    self.queryset = Category.objects
+                elif parent.parent is not None:
+                    # 更一般的情况。只能使用上级机构使用的题库
+                    self.queryset = parent.parent.categories
+                else:  # 没有上级机构。防止出错添加这个判定
+                    self.queryset = Category.objects
+                # 然后，从圈定的范围内筛选出所有可用的题库。
                 self.queryset = self.queryset.exclude(id__in=exist_id).all()
 
                 return parent_related_name, parent
