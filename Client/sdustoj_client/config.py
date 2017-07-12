@@ -27,7 +27,7 @@ INIT_USER_SETTINGS = {
 
 # 用户端信息
 CLIENT_SETTINGS = {
-    'root_url': 'http://localhost:8000/',
+    'root_url': 'http://120.25.229.109/',
     'problem_url': '/JudgeAdmin/api/problems/',
     'environment_url': '/JudgeAdmin/api/environments/',
     'category_url': '/JudgeAdmin/api/categories/',

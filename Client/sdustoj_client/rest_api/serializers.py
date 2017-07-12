@@ -3,6 +3,10 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from .models import *
+from .utils import dict_sub
+from rest_framework.serializers import ValidationError
+
+_RESOURCE_READONLY = ('creator', 'updater', 'create_time', 'update_time')
 
 
 class Utils(object):
@@ -90,6 +94,7 @@ class PersonalSerializers(object):
 
 
 class UserSerializers(object):
+    # admin - 所有管理员
     class ListAdmin(serializers.ModelSerializer):
         password = serializers.CharField(max_length=128, write_only=True)
         identities = serializers.ListField(child=serializers.CharField(),
@@ -131,6 +136,7 @@ class UserSerializers(object):
             profile.update_identities()
             return profile
 
+    # admin - 所有管理员
     class InstanceAdmin(serializers.ModelSerializer):
         password = serializers.CharField(max_length=128, write_only=True)
         identities = serializers.ListField(child=serializers.CharField(),
@@ -171,6 +177,7 @@ class UserSerializers(object):
             ret.update_identities()
             return instance
 
+    # admin - 机构管理员
     class ListOrgAdmin(serializers.ModelSerializer):
         password = serializers.CharField(max_length=128, write_only=True)
         identities = serializers.ListField(child=serializers.CharField(),
@@ -213,6 +220,7 @@ class UserSerializers(object):
             profile.update_identities()
             return profile
 
+    # admin - 机构管理员
     class InstanceOrgAdmin(serializers.ModelSerializer):
         password = serializers.CharField(max_length=128, write_only=True)
         identities = serializers.ListField(child=serializers.CharField(),
@@ -254,6 +262,7 @@ class UserSerializers(object):
             ret.update_identities()
             return instance
 
+    # admin - 用户管理员
     class ListUserAdmin(serializers.ModelSerializer):
         password = serializers.CharField(max_length=128, write_only=True)
         identities = serializers.ListField(child=serializers.CharField(),
@@ -296,6 +305,7 @@ class UserSerializers(object):
             profile.update_identities()
             return profile
 
+    # admin - 用户管理员
     class InstanceUserAdmin(serializers.ModelSerializer):
         password = serializers.CharField(max_length=128, write_only=True)
         identities = serializers.ListField(child=serializers.CharField(),
@@ -323,6 +333,98 @@ class UserSerializers(object):
         class Meta:
             model = UserProfile
             exclude = ('user', 'courses')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+        def update(self, instance, validated_data):
+            if 'password' in validated_data:
+                instance.user.set_password(validated_data.pop('password'))
+                instance.user.save()
+            ret = super().update(instance, validated_data)
+            ret.update_identities()
+            return instance
+
+    # admin - 教务管理员
+    class ListEduAdmin(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_username(value):
+            return Utils.validate_username(value)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it in ORG_IDENTITY_CHOICES:
+                    ret[it] = True
+            return ret
+
+        def create(self, validated_data):
+            organization = validated_data['organization']
+            validated_data['identities'] = {IdentityChoices.edu_admin: [organization.name]}
+            profile = UserProfile.create_profile(**validated_data)
+            edu_admin = EduAdmin(
+                user=profile.user,
+                profile=profile,
+                username=profile.username,
+                organization=organization
+            )
+            edu_admin.save()
+            profile.update_identities()
+            return profile
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses', 'is_staff')
+            read_only_fields = (
+                'creator', 'updater', 'create_time', 'update_time',
+                'last_login', 'ip'
+            )
+
+    # admin - 教务管理员
+    class InstanceEduAdmin(serializers.ModelSerializer):
+        password = serializers.CharField(max_length=128, write_only=True)
+        identities = serializers.ListField(child=serializers.CharField(),
+                                           source='get_identities',
+                                           allow_null=True,
+                                           allow_empty=True,
+                                           read_only=True)
+
+        @staticmethod
+        def validate_password(value):
+            return Utils.validate_password(value)
+
+        @staticmethod
+        def validate_sex(value):
+            return Utils.validate_sex(value)
+
+        @staticmethod
+        def validate_identities(value):
+            ret = {}
+            for it in value:
+                if it in ORG_IDENTITY_CHOICES:
+                    ret[it] = True
+            return ret
+
+        class Meta:
+            model = UserProfile
+            exclude = ('user', 'courses', 'is_staff')
             read_only_fields = (
                 'creator', 'updater', 'create_time', 'update_time',
                 'last_login', 'ip'
@@ -421,3 +523,51 @@ class OrganizationSerializers(object):
                                     'number_categories',
                                     'number_problems',
                                     'creator', 'create_time', 'updater', 'update_time')
+
+
+class CategorySerializers(object):
+    class Category(object):
+        class ListOrgAdmin(serializers.ModelSerializer):
+
+            class ListAdmin(serializers.ModelSerializer):
+                class Meta:
+                    model = Category
+                    exclude = ('problems',)
+                    read_only_fields = ('title', 'introduction', 'source', 'author',
+                                        'number_problem')
+
+            category = ListAdmin(read_only=True)
+            category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category')
+
+            def create(self, validated_data):
+                organization = validated_data['organization']
+                if organization.categories.filter(id=validated_data['category'].id).exists():
+                    raise ValidationError('category exists.')
+                validated_data = dict_sub(validated_data, 'category', 'organization')
+                return super().create(validated_data)
+
+            class Meta:
+                model = OrganizationCategoryRelation
+                fields = ('id', 'category', 'category_id')
+                read_only_fields = _RESOURCE_READONLY
+
+        class InstanceOrgAdmin(serializers.ModelSerializer):
+            class InstanceAdmin(serializers.ModelSerializer):
+                problems = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+                class Meta:
+                    model = Category
+                    fields = ('problems',)
+                    read_only_fields = ('title', 'introduction', 'source', 'author',
+                                        'number_problem')
+            category = InstanceAdmin(read_only=True)
+
+            class Meta:
+                model = OrganizationCategoryRelation
+                fields = ('id', 'category')
+                read_only_fields = _RESOURCE_READONLY
+
+        class ListAvailableOrgAdmin(serializers.ModelSerializer):
+            class Meta:
+                model = Category
+                exclude = ('problems',)

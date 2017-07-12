@@ -7,6 +7,15 @@ from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 
 
+# -- Tools ----
+
+def dict_sub(dictionary, *args):
+    ans = {}
+    for a in args:
+        ans[a] = dictionary[a]
+    return ans
+
+
 # -- Functions --------------------------------------------------------------------------
 
 def is_root(user):
@@ -215,4 +224,36 @@ class NestedResourceViewSet(ListNestedMixin,
                             ExtraDataMixin,
                             NestedMixin,
                             viewsets.GenericViewSet):
+    pass
+
+
+class ListReadonlyNestedViewSet(ListNestedMixin,
+                                ExtraDataMixin,
+                                NestedMixin,
+                                viewsets.GenericViewSet):
+    pass
+
+
+class ListNestedViewSet(ListNestedMixin,
+                        CreateNestedMixin,
+                        ExtraDataMixin,
+                        NestedMixin,
+                        viewsets.GenericViewSet):
+    pass
+
+
+class InstanceNestedViewSet(RetrieveNestedMixin,
+                            UpdateResourceMixin,
+                            DestroyNestedMixin,
+                            ExtraDataMixin,
+                            NestedMixin,
+                            viewsets.GenericViewSet):
+    pass
+
+
+class InstanceDeleteNestedViewSet(RetrieveNestedMixin,
+                                  DestroyNestedMixin,
+                                  ExtraDataMixin,
+                                  NestedMixin,
+                                  viewsets.GenericViewSet):
     pass

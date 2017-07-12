@@ -1,7 +1,8 @@
 from rest_framework import routers
+from rest_framework_nested.routers import NestedSimpleRouter
 
 from .views import PersonalViewSets, UserViewSets
-from .views import OrganizationViewSets
+from .views import OrganizationViewSets, CategoryViewSet
 
 
 admin_router = routers.DefaultRouter()
@@ -32,9 +33,24 @@ admin_router.register(
 admin_router.register(
     r'organizations', OrganizationViewSets.OrganizationInstance.OrganizationAdminViewSet, base_name='admin-organization')
 
+# --------
+admin_organization_router = NestedSimpleRouter(admin_router, r'organizations', lookup='admin_organization')
+admin_organization_router.register(
+    r'categories', CategoryViewSet.CategoryList.CategoryOrgAdminViewSet, base_name='admin-organization-categories')
+admin_organization_router.register(
+    r'categories', CategoryViewSet.CategoryInstance.CategoryOrgAdminViewSet, base_name='admin-organization-categories')
+admin_organization_router.register(
+    r'available-categories', CategoryViewSet.CategoryList.CategoryAvailableOrgAdminViewSet,
+    base_name='admin-organization-available-categories')
+admin_organization_router.register(
+    r'admins', UserViewSets.UserList.EduAdminViewSet, base_name='admin-organization-edu-admins')
+admin_organization_router.register(
+    r'admins', UserViewSets.UserInstance.EduAdminViewSet, base_name='admin-organization-edu-admins')
+# --------
 
 admin_patterns = []
 admin_patterns += admin_router.urls
+admin_patterns += admin_organization_router.urls
 
 
 api_router = routers.DefaultRouter()
