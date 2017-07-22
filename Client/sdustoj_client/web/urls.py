@@ -20,31 +20,35 @@ admin_patterns = [
     url(r'^info/(\S+)/', UserAdminPages.Admin.instance, name='web-admin-instance'),
 ]
 
-user_admin_patterns = [
+org_patterns = [
+    url(r'^$', OrganizationAdminPages.Organization.list, name='web-organization'),
+    url(r'^create/', OrganizationAdminPages.Organization.create, name='web-organization-create'),
+    url(r'^categories/(\S+)/create/',OrganizationAdminPages.Category.categoriescreate, name='web-categories-create'),
+    url(r'^categories/(\S+)/', OrganizationAdminPages.Category.categories,
+        name='web-organization-categories'),
+    url(r'^info/(\S+)/', OrganizationAdminPages.Organization.instance, name='web-organization-instance'),
+
+]
+
+userAdmin_patterns = [
     url(r'^$', UserAdminPages.UserAdmin.list, name='web-admin-useradmin'),
     url(r'^create/', UserAdminPages.UserAdmin.create, name='web-useradmin-create'),
     url(r'^info/(\S+)/', UserAdminPages.UserAdmin.instance, name='web-useradmin-instance'),
 ]
 
-org_admin_patterns = [
-    url(r'^$', UserAdminPages.OrgAdmin.list, name='web-admin-orgadmin'),
-    url(r'^create/', UserAdminPages.OrgAdmin.create, name='web-orgadmin-create'),
-    url(r'^info/(\S+)/', UserAdminPages.OrgAdmin.instance, name='web-orgadmin-instance'),
+orgAdmin_patterns = [
+    url(r'^$',UserAdminPages.OrgAdmin.list, name='web-admin-orgadmin'),
+    url(r'^create/',UserAdminPages.OrgAdmin.create, name='web-orgadmin-create'),
+    url(r'^info/(\S+)/',UserAdminPages.OrgAdmin.instance, name='web-orgadmin-instance'),
 ]
-
-org_patterns = [
-    url(r'^$', OrganizationAdminPages.Organization.list, name='web-organization'),
-    url(r'^create/', OrganizationAdminPages.Organization.create, name='web-organization-create'),
-    url(r'^info/(\S+)/', OrganizationAdminPages.Organization.instance, name='web-organization-instance'),
-]
-
 url_patterns = [
     url(r'home/', MainPages.home, name='web-home'),
     url(r'login/', MainPages.login, name='web-login'),
     url(r'^personal/', include(personal_patterns)),
     url(r'^users/', include(user_patterns)),
     url(r'^admins/', include(admin_patterns)),
-    url(r'^user_admins/', include(user_admin_patterns)),
-    url(r'^org_admins/', include(org_admin_patterns)),
     url(r'^organizations/', include(org_patterns)),
+    url(r'^orgAdmin/', include(orgAdmin_patterns)),
+    url(r'^userAdmin/', include(userAdmin_patterns)),
+
 ]
