@@ -884,16 +884,12 @@ class CategorySerializers(object):
     class Category(object):
         # admin - 机构正在使用的题库
         class ListOrgAdmin(serializers.ModelSerializer):
-
-            class ListAdmin(serializers.ModelSerializer):
-                class Meta:
-                    model = Category
-                    exclude = ('problems',)
-                    read_only_fields = ('title', 'introduction', 'source', 'author',
-                                        'number_problem')
-
-            category = ListAdmin(read_only=True)
             category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category')
+            title = serializers.SlugRelatedField(slug_field='title', read_only=True, source='category')
+            introduction = serializers.SlugRelatedField(slug_field='introduction', read_only=True, source='category')
+            source = serializers.SlugRelatedField(slug_field='source', read_only=True, source='category')
+            author = serializers.SlugRelatedField(slug_field='author', read_only=True, source='category')
+            number_problem = serializers.SlugRelatedField(slug_field='number_problem', read_only=True, source='category')
 
             def create(self, validated_data):
                 organization = validated_data['organization']  # 得到parent的org
@@ -909,7 +905,7 @@ class CategorySerializers(object):
 
             class Meta:
                 model = OrganizationCategoryRelation
-                fields = ('id', 'category', 'category_id')
+                fields = ('id', 'category_id', 'title', 'introduction', 'source', 'author', 'number_problem')
                 read_only_fields = _RESOURCE_READONLY
 
         # admin - 机构正在使用的题库
