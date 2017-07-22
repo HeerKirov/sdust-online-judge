@@ -6,3 +6,23 @@
   <a class="nav-link {% block nav_organization %}{% endblock %}" href="{% url 'web-organization' %}">所有机构</a>
 </li>
 {% endblock %}
+{% block sub_content %}
+<div class="container">
+<div class="row">
+<div class="col-lg-3 col-md-4">
+    <div class="container">
+        <nav class="flex-colu0mn nav-pills">
+            <a class="nav-link{% block nav_basic_info %}{% endblock %}"href="{% url 'web-organization-instance' oid %}">基本信息</a>
+            <a class="nav-link{% block nav_using_category %}{% endblock %}"href="{% url 'web-organization-categories' oid %}">正在使用的题库</a>
+        </nav>
+    </div>
+    <br class="hidden-md-up">
+    <br class="hidden-md-up">
+</div>
+<div class="col-1 row">
+    <div class="nav-divider hidden-sm-down"></div>
+</div>
+    {% block sub_content2 %}{% endblock %}
+</div>
+</div>
+{% endblock %}

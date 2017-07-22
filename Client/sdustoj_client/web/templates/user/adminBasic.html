@@ -6,12 +6,12 @@
   <a class="nav-link {% block nav_all_user %}{% endblock %}" href="{% url 'web-user-all' %}">所有用户</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {% block nav_admin %}{% endblock %}" href="{% url 'web-admin-all' %}">全局管理员</a>
+  <a class="nav-link {% block nav_admin %}{% endblock %}" href="{% url 'web-admin-all' %}">所有管理员</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {% block nav_user_admin %}{% endblock %}" href="{% url 'web-admin-useradmin' %}">用户管理员</a>
+  <a class="nav-link {% block nav_userAdmin %}{% endblock %}" href="{% url 'web-admin-useradmin' %}">用户管理员</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {% block nav_org_admin %}{% endblock %}" href="{% url 'web-admin-orgadmin' %}">机构管理员</a>
+  <a class="nav-link {% block nav_orgAdmin %}{% endblock %}" href="{% url 'web-admin-orgadmin' %}">机构管理员</a>
 </li>
 {% endblock %}

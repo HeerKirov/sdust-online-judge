@@ -1,9 +1,9 @@
 {% extends "user/adminBasic.html" %}
 {% load staticfiles %}
 
-{% block title %}创建机构管理员{% endblock %}
+{% block title %}管理用户管理员{% endblock %}
 
-{% block nav_org_admin %}active{% endblock %}
+{% block nav_userAdmin %}active{% endblock %}
 
 {% block sub_content %}
 <div class="container">
@@ -18,8 +18,8 @@
 SATable.SimpleAjaxForm({
   id: 'all-user',
   method: 'POST',
-  toSuccess: '{% url 'web-admin-orgadmin' %}',
-  url: '{% url 'admin-org-admin-list' %}',
+  toSuccess: '{% url 'web-admin-useradmin' %}',
+  url: '{% url 'admin-user-admin-list' %}',
   items: [
     {
       name: 'available',
@@ -31,7 +31,7 @@ SATable.SimpleAjaxForm({
       name: 'is_staff',
       caption: '管理员',
       type: 'Boolean',
-      defaultTrue: true
+      defaultTrue: false
     },
     {
       name: 'identities',
@@ -40,8 +40,8 @@ SATable.SimpleAjaxForm({
       typeInfo: {
         many: true,
         choices: [
-{#          { text: '超级管理员', value: 'ROOT' },#}
-{#          { text: '用户管理员', value: 'USER_ADMIN' },#}
+          { text: '超级管理员', value: 'ROOT' },
+          { text: '用户管理员', value: 'USER_ADMIN' },
           { text: '机构管理员', value: 'ORG_ADMIN' },
         ]
       }

@@ -1,0 +1,62 @@
+{% extends "organization/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}正在使用的题库{% endblock %}
+
+{% block nav_organization %} active {% endblock %}
+{% block nav_using_category %} active {% endblock %}
+
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="organization"></div>
+</div>
+
+{% endblock %}
+
+
+{% block script %}
+<script>
+SATable.DRFTable({
+  id: 'organization',
+  title: '正在使用题库',
+  url: "{% url 'admin-organization-categories-list' oid %}",
+  search: true,
+  columns: [
+    { name: 'name', caption: '题库ID', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-organization-categories' oid %}info/', key: 'name' } },
+    { name: "caption", caption: "名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-organization-categories' oid %}info/', key: 'name' } },
+    { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
+    { name: 'update_time', caption: '最后更新', sort: true, type: 'Datetime' },
+    { name: "available", caption: "可用", type: 'Boolean' },
+  ],
+  createURL: "{% url 'web-categories-create' oid %}"
+})
+</script>
+{% comment %}<script>
+SATable.DRFTable({
+    id: 'categories',
+    title: '正在使用的题库',
+    url: "{% url 'admin-organization-categories-list' %}",
+    search: true,
+    colums;
+})
+</script>{% endcomment %}
+{% endblock %}
+
+
+{% comment %}<script>
+SATable.DRFTable({
+  id: 'organization',
+  title: '所有机构',
+  url: "{% url 'admin-organization-categories-list' %}",
+  search: true,
+  columns: [
+    { name: 'name', caption: '题库ID', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-organization-categories' %}info/', key: 'name' } },
+    { name: "caption", caption: "名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-organization-categories' %}info/', key: 'name' } },
+    { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
+    { name: 'update_time', caption: '最后更新', sort: true, type: 'Datetime' },
+    { name: "available", caption: "可用", type: 'Boolean' },
+  ],
+  createURL: "{% url 'web-organization-create' %}"
+})
+</script>{% endcomment %}
