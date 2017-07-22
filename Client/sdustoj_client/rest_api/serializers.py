@@ -739,6 +739,7 @@ class OrgUserSerializers(object):
 
 class OrganizationSerializers(object):
     class Organization(object):
+        # admin - 机构
         class ListAdmin(serializers.ModelSerializer):
             parent = serializers.SlugRelatedField(
                 allow_null=False, default=getattr(Organization, 'objects').get(name='ROOT'),
@@ -780,6 +781,7 @@ class OrganizationSerializers(object):
                                     'number_problems',
                                     'creator', 'create_time', 'updater', 'update_time')
 
+        # 机构
         class List(serializers.ModelSerializer):
             parent = serializers.SlugRelatedField(
                 read_only=True, allow_null=False, default=getattr(Organization, 'objects').get(name='ROOT'),
@@ -806,6 +808,7 @@ class OrganizationSerializers(object):
                                     'parent', 'parent_caption'
                                     'creator', 'create_time', 'updater', 'update_time')
 
+        # admin - 机构
         class InstanceAdmin(serializers.ModelSerializer):
             parent = serializers.SlugRelatedField(
                 allow_null=False, default=getattr(Organization, 'objects').get(name='ROOT'),
@@ -848,6 +851,7 @@ class OrganizationSerializers(object):
                                     'number_problems',
                                     'creator', 'create_time', 'updater', 'update_time')
 
+        # 机构
         class Instance(serializers.ModelSerializer):
             parent = serializers.SlugRelatedField(
                 read_only=True, allow_null=False, default=getattr(Organization, 'objects').get(name='ROOT'),
@@ -878,6 +882,7 @@ class OrganizationSerializers(object):
 
 class CategorySerializers(object):
     class Category(object):
+        # admin - 机构正在使用的题库
         class ListOrgAdmin(serializers.ModelSerializer):
 
             class ListAdmin(serializers.ModelSerializer):
@@ -907,15 +912,14 @@ class CategorySerializers(object):
                 fields = ('id', 'category', 'category_id')
                 read_only_fields = _RESOURCE_READONLY
 
+        # admin - 机构正在使用的题库
         class InstanceOrgAdmin(serializers.ModelSerializer):
             class InstanceAdmin(serializers.ModelSerializer):
                 problems = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
                 class Meta:
                     model = Category
-                    fields = ('problems',)
-                    read_only_fields = ('title', 'introduction', 'source', 'author',
-                                        'number_problem')
+                    fields = ('problems', 'title', 'introduction', 'source', 'author', 'number_problem')
             category = InstanceAdmin(read_only=True)
 
             class Meta:
@@ -923,7 +927,28 @@ class CategorySerializers(object):
                 fields = ('id', 'category')
                 read_only_fields = _RESOURCE_READONLY
 
+        # admin - 机构可用的题库
         class ListAvailableOrgAdmin(serializers.ModelSerializer):
             class Meta:
                 model = Category
                 exclude = ('problems',)
+
+
+class CourseSerializers(object):
+    class CourseMeta(object):
+        # 机构下的课程基类
+        class ListOrg(serializers.ModelSerializer):
+            class Meta:
+                model = CourseMeta
+                exclude = ('organization', 'categories')
+                read_only_fields = ('number_courses',
+                                    'number_course_groups',
+                                    'number_categories',
+                                    'number_problems',
+                                    'creator', 'updater', 'create_time', 'update_time',)
+
+    class Course(object):
+        pass
+
+    class CourseGroup(object):
+        pass
