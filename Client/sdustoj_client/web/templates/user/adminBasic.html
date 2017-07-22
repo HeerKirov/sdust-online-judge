@@ -8,4 +8,10 @@
 <li class="nav-item">
   <a class="nav-link {% block nav_admin %}{% endblock %}" href="{% url 'web-admin-all' %}">全局管理员</a>
 </li>
+<li class="nav-item">
+  <a class="nav-link {% block nav_user_admin %}{% endblock %}" href="{% url 'web-admin-useradmin' %}">用户管理员</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link {% block nav_org_admin %}{% endblock %}" href="{% url 'web-admin-orgadmin' %}">机构管理员</a>
+</li>
 {% endblock %}

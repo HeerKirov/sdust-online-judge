@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from .models import IdentityChoices, SITE_IDENTITY_CHOICES
+from .models import IdentityChoices, SITE_IDENTITY_CHOICES, ORG_IDENTITY_CHOICES, Organization, UserProfile
+from .utils import is_parent_organizations, is_parent_organization
 
 
 class IsSelf(BasePermission):
@@ -11,13 +12,16 @@ class IsSelf(BasePermission):
         return user == obj or user == obj.user
 
 
-class SitePermission(BasePermission):
+class AuthorityPermission(BasePermission):
     read_identities = []
     write_identities = []
 
+
+class SitePermission(AuthorityPermission):  # 网站管理型permission的基类。
+
     @staticmethod
     def _has_site_identity(expected_identities, user_identities, request):
-        if request:
+        if request:  # 这是什么……
             pass
         for identity in expected_identities:
             if identity in SITE_IDENTITY_CHOICES and identity in user_identities:
@@ -28,35 +32,70 @@ class SitePermission(BasePermission):
         user = request.user
         if not user.is_authenticated:
             return False
-        identities = user.profile.identities
+        identities = user.profile.identities  # 取得权限的json数据
         if request.method in SAFE_METHODS:
             return self._has_site_identity(self.read_identities, identities, request)
         else:
             return self._has_site_identity(self.write_identities, identities, request)
 
 
-class OrgPermission(BasePermission):
-    read_identities = []
-    write_identities = []
+class OrgPermission(AuthorityPermission):  # 机构内的permission的基类。
 
     @staticmethod
-    def _has_site_identity(expected_identities, user_identities, request):
+    def _has_org_identity(expected_identities, user_identities, request):
         if request:
             pass
         for identity in expected_identities:
-            if identity in SITE_IDENTITY_CHOICES and identity in user_identities:
-                return True
+            if identity in user_identities:
+                if identity in SITE_IDENTITY_CHOICES and user_identities[identity] is True:
+                    return True
+                elif identity in ORG_IDENTITY_CHOICES and len(user_identities[identity]) > 0:
+                    return True
         return False
 
     def has_permission(self, request, view):
+
         user = request.user
         if not user.is_authenticated:
             return False
         identities = user.profile.identities
         if request.method in SAFE_METHODS:
-            return self._has_site_identity(self.read_identities, identities, request)
+            id_check = self.read_identities
         else:
-            return self._has_site_identity(self.write_identities, identities, request)
+            id_check = self.write_identities
+        result = self._has_org_identity(id_check, identities, request)
+        print("%s method: %s result: %s" % (type(self), request.method, result))
+        return result
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        identities = user.profile.identities
+        if request.method in SAFE_METHODS:
+            id_check = self.read_identities
+        else:
+            id_check = self.write_identities
+        for identity in id_check:
+            if identity in identities:  # 这表示用户有这个权限的登记
+                if identity in ORG_IDENTITY_CHOICES:
+                    org_id = identities[identity]  # 获得权限所在的org的id的list
+                    if isinstance(obj, Organization):  # 如果要查看的目标是机构的一个实例
+                        if is_parent_organizations(org_id, obj.id):  # 判断是否要查看的目标机构在认证信息的值之中。
+                            return True
+                    elif hasattr(obj, 'organization_id'):
+                        # 不是一个实例，要查看的目标时其他的目标，那么判断是否该目标的组织所属是不是在user所属组织中
+                        if is_parent_organizations(org_id, obj.organization_id):
+                            return True
+                    elif isinstance(obj, UserProfile):  # 该obj不是有组织归属的实例，但是一个user。
+                        organizations = obj.get_organizations()  # 该用户关联的所有机构
+                        for organization in organizations:
+                            if is_parent_organizations(org_id, organization):
+                                return True
+                    else:  # 是别的什么东西
+                        pass
+                else:  # 如果是一个不是org权限的权限类型，那么不进行org判断直接True。
+                    return True
 
 
 class IsRoot(SitePermission):
@@ -74,3 +113,57 @@ class IsOrgAdmin(SitePermission):
     write_identities = [IdentityChoices.org_admin, IdentityChoices.root]
 
 
+class IsEduAdmin(OrgPermission):
+    read_identities = [IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
+    write_identities = [IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
+
+
+class IsEduAdminReadonly(OrgPermission):
+    read_identities = [IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
+    write_identities = [IdentityChoices.org_admin, IdentityChoices.root]
+
+
+class IsTeacher(OrgPermission):
+    read_identities = [IdentityChoices.teacher, IdentityChoices.root]
+    write_identities = [IdentityChoices.teacher, IdentityChoices.root]
+
+
+class IsTeacherReadonly(OrgPermission):
+    read_identities = [IdentityChoices.teacher, IdentityChoices.root]
+    write_identities = [IdentityChoices.root]
+
+
+class IsTeacherReadonlyOrEduAdmin(OrgPermission):
+    read_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root]
+    write_identities = [IdentityChoices.edu_admin, IdentityChoices.root]
+
+
+class IsStudent(OrgPermission):
+    read_identities = [IdentityChoices.student, IdentityChoices.root]
+    write_identities = [IdentityChoices.student, IdentityChoices.root]
+
+
+class IsStudentReadonly(OrgPermission):
+    read_identities = [IdentityChoices.student, IdentityChoices.root]
+    write_identities = [IdentityChoices.root]
+
+
+class IsStudentReadonlyOrEduAdmin(OrgPermission):
+    read_identities = [IdentityChoices.student, IdentityChoices.edu_admin, IdentityChoices.root]
+    write_identities = [IdentityChoices.edu_admin, IdentityChoices.root]
+
+
+class IsAnyOrg(OrgPermission):
+    read_identities = [
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+    ]
+    write_identities = [
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+    ]
+
+
+class IsAnyOrgReadonly(OrgPermission):
+    read_identities = [
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+    ]
+    write_identities = [IdentityChoices.root]

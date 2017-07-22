@@ -202,6 +202,19 @@ class UserProfile(Resource):
         profile.save()
         return profile
 
+    def get_organizations(self):
+        """
+        快速获得该用户关联的机构。仅在该用户是机构成员时才有有效结果。自动筛掉了root用户并按id排序.
+        :return: QuerySet<[Organization]>
+        """
+        user = self.user
+        edu_organizations = getattr(Organization, 'objects').filter(edu_admins__user=user)
+        teacher_organizations = getattr(Organization, 'objects').filter(teachers__user=user)
+        student_organizations = getattr(Organization, 'objects').filter(students__user=user)
+        organizations = edu_organizations | teacher_organizations | student_organizations
+        organizations = organizations.exclude(name='ROOT').order_by('id')
+        return organizations
+
 
 class Student(Resource):
     id = models.BigAutoField(primary_key=True)
@@ -350,6 +363,22 @@ class Organization(Resource):
         self.number_course_meta = number_course_meta
 
         self.save()
+
+    def available_categories(self):
+        """
+        获得所有该机构可用的题库的查询集。
+        :return: QuerySet<[Category]>
+        """
+        org_root = Organization.objects.filter(name='ROOT').first()  # 获得org内的root机构
+        if org_root.id == self.id:  # 自身是root机构，全题库
+            return Category.objects
+        elif self.parent is not None:
+            if self.parent.id == org_root.id:  # 上级是root机构，全题库
+                return Category.objects
+            else:  # 不是，需要从上级题库中筛选
+                return self.parent.categories
+        else:  # 无上级(错误),全题库
+            return Category.objects
 
     def __str__(self):
         return '<Organization %s: %s>' % (self.name, self.caption)
@@ -563,6 +592,9 @@ class Category(models.Model):
                                       through_fields=('category', 'problem'))
     number_problem = models.IntegerField(default=0)
 
+    def __str__(self):
+        return "<Category %s: %s>" % (self.id, self.title)
+
 
 class CategoryProblemRelation(models.Model):
     id = models.BigIntegerField(primary_key=True)
@@ -572,6 +604,9 @@ class CategoryProblemRelation(models.Model):
                                 to_field='id', on_delete=models.CASCADE)
     directory = pg_fields.ArrayField(models.CharField(max_length=128))
 
+    def __str__(self):
+        return "<Category - Problem Relation %s: %s - %s>" % (self.id, self.category.id, self.problem.id)
+
 
 class OrganizationCategoryRelation(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -579,6 +614,9 @@ class OrganizationCategoryRelation(models.Model):
                                      to_field='id', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, related_name='organization_relations',
                                  to_field='id', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "<Organization - Category Relation %s: %s - %s>" % (self.id, self.organization.name, self.category.id)
 
 
 class CourseMetaCategoryRelation(models.Model):
@@ -589,6 +627,9 @@ class CourseMetaCategoryRelation(models.Model):
                                     to_field='id', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, related_name='course_meta_relations',
                                  to_field='id', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "<CourseMeta - Category Relation %s: %s - %s>" % (self.id, self.course_meta.id, self.category.id)
 
 
 # -- Submission ---------------------------------------------------------------

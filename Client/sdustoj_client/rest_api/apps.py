@@ -24,19 +24,19 @@ def check_init_user():
         if 'sex' in INIT_USER_SETTINGS and INIT_USER_SETTINGS['sex'] in UserProfile.SEX_CHOICES:
             profile.sex = INIT_USER_SETTINGS['sex']
         if 'phone' in INIT_USER_SETTINGS:
-            profile.name = INIT_USER_SETTINGS['phone']
+            profile.phone = INIT_USER_SETTINGS['phone']
         if 'email' in INIT_USER_SETTINGS:
-            profile.name = INIT_USER_SETTINGS['email']
+            profile.email = INIT_USER_SETTINGS['email']
         if 'github' in INIT_USER_SETTINGS:
-            profile.name = INIT_USER_SETTINGS['github']
+            profile.github = INIT_USER_SETTINGS['github']
         if 'qq' in INIT_USER_SETTINGS:
-            profile.name = INIT_USER_SETTINGS['qq']
-        if 'weixin' in INIT_USER_SETTINGS:
-            profile.name = INIT_USER_SETTINGS['weixin']
+            profile.qq = INIT_USER_SETTINGS['qq']
+        if 'wechat' in INIT_USER_SETTINGS:
+            profile.wechat = INIT_USER_SETTINGS['wechat']
         if 'blog' in INIT_USER_SETTINGS:
-            profile.name = INIT_USER_SETTINGS['blog']
+            profile.blog = INIT_USER_SETTINGS['blog']
         if 'introduction' in INIT_USER_SETTINGS:
-            profile.name = INIT_USER_SETTINGS['introduction']
+            profile.introduction = INIT_USER_SETTINGS['introduction']
         profile.identities = {IdentityChoices.root: True}
         profile.save()
         print('--- Done')

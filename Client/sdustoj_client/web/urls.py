@@ -20,6 +20,18 @@ admin_patterns = [
     url(r'^info/(\S+)/', UserAdminPages.Admin.instance, name='web-admin-instance'),
 ]
 
+user_admin_patterns = [
+    url(r'^$', UserAdminPages.UserAdmin.list, name='web-admin-useradmin'),
+    url(r'^create/', UserAdminPages.UserAdmin.create, name='web-useradmin-create'),
+    url(r'^info/(\S+)/', UserAdminPages.UserAdmin.instance, name='web-useradmin-instance'),
+]
+
+org_admin_patterns = [
+    url(r'^$', UserAdminPages.OrgAdmin.list, name='web-admin-orgadmin'),
+    url(r'^create/', UserAdminPages.OrgAdmin.create, name='web-orgadmin-create'),
+    url(r'^info/(\S+)/', UserAdminPages.OrgAdmin.instance, name='web-orgadmin-instance'),
+]
+
 org_patterns = [
     url(r'^$', OrganizationAdminPages.Organization.list, name='web-organization'),
     url(r'^create/', OrganizationAdminPages.Organization.create, name='web-organization-create'),
@@ -32,5 +44,7 @@ url_patterns = [
     url(r'^personal/', include(personal_patterns)),
     url(r'^users/', include(user_patterns)),
     url(r'^admins/', include(admin_patterns)),
+    url(r'^user_admins/', include(user_admin_patterns)),
+    url(r'^org_admins/', include(org_admin_patterns)),
     url(r'^organizations/', include(org_patterns)),
 ]

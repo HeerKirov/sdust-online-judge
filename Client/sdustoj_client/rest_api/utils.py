@@ -2,7 +2,7 @@ from rest_framework import viewsets, mixins, status, exceptions, serializers
 from django.utils import timezone
 from rest_framework.filters import FilterSet
 import django_filters
-from .models import IdentityChoices
+from .models import IdentityChoices, Organization
 from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 
@@ -10,10 +10,62 @@ from django.shortcuts import get_object_or_404
 # -- Tools ----
 
 def dict_sub(dictionary, *args):
+    """
+    根据参数列表，返回一个字典结构的一部分。
+    :param dictionary: 
+    :param args: 
+    :return: 
+    """
     ans = {}
     for a in args:
         ans[a] = dictionary[a]
     return ans
+
+
+def is_parent_organization(base=None, goal=None):
+    """
+    判断base是否是goal的一个子机构。
+    :param base: 基org。可以为id(int)或org。
+    :param goal: 目标org。可以为id(int)或org。
+    :return: 
+    """
+    if base is None or goal is None:
+        return False
+    if not isinstance(base, Organization):
+        if isinstance(base, str):
+            base = Organization.objects.filter(name=base).first()
+        else:
+            base = Organization.objects.filter(id=base).first()
+    if not isinstance(goal, Organization):
+        if isinstance(goal, str):
+            goal = Organization.objects.filter(name=goal).first()
+        else:
+            goal = Organization.objects.filter(id=goal).first()
+
+    root = Organization.objects.filter(name='ROOT').first()
+    checked = set()
+    cur = base
+    while cur is not None and (goal.id == root.id or cur.id != root.id) and cur.id not in checked:
+        if cur.id == goal.id:
+            return True
+        checked.add(cur.id)
+        cur = cur.parent
+    return False
+
+
+def is_parent_organizations(base, goal=None):
+    """
+    判断base列表是否存在goal的子机构。
+    :param base: 一个机构列表
+    :param goal: 一个机构
+    :return: 
+    """
+    if base is None or goal is None:
+        return False
+    for i in base:
+        if is_parent_organization(i, goal):
+            return True
+    return False
 
 
 # -- Functions --------------------------------------------------------------------------
@@ -125,6 +177,31 @@ class NestedMixin(object):
         return parent_related_name, parent
 
 
+class OrgNestedMixin(object):
+    """
+    专供parent为org的user使用的混入类。仅重写了set_queryset函数以契合通用的identity查询模式。
+    """
+    parent_queryset = Organization.objects.all()
+    parent_lookup = None
+    parent_pk = 'name'
+    parent_related_name = None
+    parent_resource_name = 'organization'
+
+    def _set_queryset(self, **kwargs):
+        parent_queryset = getattr(self, 'parent_queryset')  # Organization的查询集
+        parent_lookup = getattr(self, 'parent_lookup')  # 在url中的资源代号
+        parent_pk = getattr(self, 'parent_pk')  # 在Organization中的查询键
+        parent_related_name = getattr(self, 'parent_related_name')  # 与上级model的关联名称
+        parent_resource_name = getattr(self, 'parent_resource_name')  # 导入到下级资源的名称
+
+        lookup = kwargs[parent_lookup]  # parent的id名
+        parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})
+        org_id = parent.id
+        self.queryset = self.queryset.filter(**{parent_related_name: org_id}).all()
+
+        return parent_resource_name, parent
+
+
 class ListNestedMixin(mixins.ListModelMixin):
     def list(self, request, *args, **kwargs):
         getattr(self, '_set_queryset')(**kwargs)
@@ -166,11 +243,24 @@ class ListResourceViewSet(mixins.ListModelMixin,
     pass
 
 
+class ListReadonlyResourceViewSet(mixins.ListModelMixin,
+                                  CreateResourceMixin,
+                                  ExtraDataMixin,
+                                  viewsets.GenericViewSet):
+    pass
+
+
 class InstanceResourceViewSet(mixins.RetrieveModelMixin,
                               UpdateResourceMixin,
                               mixins.DestroyModelMixin,
                               ExtraDataMixin,
                               viewsets.GenericViewSet):
+    pass
+
+
+class InstanceReadonlyResourceViewSet(mixins.RetrieveModelMixin,
+                                      ExtraDataMixin,
+                                      viewsets.GenericViewSet):
     pass
 
 
