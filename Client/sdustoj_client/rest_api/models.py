@@ -362,6 +362,9 @@ class Organization(Resource):
 
         self.number_course_meta = number_course_meta
 
+        # todo number_courses number_course_groups number_categories number_problems都还没有做！
+        self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(organization=self).count()
+
         self.save()
 
     def available_categories(self):
