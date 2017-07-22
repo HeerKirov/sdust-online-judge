@@ -64,7 +64,6 @@ class OrgPermission(AuthorityPermission):  # 机构内的permission的基类。
         else:
             id_check = self.write_identities
         result = self._has_org_identity(id_check, identities, request)
-        print("%s method: %s result: %s" % (type(self), request.method, result))
         return result
 
     def has_object_permission(self, request, view, obj):

@@ -2,7 +2,7 @@ from rest_framework import routers
 from rest_framework_nested.routers import NestedSimpleRouter
 
 from .views import PersonalViewSets, UserViewSets
-from .views import OrganizationViewSets, CategoryViewSet
+from .views import OrganizationViewSets, CategoryViewSet, CourseViewSet
 
 
 admin_router = routers.DefaultRouter()
@@ -82,6 +82,8 @@ api_organization_router.register(
     r'students', UserViewSets.OrgUserList.StudentViewSet, base_name='api-organization-student')
 api_organization_router.register(
     r'students', UserViewSets.OrgUserInstance.StudentViewSet, base_name='api-organization-student')
+api_organization_router.register(
+    r'course-metas', CourseViewSet.CourseMetaList.CourseMetaOrgViewSet, base_name='api-organization-course-meta')
 # --------
 
 api_patterns = []
