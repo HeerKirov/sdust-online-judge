@@ -3,7 +3,7 @@
 
 {% block title %}管理用户管理员{% endblock %}
 
-{% block nav_user_admin %}active{% endblock %}
+{% block nav_userAdmin %}active{% endblock %}
 
 {% block sub_content %}
 <div class="container">
@@ -23,7 +23,7 @@ SATable.DRFTable({
   columns: [
     { name: 'username', caption: '用户名', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'web-admin-useradmin' %}info/', key: 'username' } },
     { name: 'name', caption: '姓名', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-admin-useradmin' %}info/', key: 'username' } },
-    { name: "is_staff", caption: "全局管理员", type: 'Boolean' },
+    { name: "is_staff", caption: "用户管理员", type: 'Boolean' },
     { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
     { name: 'last_login', caption: '最后登录', sort: true, type: 'Datetime' },
     { name: "available", caption: "可用", type: 'Boolean' },

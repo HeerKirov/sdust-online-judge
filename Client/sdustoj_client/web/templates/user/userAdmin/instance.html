@@ -1,9 +1,9 @@
 {% extends "user/adminBasic.html" %}
 {% load staticfiles %}
 
-{% block title %}查看机构管理员{% endblock %}
+{% block title %}编辑用户管理员{% endblock %}
 
-{% block nav_org_admin %}active{% endblock %}
+{% block nav_userAdmin %}active{% endblock %}
 
 {% block sub_content %}
 <div class="container row justify-content-sm-center">
@@ -23,10 +23,10 @@ SATable.SimpleAjaxInfo({
   getMethod: 'GET',
   updateMethod: 'PATCH',
   removeMethod: 'DELETE',
-  getURL: '{% url 'admin-org-admin-detail' u %}',
-  updateURL: '{% url 'admin-org-admin-detail' u %}',
-  removeURL: '{% url 'admin-org-admin-detail' u %}',
-  removeToURL: '{% url 'web-admin-orgadmin' %}',
+  getURL: '{% url 'admin-user-admin-detail' u %}',
+  updateURL: '{% url 'admin-user-admin-detail' u %}',
+  removeURL: '{% url 'admin-user-admin-detail' u %}',
+  removeToURL: '{% url 'web-admin-useradmin' %}',
   items: [
     { name: 'username', caption: '用户名', type: 'Text', readOnly: true },
     'Divide',
@@ -75,8 +75,8 @@ SATable.SimpleAjaxInfo({
   title: '修改密码',
   getMethod: 'GET',
   updateMethod: 'PATCH',
-  getURL: '{% url 'admin-org-admin-detail' u %}',
-  updateURL: '{% url 'admin-org-admin-detail' u %}',
+  getURL: '{% url 'admin-user-admin-detail' u %}',
+  updateURL: '{% url 'admin-user-admin-detail' u %}',
   items: [
     { name: 'password', caption: '新密码', type: 'Text', typeInfo: { writeOnly: true, password: true, max_length: 128 } },
   ]
