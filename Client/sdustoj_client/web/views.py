@@ -238,6 +238,12 @@ class OrganizationAdminPages(object):
             return Utils.Render.org_admin(request,'organization/categories/create.html',{
                 "oid": oid
             })
+        @staticmethod
+        def instance(request,oid,cid):
+            return Utils.Render.org_admin(request,'organization/categories/instance.html',{
+                "oid": oid,
+                "cid": cid
+            })
     class EduAdmin(object):
         @staticmethod
         def list(request,oid):
