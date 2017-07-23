@@ -28,6 +28,11 @@
           <a class="nav-link" href="{% url 'web-organization' %}">管理机构</a>
         </li>
         {% endif %}
+        {% if 'EDU_ADMIN' in user_info.identities or 'TEACHER_ADMIN' in user_info.identities or 'STUDENT' in user_info.identities%}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'web-myorganization'  %}">我的机构</a>
+        </li>
+        {% endif %}
       </ul>
       <ul class="navbar-nav mr-auto mr-sm-2">
         {% if not user.is_authenticated %}

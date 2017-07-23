@@ -136,7 +136,7 @@ def problem_meta(request):
     if not is_problem_admin(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'problem/metaProblem/list.html', {
+    return render(request, 'problem/metaProblem/list0.html', {
         'user': info
     })
 
@@ -183,7 +183,7 @@ def problem_meta_description(request, mid):
 
     meta_problem = get_object_or_404(MetaProblem.objects, id=int(mid))
 
-    return render(request, 'problem/metaProblem/description/list.html', {
+    return render(request, 'problem/metaProblem/description/list0.html', {
         'user': info,
         'meta_problem': meta_problem
     })
@@ -236,7 +236,7 @@ def problem_meta_sample(request, mid):
 
     meta_problem = get_object_or_404(MetaProblem.objects, id=int(mid))
 
-    return render(request, 'problem/metaProblem/sample/list.html', {
+    return render(request, 'problem/metaProblem/sample/list0.html', {
         'user': info,
         'meta_problem': meta_problem
     })
@@ -289,7 +289,7 @@ def problem_meta_test(request, mid):
 
     meta_problem = get_object_or_404(MetaProblem.objects, id=int(mid))
 
-    return render(request, 'problem/metaProblem/testData/list.html', {
+    return render(request, 'problem/metaProblem/testData/list0.html', {
         'user': info,
         'meta_problem': meta_problem
     })
@@ -343,7 +343,7 @@ def problem_meta_problem(request, mid):
 
     meta_problem = get_object_or_404(MetaProblem.objects, id=int(mid))
 
-    return render(request, 'problem/metaProblem/problem/list.html', {
+    return render(request, 'problem/metaProblem/problem/list0.html', {
         'user': info,
         'meta_problem': meta_problem
     })
@@ -397,7 +397,7 @@ def problem_meta_problem_limits(request, mid, pid):
     meta_problem = get_object_or_404(MetaProblem.objects, id=int(mid))
     prob = get_object_or_404(Problem.objects, id=int(pid))
 
-    return render(request, 'problem/metaProblem/problem/limit/list.html', {
+    return render(request, 'problem/metaProblem/problem/limit/list0.html', {
         'user': info,
         'meta_problem': meta_problem,
         'problem': prob
@@ -456,7 +456,7 @@ def problem_meta_problem_spj(request, mid, pid):
     meta_problem = get_object_or_404(MetaProblem.objects, id=int(mid))
     prob = get_object_or_404(Problem.objects, id=int(pid))
 
-    return render(request, 'problem/metaProblem/problem/specialJudge/list.html', {
+    return render(request, 'problem/metaProblem/problem/specialJudge/list0.html', {
         'user': info,
         'meta_problem': meta_problem,
         'problem': prob
@@ -515,7 +515,7 @@ def problem_meta_problem_iw(request, mid, pid):
     meta_problem = get_object_or_404(MetaProblem.objects, id=int(mid))
     prob = get_object_or_404(Problem.objects, id=int(pid))
 
-    return render(request, 'problem/metaProblem/problem/invalidWord/list.html', {
+    return render(request, 'problem/metaProblem/problem/invalidWord/list0.html', {
         'user': info,
         'meta_problem': meta_problem,
         'problem': prob
@@ -574,7 +574,7 @@ def problem_meta_problem_test(request, mid, pid):
     meta_problem = get_object_or_404(MetaProblem.objects, id=int(mid))
     prob = get_object_or_404(Problem.objects, id=int(pid))
 
-    return render(request, 'problem/metaProblem/problem/testDataRelation/list.html', {
+    return render(request, 'problem/metaProblem/problem/testDataRelation/list0.html', {
         'user': info,
         'meta_problem': meta_problem,
         'problem': prob
@@ -630,7 +630,7 @@ def problem(request):
     if not is_category_admin(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'problem/problem/list.html', {
+    return render(request, 'problem/problem/list0.html', {
         'user': info
     })
 
@@ -679,7 +679,7 @@ def problem_category(request):
     if not has_submission_access(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'problem/category/list.html', {
+    return render(request, 'problem/category/list0.html', {
         'user': info
     })
 
@@ -741,7 +741,7 @@ def problem_submissions(request):
     if not is_category_admin(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'submission/list.html', {
+    return render(request, 'submission/list0.html', {
         'user': info
     })
 
@@ -773,7 +773,7 @@ def client_clients(request):
     if not is_client_admin(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'client/client/list.html', {
+    return render(request, 'client/client/list0.html', {
         'user': info,
     })
 
@@ -820,7 +820,7 @@ def client_categories(request, cid):
 
     client = get_object_or_404(Client.objects, id=int(cid))
 
-    return render(request, 'client/client/categoryRelation/list.html', {
+    return render(request, 'client/client/categoryRelation/list0.html', {
         'user': info,
         'client': client
     })
@@ -871,7 +871,7 @@ def client_users(request):
     if not is_client_admin(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'client/user/list.html', {
+    return render(request, 'client/user/list0.html', {
         'user': info,
     })
 
@@ -916,7 +916,7 @@ def users(request):
     if not is_user_admin(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'user/list.html', {
+    return render(request, 'user/list0.html', {
         'user': info
     })
 
@@ -985,7 +985,7 @@ def environments(request):
     if not is_judge_admin(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'judge/environment/list.html', {
+    return render(request, 'judge/environment/list0.html', {
         'user': info
     })
 
@@ -1030,7 +1030,7 @@ def judges(request):
     if not is_judge_admin(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'judge/judge/list.html', {
+    return render(request, 'judge/judge/list0.html', {
         'user': info
     })
 
