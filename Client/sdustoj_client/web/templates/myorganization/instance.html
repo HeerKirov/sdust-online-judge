@@ -1,0 +1,54 @@
+{% extends "myorganization/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}机构信息{% endblock %}
+
+{% block nav_myorganization %}active{% endblock %}
+{% block nav_organization_info %} active {% endblock %}
+{% block sub_content2 %}
+
+  <div class="col-lg-8 col-md-10">
+    <div id="organization"></div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+SATable.SimpleAjaxInfo({
+  id: 'organization',
+  title: '机构信息',
+  getMethod: 'GET',
+  updateMethod: 'PATCH',
+  removeMethod: 'DELETE',
+  getURL: '{% url 'api-organization-detail' oid %}',
+  updateURL: '{% url 'api-organization-detail' oid %}',
+  removeURL: '{% url 'api-organization-detail' oid %}',
+  removeToURL: '{% url 'api-organization-list' %}',
+  items: [
+    { name: 'name', caption: '机构ID', type: 'Text', readOnly: true },
+    { name: 'caption', caption: '机构名称', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'parent', caption: '上级机构ID', type: 'Text', typeInfo: { max_length: 32 } },
+    { name: 'parent_caption', caption: '上级机构名称', type: 'Text', readOnly: true },
+    'Divide',
+    { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
+    'Divide',
+    { name: 'available', caption: '可用', type: 'Boolean' },
+    'Divide',
+    { name: 'creator', caption: '创建者', type: 'Text', readOnly: true },
+    { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },
+    { name: 'updater', caption: '最后更新者', type: 'Text', readOnly: true },
+    { name: 'update_time', caption: '最后更新时间', type: 'Datetime', readOnly: true },
+    'Divide',
+    { name: 'number_organizations', caption: '机构数量', type: 'Number', readOnly: true },
+    { name: 'number_students', caption: '学生数量', type: 'Number', readOnly: true },
+    { name: 'number_teachers', caption: '教师数量', type: 'Number', readOnly: true },
+    { name: 'number_admins', caption: '管理员数量', type: 'Number', readOnly: true },
+    { name: 'number_course_meta', caption: '课程基类数量', type: 'Number', readOnly: true },
+    { name: 'number_courses', caption: '课程数量', type: 'Number', readOnly: true },
+    { name: 'number_course_groups', caption: '课程组数量', type: 'Number', readOnly: true },
+    { name: 'number_categories', caption: '题库数量', type: 'Number', readOnly: true },
+  ]
+})
+</script>
+{% endblock %}
