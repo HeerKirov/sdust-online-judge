@@ -1,0 +1,32 @@
+{% extends "adminBasic.html" %}
+{% load staticfiles %}
+
+{% block sub_nav %}
+<li class="nav-item">
+  <a class="nav-link {% block nav_myorganization %}{% endblock %}" href="{% url 'web-organization' %}">所有机构</a>
+</li>
+{% endblock %}
+
+{% block sub_content %}
+<div class="container">
+  <div class="row">
+    <div class="col-lg-3 col-md-4">
+      <div class="container">
+        <nav class="nav flex-column nav-pills">
+          <a class="nav-link {% block nav_organization_info %}{% endblock %}" href="{% url 'web-myorganization-instance' oid %}">机构信息</a>
+          <a class="nav-link {% block nav_eduadmin %}{% endblock %}" href="">教务管理员</a>
+          <a class="nav-link {% block nav_teacher %}{% endblock %}" href="">教师</a>
+          <a class="nav-link {% block nav_student %}{% endblock %}" href="">学生</a>
+          <a class="nav-link {% block nav_course_meta %}{% endblock %}" href="{% url 'web-course-meta-list' oid %}">课程基类</a>
+        </nav>
+      </div>
+      <br class="hidden-md-up">
+      <br class="hidden-md-up">
+    </div>
+    <div class="col-1 row">
+      <div class="nav-divider hidden-sm-down"></div>
+    </div>
+    {% block sub_content2 %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
