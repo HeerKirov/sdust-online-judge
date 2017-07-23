@@ -185,34 +185,32 @@ class UserAdminPages(object):
         @staticmethod
         def instance(request, username):
             return Utils.Render.user_admin(request, 'user/admin/instance.html', {'u': username})
-#new********************************************************************************************************************
-
     class UserAdmin(object):
         @staticmethod
         def list(request):
-            return Utils.Render.user_admin(request, 'user/user-admin/list.html')
+            return Utils.Render.user_admin(request,'user/userAdmin/list.html')
 
         @staticmethod
         def create(request):
-            return Utils.Render.user_admin(request, 'user/user-admin/create.html')
+            return Utils.Render.user_admin(request,'user/userAdmin/create.html')
 
         @staticmethod
-        def instance(request, username):
-            return Utils.Render.user_admin(request, 'user/user-admin/instance.html', {'u': username})
+        def instance(request,username):
+            return Utils.Render.user_admin(request,'user/userAdmin/instance.html',{'u': username})
 
     class OrgAdmin(object):
         @staticmethod
         def list(request):
-            return Utils.Render.user_admin(request, 'user/org-admin/list.html')
+            return Utils.Render.user_admin(request,'user/orgAdmin/list.html')
 
         @staticmethod
         def create(request):
-            return Utils.Render.user_admin(request, 'user/org-admin/create.html')
+            return Utils.Render.user_admin(request,'user/orgAdmin/create.html')
 
         @staticmethod
-        def instance(request, username):
-            return Utils.Render.user_admin(request, 'user/org-admin/instance.html', {'u': username})
-#endnew ****************************************************************************************************************
+        def instance(request,username):
+            return Utils.Render.user_admin(request,'user/orgAdmin/instance.html',{'u': username})
+
 
 class OrganizationAdminPages(object):
     class Organization(object):
@@ -229,3 +227,35 @@ class OrganizationAdminPages(object):
             return Utils.Render.org_admin(request, 'organization/instance.html', {
                 'oid': oid
             })
+    class Category(object):
+        @staticmethod
+        def categories(request,oid):
+            return Utils.Render.org_admin(request,'organization/categories/list.html',{
+                'oid': oid
+            })
+        @staticmethod
+        def categoriescreate(request,oid):
+            return Utils.Render.org_admin(request,'organization/categories/create.html',{
+                "oid": oid
+            })
+    class EduAdmin(object):
+        @staticmethod
+        def list(request,oid):
+            return Utils.Render.org_admin(request,'organization/eduadmin/list.html',{
+                "oid": oid
+            })
+
+        @staticmethod
+        def create(request,oid):
+            return Utils.Render.org_admin(request,'organization/eduadmin/create.html',{
+                "oid": oid
+            })
+
+        @staticmethod
+        def instance(request ,oid ,uid):
+            return Utils.Render.org_admin(request,'organization/eduadmin/instance.html',{
+                "oid": oid,
+                "uid": uid
+            })
+
+
