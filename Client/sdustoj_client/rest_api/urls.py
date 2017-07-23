@@ -2,7 +2,7 @@ from rest_framework import routers
 from rest_framework_nested.routers import NestedSimpleRouter
 
 from .views import PersonalViewSets, UserViewSets
-from .views import OrganizationViewSets, CategoryViewSet, CourseViewSet
+from .views import OrganizationViewSets, CategoryViewSet, CourseViewSets
 
 
 admin_router = routers.DefaultRouter()
@@ -67,6 +67,12 @@ api_router.register(
     r'organizations', OrganizationViewSets.OrganizationList.OrganizationViewSet, base_name='api-organization')
 api_router.register(
     r'organizations', OrganizationViewSets.OrganizationInstance.OrganizationViewSet, base_name='api-organization')
+api_router.register(
+    r'course-metas', CourseViewSets.CourseMetaInstance.CourseMetaViewSet, base_name='api-course-meta')
+api_router.register(
+    r'courses', CourseViewSets.CourseInstance.CourseViewSet, base_name='api-course')
+api_router.register(
+    r'course-groups', CourseViewSets.CourseGroupInstance.CourseGroupViewSet, base_name='api-course-group')
 
 # --------
 api_organization_router = NestedSimpleRouter(api_router, r'organizations', lookup='organization')
@@ -83,9 +89,16 @@ api_organization_router.register(
 api_organization_router.register(
     r'students', UserViewSets.OrgUserInstance.StudentViewSet, base_name='api-organization-student')
 api_organization_router.register(
-    r'course-metas', CourseViewSet.CourseMetaList.CourseMetaOrgViewSet, base_name='api-organization-course-meta')
+    r'course-metas', CourseViewSets.CourseMetaList.CourseMetaOrgViewSet, base_name='api-organization-course-meta')
 # --------
+api_course_meta_router = NestedSimpleRouter(api_router, r'course-metas', lookup='course_meta')
+api_course_meta_router.register(
+    r'courses', CourseViewSets.CourseList.CourseViewSet, base_name='api-course-meta-course')
+api_course_meta_router.register(
+    r'course-groups', CourseViewSets.CourseGroupList.CourseGroupViewSet, base_name='api-course-meta-course-group')
+
 
 api_patterns = []
 api_patterns += api_router.urls
 api_patterns += api_organization_router.urls
+api_patterns += api_course_meta_router.urls

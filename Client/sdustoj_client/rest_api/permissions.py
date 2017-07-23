@@ -166,3 +166,12 @@ class IsAnyOrgReadonly(OrgPermission):
         IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
     ]
     write_identities = [IdentityChoices.root]
+
+
+class IsAnyOrgReadonlyOrEduAdmin(OrgPermission):
+    read_identities = [
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+    ]
+    write_identities = [
+        IdentityChoices.edu_admin, IdentityChoices.root
+    ]

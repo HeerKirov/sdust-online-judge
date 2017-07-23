@@ -1,5 +1,5 @@
 from django.conf.urls import url, include
-from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages
+from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages
 
 
 personal_patterns = [
@@ -22,6 +22,29 @@ admin_patterns = [
 
 org_patterns = [
     url(r'^$', OrganizationAdminPages.Organization.list, name='web-organization'),
+<<<<<<< HEAD
+<<<<<<< HEAD
+    url(r'^create/', OrganizationAdminPages.Organization.create, name='web-organization-create'),
+    url(r'^categories/(\S+)/create/',OrganizationAdminPages.Category.categoriescreate, name='web-categories-create'),
+    url(r'^categories/(\S+)/', OrganizationAdminPages.Category.categories,
+        name='web-organization-categories'),
+    url(r'^info/(\S+)/', OrganizationAdminPages.Organization.instance, name='web-organization-instance'),
+
+]
+
+userAdmin_patterns = [
+    url(r'^$', UserAdminPages.UserAdmin.list, name='web-admin-useradmin'),
+    url(r'^create/', UserAdminPages.UserAdmin.create, name='web-useradmin-create'),
+    url(r'^info/(\S+)/', UserAdminPages.UserAdmin.instance, name='web-useradmin-instance'),
+]
+
+orgAdmin_patterns = [
+    url(r'^$',UserAdminPages.OrgAdmin.list, name='web-admin-orgadmin'),
+    url(r'^create/',UserAdminPages.OrgAdmin.create, name='web-orgadmin-create'),
+    url(r'^info/(\S+)/',UserAdminPages.OrgAdmin.instance, name='web-orgadmin-instance'),
+=======
+=======
+>>>>>>> HeerKirov/master
     url(r'^create/$', OrganizationAdminPages.Organization.create, name='web-organization-create'),
     url(r'^info/([\w\-.+@]+)/categories/create/$',OrganizationAdminPages.Category.categoriescreate, name='web-categories-create'),
     url(r'^info/([\w\-.+@]+)/categories/info/([\w\-.+@]+)/$',OrganizationAdminPages.Category.instance, name='web-categories-instance'),
@@ -45,7 +68,20 @@ orgAdmin_patterns = [
     url(r'^$',UserAdminPages.OrgAdmin.list, name='web-admin-orgadmin'),
     url(r'^create/',UserAdminPages.OrgAdmin.create, name='web-orgadmin-create'),
     url(r'^info/([\w\-.+@]+)/',UserAdminPages.OrgAdmin.instance, name='web-orgadmin-instance'),
+<<<<<<< HEAD
+>>>>>>> HeerKirov/master
+=======
+>>>>>>> HeerKirov/master
 ]
+
+myOrg_patterns = [
+    url(r'^$', MyOrganizationPages.Organization.list, name='web-myorganization'),
+    url(r'^info/([\w\-.+@]+)/$', MyOrganizationPages.Organization.instance, name='web-myorganization-instance'),
+    url(r'^info/([\w\-.+@]+)/course-meta/$', MyOrganizationPages.CourseMeta.list, name='web-course-meta-list'),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/$', MyOrganizationPages.CourseMeta.instance, name='web-course-meta-instance'),
+
+]
+
 url_patterns = [
     url(r'home/', MainPages.home, name='web-home'),
     url(r'login/', MainPages.login, name='web-login'),
@@ -53,6 +89,7 @@ url_patterns = [
     url(r'^users/', include(user_patterns)),
     url(r'^admins/', include(admin_patterns)),
     url(r'^organizations/', include(org_patterns)),
+    url(r'^myOrganizations/', include(myOrg_patterns)),
     url(r'^orgAdmin/', include(orgAdmin_patterns)),
     url(r'^userAdmin/', include(userAdmin_patterns)),
 
