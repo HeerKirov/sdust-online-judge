@@ -171,6 +171,25 @@ class UserProfile(Resource):
         self.identities = identities
         self.save()
 
+    def update_courses_cache(self):
+        """
+        刷新缓存的课程cid。
+        :return: 
+        """
+        courses = {}
+        # 刷新teaching courses
+        teachers = getattr(self, 'teacher_identities')
+        if teachers is not None:
+            for c in (teacher.courses.all() for teacher in teachers.all()):
+                courses[c.cid] = 'teaching'
+        # 刷新learning courses
+        students = getattr(self, 'student_identities')
+        if students is not None:
+            for c in (student.courses.all() for student in students.all()):
+                courses[c.cid] = 'learning'
+        self.courses = courses
+        self.save()
+
     @staticmethod
     def create_profile(**kwargs):
         username = kwargs['username']
@@ -207,13 +226,53 @@ class UserProfile(Resource):
         快速获得该用户关联的机构。仅在该用户是机构成员时才有有效结果。自动筛掉了root用户并按id排序.
         :return: QuerySet<[Organization]>
         """
-        user = self.user
-        edu_organizations = getattr(Organization, 'objects').filter(edu_admins__user=user)
-        teacher_organizations = getattr(Organization, 'objects').filter(teachers__user=user)
-        student_organizations = getattr(Organization, 'objects').filter(students__user=user)
-        organizations = edu_organizations | teacher_organizations | student_organizations
-        organizations = organizations.exclude(name='ROOT').order_by('id')
-        return organizations
+        # user = self.user
+        # edu_organizations = getattr(Organization, 'objects').filter(edu_admins__user=user)
+        # teacher_organizations = getattr(Organization, 'objects').filter(teachers__user=user)
+        # student_organizations = getattr(Organization, 'objects').filter(students__user=user)
+        # organizations = edu_organizations | teacher_organizations | student_organizations
+        # organizations = organizations.exclude(name='ROOT').order_by('id')
+        # return organizations
+        organizations_id = []
+        for identity, value in self.identities.items():
+            if identity in ORG_IDENTITY_CHOICES and len(value) > 0:
+                organizations_id += value
+        return Organization.objects.filter(id__in=organizations_id).all()
+
+    def get_courses(self, **kwargs):
+        """
+        快速获得该用户关联的课程。
+        当存在参数时，按照参数筛选“teaching”和“learning”的课程。如果参数有“admin”且用户是教务管理员，则列出全部机构内课程。
+        1.通过course.objects->student.objects->id匹配，二重积
+        2.通过relation.objects->student.id匹配，一重积，不过要并集
+        3.通过cache缓存，course.objects->id匹配，一重积，可以直接用in语法
+        根据设计文档，这里选择了方案3.
+        :return: QuerySet<[Course]>
+        """
+        if len(kwargs) > 0:
+            teaching = 'teaching' in kwargs and kwargs['teaching'] is True
+            learning = 'learning' in kwargs and kwargs['learning'] is True
+            admin = 'admin' in kwargs and kwargs['admin'] is True
+        else:
+            teaching = True
+            learning = True
+            admin = True
+        courses_id = []
+        for course, c_type in self.courses.items():
+            if c_type == 'teaching' and teaching:
+                courses_id.append(course)
+            elif c_type == 'learning' and learning:
+                courses_id.append(course)
+        courses_edu = Course.objects.filter(cid__in=courses_id).all()
+        if admin:
+            organizations_id = []
+            for identity, value in self.identities.items():
+                if identity == IdentityChoices.edu_admin and len(value) > 0:
+                    organizations_id += value
+            courses_admin = Course.objects.filter(organization__id__in=organizations_id).all()
+        else:
+            courses_admin = Course.objects.none()
+        return courses_edu | courses_admin
 
 
 class Student(Resource):
