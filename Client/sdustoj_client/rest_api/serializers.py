@@ -944,8 +944,68 @@ class CourseSerializers(object):
                                     'number_problems',
                                     'creator', 'updater', 'create_time', 'update_time',)
 
+        class InstanceOrg(serializers.ModelSerializer):
+            class Meta:
+                model = CourseMeta
+                exclude = ('organization', 'categories')
+                read_only_fields = ('number_courses',
+                                    'number_course_groups',
+                                    'number_categories',
+                                    'number_problems',
+                                    'creator', 'updater', 'create_time', 'update_time',)
+
     class Course(object):
-        pass
+        class List(serializers.ModelSerializer):
+            meta = serializers.PrimaryKeyRelatedField(read_only=True)
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='caption', source='meta')
+
+            def create(self, validated_data):
+                unit = CourseUnit.objects.create(type='COURSE')
+                meta = validated_data['meta']
+                unit.save()
+                validated_data['course_unit'] = unit
+                validated_data['cid'] = unit.id
+                validated_data['organization'] = meta.organization
+                return super().create(validated_data)
+
+            class Meta:
+                model = Course
+                exclude = ('organization', 'course_unit', 'teachers', 'students',)
+                read_only_fields = ('cid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
+
+        class Instance(serializers.ModelSerializer):
+            meta = serializers.PrimaryKeyRelatedField(read_only=True)
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='caption', source='meta')
+
+            class Meta:
+                model = Course
+                exclude = ('organization', 'course_unit', 'teachers', 'students',)
+                read_only_fields = ('cid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
 
     class CourseGroup(object):
-        pass
+        class List(serializers.ModelSerializer):
+            meta = serializers.PrimaryKeyRelatedField(read_only=True)
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='caption', source='meta')
+
+            def create(self, validated_data):
+                unit = CourseUnit.objects.create(type='GROUP')
+                meta = validated_data['meta']
+                unit.save()
+                validated_data['course_unit'] = unit
+                validated_data['gid'] = unit.id
+                validated_data['organization'] = meta.organization
+                return super().create(validated_data)
+
+            class Meta:
+                model = CourseGroup
+                exclude = ('organization', 'course_unit', 'teachers', 'courses',)
+                read_only_fields = ('gid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
+
+        class Instance(serializers.ModelSerializer):
+            meta = serializers.PrimaryKeyRelatedField(read_only=True)
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='caption', source='meta')
+
+            class Meta:
+                model = CourseGroup
+                exclude = ('organization', 'course_unit', 'teachers', 'courses',)
+                read_only_fields = ('gid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
