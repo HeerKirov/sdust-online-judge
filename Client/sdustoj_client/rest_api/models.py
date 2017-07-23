@@ -324,7 +324,15 @@ class EduAdmin(Resource):
 class Organization(Resource):
     id = models.BigAutoField(primary_key=True)
 
-    name = models.CharField(max_length=32, unique=True)
+    name = models.CharField(
+        max_length=32,
+        unique=True,
+        help_text=_('Required. 32 characters or fewer. Letters, digits and @/./+/-/_ only.'),
+        validators=[AbstractUser.username_validator],
+        error_messages={
+            'unique': _("A organization with that name already exists."),
+        },
+    )
     caption = models.CharField(max_length=150)
     introduction = models.TextField(max_length=1024, null=True)
 
@@ -361,6 +369,9 @@ class Organization(Resource):
         self.number_admins = number_admins
 
         self.number_course_meta = number_course_meta
+
+        # todo number_courses number_course_groups number_categories number_problems都还没有做！
+        self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(organization=self).count()
 
         self.save()
 

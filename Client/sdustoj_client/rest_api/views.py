@@ -517,12 +517,25 @@ class CourseViewSet(object):
                 user = self.request.user
                 profile = user.profile
                 identities = profile.identities  # 权限列表
+                org_set = set()
                 for identity in identities:
-                    if identity in SITE_IDENTITY_CHOICES:  # 该账户拥有site管理员权限
-                        # todo
-                        break
-                    elif identity in ORG_IDENTITY_CHOICES:  # 该账户是机构内账户
-                        pass
+                    if identity in SITE_IDENTITY_CHOICES and identity is True:  # 该账户拥有site管理员权限
+                        return self.queryset
+                    elif identity in ORG_IDENTITY_CHOICES and len(identity)>0:  # 该账户是机构内账户
+                        # 逻辑：从identities的列表中，题目每一个org权限的所有org名称组成集合，
+                        # 然后去提取所有与这些名称相关的Organization
+                        for org in identity:
+                            org_set.add(org)
+                queryset = None
+                for org in org_set:
+                    if queryset is None:
+                        queryset = self.queryset.filter(organization__id=org)
+                    else:
+                        queryset = queryset | self.queryset.filter(organization__id=org)
+                if queryset is None:
+                    return CourseMeta.objects.none()
+                else:
+                    return queryset
 
     class CourseList(object):
         pass
