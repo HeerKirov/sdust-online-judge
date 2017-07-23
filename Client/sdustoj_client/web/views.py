@@ -240,9 +240,18 @@ class OrganizationAdminPages(object):
             })
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 =======
+>>>>>>> HeerKirov/master
+=======
+        @staticmethod
+        def instance(request,oid,cid):
+            return Utils.Render.org_admin(request,'organization/categories/instance.html',{
+                "oid": oid,
+                "cid": cid
+            })
 >>>>>>> HeerKirov/master
     class EduAdmin(object):
         @staticmethod

@@ -47,6 +47,7 @@ orgAdmin_patterns = [
 >>>>>>> HeerKirov/master
     url(r'^create/$', OrganizationAdminPages.Organization.create, name='web-organization-create'),
     url(r'^info/([\w\-.+@]+)/categories/create/$',OrganizationAdminPages.Category.categoriescreate, name='web-categories-create'),
+    url(r'^info/([\w\-.+@]+)/categories/info/([\w\-.+@]+)/$',OrganizationAdminPages.Category.instance, name='web-categories-instance'),
     url(r'^info/([\w\-.+@]+)/categories/$', OrganizationAdminPages.Category.categories,
         name='web-organization-categories'),
     url(r'^info/([\w\-.+@]+)/$', OrganizationAdminPages.Organization.instance, name='web-organization-instance'),
