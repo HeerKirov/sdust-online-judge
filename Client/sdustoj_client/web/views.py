@@ -130,6 +130,16 @@ class Utils(object):
                 context=context
             )
 
+        @staticmethod
+        def edu_admin(request, template, context=None):
+            return Utils.Render._identity_render(
+                request=request,
+                template=template,
+                id_expect=(IdentityChoices.edu_admin, IdentityChoices.root,),
+                context=context
+            )
+
+
 
 class MainPages(object):
     @staticmethod
@@ -264,4 +274,28 @@ class OrganizationAdminPages(object):
                 "uid": uid
             })
 
+class MyOrganizationPages(object):
+    class Organization(object):
+        @staticmethod
+        def list(request):
+            return Utils.Render.all_user(request, 'myorganization/list.html')
 
+        @staticmethod
+        def instance(request, oid):
+            return Utils.Render.all_user(request, 'myorganization/instance.html', {
+                'oid': oid
+            })
+
+    class CourseMeta(object):
+        @staticmethod
+        def list(request, oid):
+            return Utils.Render.edu_admin(request, 'myorganization/course-meta/list.html',{
+                'oid': oid
+            })
+
+        @staticmethod
+        def instance(request, oid, uid):
+            return Utils.Render.edu_admin(request, 'myorganization/course-meta/instance.html', {
+                'oid': oid,
+                "uid": uid
+            })
