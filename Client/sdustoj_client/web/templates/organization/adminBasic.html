@@ -14,6 +14,7 @@
         <nav class="flex-colu0mn nav-pills">
             <a class="nav-link{% block nav_basic_info %}{% endblock %}"href="{% url 'web-organization-instance' oid %}">基本信息</a>
             <a class="nav-link{% block nav_using_category %}{% endblock %}"href="{% url 'web-organization-categories' oid %}">正在使用的题库</a>
+            <a class="nav-link{% block nav_edu_admin %}{% endblock %}"href="{% url 'web-eduadmin-list' oid %}">教务管理员</a>
         </nav>
     </div>
     <br class="hidden-md-up">
