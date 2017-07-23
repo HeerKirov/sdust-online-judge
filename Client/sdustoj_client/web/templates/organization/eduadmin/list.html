@@ -4,35 +4,32 @@
 {% block title %}正在使用的题库{% endblock %}
 
 {% block nav_organization %} active {% endblock %}
-{% block nav_using_category %} active {% endblock %}
+{% block nav_edu_admin %} active {% endblock %}
 
 {% block sub_content2 %}
 
 <div class="col-lg-8 col-md-10">
-    <div id="organization"></div>
+    <div id="eduadmin"></div>
 </div>
 
 {% endblock %}
 
-
 {% block script %}
 <script>
 SATable.DRFTable({
-  id: 'organization',
-  title: '正在使用题库',
-  url: "{% url 'admin-organization-categories-list' oid %}",
+  id: 'eduadmin',
+  title: '教务管理员',
+  url: "{% url 'admin-organization-edu-admins-list' oid %}",
   search: true,
   columns: [
-    { name: 'name', caption: '题库ID', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-organization-categories' oid %}info/', key: 'name' } },
-    { name: "caption", caption: "名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-organization-categories' oid %}info/', key: 'name' } },
+    { name: 'username', caption: '题库ID', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-eduadmin-list' oid %}info/', key: 'username' } },
+    { name: "name", caption: "名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-eduadmin-list' oid %}info/', key: 'username' } },
     { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
     { name: 'update_time', caption: '最后更新', sort: true, type: 'Datetime' },
     { name: "available", caption: "可用", type: 'Boolean' },
   ],
-  createURL: "{% url 'web-categories-create' oid %}"
+  createURL: "{% url 'web-eduadmin-create' oid %}"
 })
 </script>
 
 {% endblock %}
-
-
