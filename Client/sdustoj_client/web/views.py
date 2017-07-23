@@ -239,8 +239,11 @@ class OrganizationAdminPages(object):
                 "oid": oid
             })
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
+=======
+>>>>>>> HeerKirov/master
     class EduAdmin(object):
         @staticmethod
         def list(request,oid):
@@ -260,6 +263,9 @@ class OrganizationAdminPages(object):
                 "oid": oid,
                 "uid": uid
             })
+<<<<<<< HEAD
+>>>>>>> HeerKirov/master
+=======
 >>>>>>> HeerKirov/master
 
 

@@ -23,6 +23,7 @@ admin_patterns = [
 org_patterns = [
     url(r'^$', OrganizationAdminPages.Organization.list, name='web-organization'),
 <<<<<<< HEAD
+<<<<<<< HEAD
     url(r'^create/', OrganizationAdminPages.Organization.create, name='web-organization-create'),
     url(r'^categories/(\S+)/create/',OrganizationAdminPages.Category.categoriescreate, name='web-categories-create'),
     url(r'^categories/(\S+)/', OrganizationAdminPages.Category.categories,
@@ -42,6 +43,8 @@ orgAdmin_patterns = [
     url(r'^create/',UserAdminPages.OrgAdmin.create, name='web-orgadmin-create'),
     url(r'^info/(\S+)/',UserAdminPages.OrgAdmin.instance, name='web-orgadmin-instance'),
 =======
+=======
+>>>>>>> HeerKirov/master
     url(r'^create/$', OrganizationAdminPages.Organization.create, name='web-organization-create'),
     url(r'^info/([\w\-.+@]+)/categories/create/$',OrganizationAdminPages.Category.categoriescreate, name='web-categories-create'),
     url(r'^info/([\w\-.+@]+)/categories/$', OrganizationAdminPages.Category.categories,
@@ -64,6 +67,9 @@ orgAdmin_patterns = [
     url(r'^$',UserAdminPages.OrgAdmin.list, name='web-admin-orgadmin'),
     url(r'^create/',UserAdminPages.OrgAdmin.create, name='web-orgadmin-create'),
     url(r'^info/([\w\-.+@]+)/',UserAdminPages.OrgAdmin.instance, name='web-orgadmin-instance'),
+<<<<<<< HEAD
+>>>>>>> HeerKirov/master
+=======
 >>>>>>> HeerKirov/master
 ]
 url_patterns = [
