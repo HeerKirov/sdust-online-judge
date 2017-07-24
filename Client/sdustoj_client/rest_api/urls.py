@@ -27,12 +27,10 @@ admin_router.register(
     r'users', UserViewSets.UserList.UserAdminViewSet, base_name='admin-user')
 admin_router.register(
     r'users', UserViewSets.UserInstance.UserAdminViewSet, base_name='admin-user')
-
 admin_router.register(
     r'organizations', OrganizationViewSets.OrganizationList.OrganizationAdminViewSet, base_name='admin-organization')
 admin_router.register(
     r'organizations', OrganizationViewSets.OrganizationInstance.OrganizationAdminViewSet, base_name='admin-organization')
-
 # --------
 admin_organization_router = NestedSimpleRouter(admin_router, r'organizations', lookup='admin_organization')
 admin_organization_router.register(
@@ -70,6 +68,9 @@ api_router.register(
 api_router.register(
     r'course-metas', CourseViewSets.CourseMetaInstance.CourseMetaViewSet, base_name='api-course-meta')
 api_router.register(
+    r'teaching-course-groups', CourseViewSets.CourseGroupList.CourseGroupTeachingViewSet,
+    base_name='api-teaching-course-groups')
+api_router.register(
     r'teaching-courses', CourseViewSets.CourseList.CourseTeachingViewSet, base_name='api-teaching-course')
 api_router.register(
     r'learning-courses', CourseViewSets.CourseList.CourseLearningViewSet, base_name='api-learning-course')
@@ -79,7 +80,6 @@ api_router.register(
     r'course-groups', CourseViewSets.CourseGroupInstance.CourseGroupViewSet, base_name='api-course-group')
 api_router.register(
     r'missions', MissionViewSets.MissionInstance.MissionViewSet, base_name='api-mission')
-
 # --------
 api_organization_router = NestedSimpleRouter(api_router, r'organizations', lookup='organization')
 api_organization_router.register(
@@ -111,8 +111,12 @@ api_course_meta_router.register(
 api_course_meta_router.register(
     r'available-categories', CategoryViewSet.CategoryList.CategoryAvailableMetaViewSet,
     base_name='api-course-meta-available-categories')
+# --------
+api_course_router = NestedSimpleRouter(api_router, r'courses', lookup='course')
+
 
 api_patterns = []
 api_patterns += api_router.urls
 api_patterns += api_organization_router.urls
 api_patterns += api_course_meta_router.urls
+api_patterns += api_course_router.urls

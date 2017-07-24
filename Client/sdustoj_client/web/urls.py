@@ -23,15 +23,15 @@ admin_patterns = [
 org_patterns = [
     url(r'^$', OrganizationAdminPages.Organization.list, name='web-organization'),
     url(r'^create/$', OrganizationAdminPages.Organization.create, name='web-organization-create'),
-    url(r'^info/([\w\-.+@]+)/categories/create/$',OrganizationAdminPages.Category.categoriescreate, name='web-categories-create'),
-    url(r'^info/([\w\-.+@]+)/categories/info/([\w\-.+@]+)/$',OrganizationAdminPages.Category.instance, name='web-categories-instance'),
+    url(r'^info/([\w\-.+@]+)/categories/create/$', OrganizationAdminPages.Category.categoriescreate, name='web-categories-create'),
+    url(r'^info/([\w\-.+@]+)/categories/info/([\w\-.+@]+)/$', OrganizationAdminPages.Category.instance, name='web-categories-instance'),
     url(r'^info/([\w\-.+@]+)/categories/$', OrganizationAdminPages.Category.categories,
         name='web-organization-categories'),
     url(r'^info/([\w\-.+@]+)/$', OrganizationAdminPages.Organization.instance, name='web-organization-instance'),
 
-    url(r'^info/([\w\-.+@]+)/edu-admins/info/([\w\-.+@]+)/$',OrganizationAdminPages.EduAdmin.instance, name='web-eduadmin-instance'),
-    url(r'^info/([\w\-.+@]+)/edu-admins/create/$',OrganizationAdminPages.EduAdmin.create, name='web-eduadmin-create'),
-    url(r'^info/([\w\-.+@]+)/edu-admins/$',OrganizationAdminPages.EduAdmin.list, name="web-eduadmin-list"),
+    url(r'^info/([\w\-.+@]+)/edu-admins/info/([\w\-.+@]+)/$', OrganizationAdminPages.EduAdmin.instance, name='web-eduadmin-instance'),
+    url(r'^info/([\w\-.+@]+)/edu-admins/create/$', OrganizationAdminPages.EduAdmin.create, name='web-eduadmin-create'),
+    url(r'^info/([\w\-.+@]+)/edu-admins/$', OrganizationAdminPages.EduAdmin.list, name="web-eduadmin-list"),
 
 ]
 

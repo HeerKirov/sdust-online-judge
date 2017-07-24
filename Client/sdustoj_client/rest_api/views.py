@@ -169,22 +169,24 @@ class UserViewSets(object):
                                'creator', 'updater', 'create_time', 'update_time')
 
         # admin - 教务管理员 - deep2
-        class EduAdminViewSet(OrgNestedMixin, ListNestedResourceViewSet):
-            queryset = getattr(UserProfile, 'objects').order_by('username')
+        class EduAdminViewSet(ListNestedResourceViewSet):
+            queryset = getattr(EduAdmin, 'objects').order_by('username')
             serializer_class = UserSerializers.ListEduAdmin
             permission_classes = (IsOrgAdmin,)
             search_fields = ('username', 'name')
             ordering_fields = ('username', 'name', 'sex', 'last_login',
                                'creator', 'updater', 'create_time', 'update_time')
 
+            # parent_lookup = 'admin_organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            # parent_related_name = 'identities__%s__contains' % (IdentityChoices.edu_admin,)  # 在当前models中，上级model的关联名
+            parent_queryset = Organization.objects.all()
             parent_lookup = 'admin_organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
-            parent_related_name = 'identities__%s__contains' % (IdentityChoices.edu_admin,)  # 在当前models中，上级model的关联名
+            parent_related_name = 'organization'  # 在当前models中，上级model的关联名
+            parent_pk = 'name'  # 上级model的主键名
 
             def perform_create(self, serializer):
                 instance = super().perform_create(serializer)  # 获得UserProfile
-                edu_admin = instance.edu_admin_identities
-                for i in edu_admin.all():
-                    i.organization.update_numbers()
+                instance.organization.update_numbers()
                 return instance
 
     # admin用户管理部分的用户
@@ -197,20 +199,20 @@ class UserViewSets(object):
             lookup_field = 'username'
 
         # admin - 教务管理员 - deep2
-        class EduAdminViewSet(OrgNestedMixin, InstanceNestedResourceViewSet):
-            queryset = getattr(UserProfile, 'objects').order_by('username')
+        class EduAdminViewSet(InstanceNestedResourceViewSet):
+            queryset = getattr(EduAdmin, 'objects').order_by('username')
             serializer_class = UserSerializers.InstanceEduAdmin
             permission_classes = (IsOrgAdmin,)
             lookup_field = 'username'
 
+            parent_queryset = Organization.objects.all()
             parent_lookup = 'admin_organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
-            parent_related_name = 'identities__%s__contains' % (IdentityChoices.edu_admin,)  # 在当前models中，上级model的关联名
+            parent_related_name = 'organization'  # 在当前models中，上级model的关联名
+            parent_pk = 'name'  # 上级model的主键名
 
             def perform_update(self, serializer):
                 instance = super().perform_update(serializer)  # 获得UserProfile
-                edu_admin = instance.edu_admin_identities
-                for i in edu_admin.all():
-                    i.organization.update_numbers()
+                instance.organization.update_numbers()
                 return instance
 
             def perform_destroy(self, instance):
@@ -222,16 +224,18 @@ class UserViewSets(object):
     # org部分下属的用户
     class OrgUserList(object):
         # 教务管理员 - deep2
-        class EduAdminViewSet(OrgNestedMixin, ListReadonlyNestedResourceViewSet):
-            queryset = getattr(UserProfile, 'objects').order_by('username')
+        class EduAdminViewSet(ListReadonlyNestedResourceViewSet):
+            queryset = getattr(EduAdmin, 'objects').order_by('username')
             serializer_class = OrgUserSerializers.ListEduAdmin
             permission_classes = (IsEduAdminReadonly,)
             search_fields = ('username', 'name')
             ordering_fields = ('username', 'name', 'sex', 'last_login',
                                'creator', 'updater', 'create_time', 'update_time')
 
+            parent_queryset = Organization.objects.all()
             parent_lookup = 'organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
-            parent_related_name = 'identities__%s__contains' % (IdentityChoices.edu_admin,)  # 在当前models中，上级model的关联名
+            parent_related_name = 'organization'  # 在当前models中，上级model的关联名
+            parent_pk = 'name'  # 上级model的主键名
 
         # 教师 - deep2
         class TeacherViewSet(OrgNestedMixin, ListNestedResourceViewSet):
@@ -274,14 +278,16 @@ class UserViewSets(object):
     # org部分下属的用户
     class OrgUserInstance(object):
         # 教务管理员 - deep2
-        class EduAdminViewSet(OrgNestedMixin, InstanceReadonlyNestedResourceViewSet):
-            queryset = getattr(UserProfile, 'objects').order_by('username')
+        class EduAdminViewSet(InstanceReadonlyNestedResourceViewSet):
+            queryset = getattr(EduAdmin, 'objects').order_by('username')
             serializer_class = UserSerializers.InstanceEduAdmin
             permission_classes = (IsEduAdminReadonly,)
             lookup_field = 'username'
 
+            parent_queryset = Organization.objects.all()
             parent_lookup = 'organization_pk'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
-            parent_related_name = 'identities__%s__contains' % (IdentityChoices.edu_admin,)  # 在当前models中，上级model的关联名
+            parent_related_name = 'organization'  # 在当前models中，上级model的关联名
+            parent_pk = 'name'  # 上级model的主键名
 
         # 教师 - deep2
         class TeacherViewSet(OrgNestedMixin, InstanceNestedResourceViewSet):
@@ -327,6 +333,23 @@ class UserViewSets(object):
                 super().perform_destroy(instance)
                 for i in identities.all():
                     i.organization.update_numbers()
+
+    # course下属的用户
+    class CourseUserList(object):
+        class TeacherViewSet(ListNestedResourceViewSet):
+            queryset = CourseTeacherRelation.objects.all()
+            # serializer_class = todo
+            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            ordering_fields = ('id',)
+
+            parent_queryset = Course.objects.all()
+            parent_lookup = 'course_id'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'course'  # 在当前models中，上级model的关联名
+            parent_pk = 'cid'  # 上级model的主键名
+
+    # course下属的用户
+    class CourseUserInstance(object):
+        pass
 
 
 # 机构api
@@ -686,6 +709,17 @@ class CourseViewSets(object):
                 instance = super().perform_create(serializer)
                 instance.organization.update_numbers()
                 return instance
+
+        class CourseGroupTeachingViewSet(ListReadonlyResourceViewSet):
+            queryset = CourseGroup.objects.all()
+            serializer_class = CourseSerializers.CourseGroup.List
+            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            ordering_fields = ('caption',)
+            search_fields = ('caption',)
+
+            def get_queryset(self):
+                profile = self.request.user.profile
+                return profile.get_course_groups(teaching=True)
 
     class CourseGroupInstance(object):
         class CourseGroupViewSet(InstanceResourceViewSet):
