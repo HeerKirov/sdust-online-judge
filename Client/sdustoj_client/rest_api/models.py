@@ -130,6 +130,19 @@ class UserProfile(Resource):
     identities = pg_fields.JSONField(default={})
     courses = pg_fields.JSONField(default={})
 
+    def has_identities(self, *args):
+        """
+        是否拥有其中之一的权限。
+        :param args: 
+        :return: 
+        """
+        for identity, value in self.identities:
+            if value:
+                for arg in args:
+                    if arg == identity:
+                        return True
+        return False
+
     def get_identities(self):
         ret = []
         for k, v in self.identities.items():
@@ -273,6 +286,25 @@ class UserProfile(Resource):
         else:
             courses_admin = Course.objects.none()
         return courses_edu | courses_admin
+
+    def get_course_groups(self):
+        """
+        获取所有管理的课程组。对于教师，会返回管理的课程组;对于教务管理员，会返回管理机构下的所有课程组。
+        该函数不通过缓存，直接查询。
+        :return: 
+        """
+        course_groups = CourseGroup.objects.none()
+        if self.has_identities(IdentityChoices.edu_admin):
+            organizations = self.get_organizations()
+            for org in organizations:
+                if hasattr(org, 'course_groups'):
+                    course_groups = course_groups | org.course_groups.all()
+        if self.has_identities(IdentityChoices.teacher):
+            teacher_identities = Teacher.objects.filter(profile=self).all()
+            for teacher in teacher_identities:
+                if hasattr(teacher, 'course_groups'):
+                    course_groups = course_groups | teacher.course_groups.all()
+        return course_groups
 
 
 class Student(Resource):
@@ -462,7 +494,6 @@ class CourseMeta(Resource):
                                      on_delete=models.CASCADE)
 
     caption = models.CharField(max_length=150)
-
     categories = models.ManyToManyField('Category', related_name='course_meta',
                                         through='CourseMetaCategoryRelation',
                                         through_fields=('course_meta', 'category'))
@@ -471,6 +502,18 @@ class CourseMeta(Resource):
     number_course_groups = models.IntegerField(default=0)
     number_categories = models.IntegerField(default=0)
     number_problems = models.IntegerField(default=0)
+
+    def update_numbers(self):
+        self.number_courses = getattr(Course, 'objects').filter(meta=self).count()
+        self.number_course_groups = getattr(CourseGroup, 'objects').filter(meta=self).count()
+        self.number_categories = self.categories.count()
+        self.number_problems = sum(i.number_problem for i in self.categories.all())
+        self.save()
+
+    def available_categories(self):
+        parent_available = self.organization.available_categories()
+        exist_id = [i.id for i in self.categories.all()]  # 获得该meta旗下的所有的已用题库的id-list
+        return parent_available.exclude(id__in=exist_id).all()
 
 
 class CourseUnit(models.Model):
@@ -567,6 +610,7 @@ class CourseGroupTeacherRelation(Resource):
 
 class Mission(Resource):
     id = models.BigAutoField(primary_key=True)
+    caption = models.CharField(max_length=150)
     course_meta = models.ForeignKey(CourseMeta, related_name='missions',
                                     to_field='id', on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, related_name='missions',
@@ -580,6 +624,7 @@ class Mission(Resource):
 
 class MissionGroup(Resource):
     id = models.BigAutoField(primary_key=True)
+    caption = models.CharField(max_length=150)
     course_meta = models.ForeignKey(CourseMeta, related_name='mission_groups',
                                     to_field='id', on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, related_name='mission_groups',

@@ -930,6 +930,56 @@ class CategorySerializers(object):
                 model = Category
                 exclude = ('problems',)
 
+    class CourseMetaCategory(object):
+        # 课程基类正在使用的题库
+        class List(serializers.ModelSerializer):
+            category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category')
+            title = serializers.SlugRelatedField(slug_field='title', read_only=True, source='category')
+            introduction = serializers.SlugRelatedField(slug_field='introduction', read_only=True, source='category')
+            source = serializers.SlugRelatedField(slug_field='source', read_only=True, source='category')
+            author = serializers.SlugRelatedField(slug_field='author', read_only=True, source='category')
+            number_problem = serializers.SlugRelatedField(slug_field='number_problem', read_only=True,
+                                                          source='category')
+
+            def create(self, validated_data):
+                course_meta = validated_data['course_meta']  # 得到parent的meta
+                goal_category_id = validated_data['category'].id  # 欲添加的题库的id
+                available_id = [i['id'] for i in course_meta.available_categories().values('id')]
+                if goal_category_id not in available_id:
+                    # 如果想要添加的题库不在可添加的题库内
+                    raise ValidationError('category is not available.')
+                elif course_meta.categories.filter(id=goal_category_id).exists():
+                    raise ValidationError('category exists.')
+                validated_data = dict_sub(validated_data, 'category', 'course_meta')
+                validated_data['organization'] = course_meta.organization
+                return super().create(validated_data)
+
+            class Meta:
+                model = CourseMetaCategoryRelation
+                fields = ('id', 'category_id', 'title', 'introduction', 'source', 'author', 'number_problem')
+                read_only_fields = _RESOURCE_READONLY
+
+        # 课程基类正在使用的题库
+        class Instance(serializers.ModelSerializer):
+            category_id = serializers.PrimaryKeyRelatedField(read_only=True, source='category')
+            title = serializers.SlugRelatedField(slug_field='title', read_only=True, source='category')
+            introduction = serializers.SlugRelatedField(slug_field='introduction', read_only=True, source='category')
+            source = serializers.SlugRelatedField(slug_field='source', read_only=True, source='category')
+            author = serializers.SlugRelatedField(slug_field='author', read_only=True, source='category')
+            number_problem = serializers.SlugRelatedField(slug_field='number_problem', read_only=True,
+                                                          source='category')
+
+            class Meta:
+                model = CourseMetaCategoryRelation
+                fields = ('id', 'category_id', 'title', 'introduction', 'source', 'author', 'number_problem')
+                read_only_fields = _RESOURCE_READONLY
+
+        # 课程基类可用的题库
+        class ListAvailable(serializers.ModelSerializer):
+            class Meta:
+                model = Category
+                exclude = ('problems',)
+
 
 class CourseSerializers(object):
     class CourseMeta(object):
@@ -1009,3 +1059,31 @@ class CourseSerializers(object):
                 model = CourseGroup
                 exclude = ('organization', 'course_unit', 'teachers', 'courses',)
                 read_only_fields = ('gid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
+
+
+class MissionSerializers(object):
+    class Mission(object):
+        class List(serializers.ModelSerializer):
+            meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
+
+            def create(self, validated_data):
+                meta = validated_data['course_meta']
+                validated_data['organization'] = meta.organization
+                return super().create(validated_data)
+
+            class Meta:
+                model = Mission
+                exclude = ('organization', 'problems')
+                read_only_fields = ('id', 'course_meta') + _RESOURCE_READONLY
+
+        class Instance(serializers.ModelSerializer):
+            meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
+
+            class Meta:
+                model = Mission
+                exclude = ('organization', 'problems')
+                read_only_fields = ('id', 'course_meta') + _RESOURCE_READONLY
+
+    class MissionGroup(object):
+        pass
+

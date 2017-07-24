@@ -244,7 +244,6 @@ class ListResourceViewSet(mixins.ListModelMixin,
 
 
 class ListReadonlyResourceViewSet(mixins.ListModelMixin,
-                                  CreateResourceMixin,
                                   ExtraDataMixin,
                                   viewsets.GenericViewSet):
     pass
