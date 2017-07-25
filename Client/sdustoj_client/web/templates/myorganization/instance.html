@@ -19,12 +19,7 @@ SATable.SimpleAjaxInfo({
   id: 'organization',
   title: '机构信息',
   getMethod: 'GET',
-  updateMethod: 'PATCH',
-  removeMethod: 'DELETE',
   getURL: '{% url 'api-organization-detail' oid %}',
-  updateURL: '{% url 'api-organization-detail' oid %}',
-  removeURL: '{% url 'api-organization-detail' oid %}',
-  removeToURL: '{% url 'api-organization-list' %}',
   items: [
     { name: 'name', caption: '机构ID', type: 'Text', readOnly: true },
     { name: 'caption', caption: '机构名称', type: 'Text', typeInfo: { max_length: 150 } },

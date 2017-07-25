@@ -3,16 +3,33 @@
 
 {% block title %}教务管理员{% endblock %}
 
-{% block nav_admin %}active{% endblock %}
+{% block nav_myorganization %} active {% endblock %}
+{% block nav_eduadmin %} active {% endblock %}
 
-{% block sub_content %}
-<div class="container">
-  <div class="col-xs-12">
-    <div id="all-user"></div>
-  </div>
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="all-edu-admin"></div>
 </div>
+
 {% endblock %}
 
+
 {% block script %}
+<script>
+SATable.DRFTable({
+  id: 'all-edu-admin',
+  title: '教务管理员',
+  url: "{% url 'api-organization-edu-admins-list' oid %}",
+  search: true,
+  columns: [
+    { name: 'username', caption: '用户名', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'web-edu-admin-list' oid %}info/', key: 'username' } },
+    { name: 'name', caption: '姓名', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-edu-admin-list' oid %}info/', key: 'username' } },
+    { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
+    { name: 'last_login', caption: '最后登录', sort: true, type: 'Datetime' },
+    { name: "available", caption: "可用", type: 'Boolean' },
+  ],
+})
+</script>
 
 {% endblock %}

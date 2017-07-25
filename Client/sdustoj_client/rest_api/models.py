@@ -130,6 +130,7 @@ class UserProfile(Resource):
     identities = pg_fields.JSONField(default={})
     courses = pg_fields.JSONField(default={})
 
+    @property
     def get_identities(self):
         ret = []
         for k, v in self.identities.items():
@@ -146,6 +147,7 @@ class UserProfile(Resource):
                 identities[IdentityChoices.user_admin] = True
             if IdentityChoices.org_admin in self.identities:
                 identities[IdentityChoices.org_admin] = True
+
 
         student_org = []
         student_identities = getattr(

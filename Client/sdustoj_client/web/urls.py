@@ -51,7 +51,14 @@ myOrg_patterns = [
     url(r'^info/([\w\-.+@]+)/$', MyOrganizationPages.Organization.instance, name='web-myorganization-instance'),
     url(r'^info/([\w\-.+@]+)/course-meta/$', MyOrganizationPages.CourseMeta.list, name='web-course-meta-list'),
     url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/$', MyOrganizationPages.CourseMeta.instance, name='web-course-meta-instance'),
-
+    url(r'^info/([\w\-.+@]+)/edu-admin/$', MyOrganizationPages.EduAdmin.list, name='web-edu-admin-list'),
+    url(r'^info/([\w\-.+@]+)/edu-admin/info/([\w\-.+@]+)/$', MyOrganizationPages.EduAdmin.instance, name='web-edu-admin-instance'),
+    url(r'^info/([\w\-.+@]+)/teacher/$', MyOrganizationPages.Teacher.list, name='web-teacher-list'),
+    url(r'^info/([\w\-.+@]+)/teacher/info/([\w\-.+@]+)/$', MyOrganizationPages.Teacher.instance, name='web-teacher-instance'),
+    url(r'^info/([\w\-.+@]+)/teacher/create/$', MyOrganizationPages.Teacher.create, name='web-teacher-create'),
+    url(r'^info/([\w\-.+@]+)/student/$', MyOrganizationPages.Student.list, name='web-student-list'),
+    url(r'^info/([\w\-.+@]+)/student/info/([\w\-.+@]+)/$', MyOrganizationPages.Student.instance, name='web-student-instance'),
+    url(r'^info/([\w\-.+@]+)/student/create/$', MyOrganizationPages.Student.create, name='web-student-create'),
 ]
 
 url_patterns = [
