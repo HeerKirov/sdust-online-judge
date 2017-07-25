@@ -1,0 +1,58 @@
+{% extends "myorganization/course-meta/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}任务{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+{% block nav_using_categories %} active {% endblock %}
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="category"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+function getOptions(ret) {
+  var results = ret.results
+  var data = []
+  for (var i in results) {
+    var obj = results[i]
+    var text = obj.id + ': ' + obj.title + ' (' + obj.number_problem + ')'
+    var value = obj.id
+    data.push({ text: text, value: value })
+  }
+  return data
+}
+SATable.SimpleAjaxForm({
+  id: 'category',
+  method: 'POST',
+  toSuccess: '{% url 'web-myorg-coursemeta-category-list' oid uid  %}',
+  url: '{% url 'api-course-meta-category-list' uid %}',
+  items: [
+      { name: 'category_id', caption: '题库ID', type: 'Select', typeInfo: {
+        many: false,
+        ajax: true,
+        ajaxInfo: {
+            type: 'GET',
+            url: '{% url 'api-course-meta-available-categories-list' uid %}',
+            dataType: 'json',
+        },
+        responseHandler: SATable.DRF.keepRequest,
+        dataGenerator: getOptions
+    } },
+
+
+    {% comment %}{ name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
+    { name: 'deleted', caption: 'deleted', type: 'Boolean', defaultTrue: true },
+
+    { name: 'introduction', caption: '简介', type: 'Text', typeInfo: { article:true, max_length: 150 } },
+{% endcomment %}
+  ]
+})
+</script>
+
+ 
+{% endblock %}

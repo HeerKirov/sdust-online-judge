@@ -285,9 +285,13 @@ SAInfo.Date = function(self, item, value) {
   var spanBtn = getDom.Span('input-group-btn')
   var input = getDom.Input(item.name, item.caption)
   $(input).attr('readonly', 'readonly').datetimepicker({
-    format: 'yyyy-mm-dd',
-    minView: 2,
-    maxView: 4
+     weekStart: 1,
+        todayBtn:  1,
+		autoclose: 1,
+		todayHighlight: 1,
+		startView: 2,
+		forceParse: 0,
+        showMeridian: 1
   })
 
   var btn = getDom.Button('保存')

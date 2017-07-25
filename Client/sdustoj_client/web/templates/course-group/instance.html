@@ -1,0 +1,47 @@
+{% extends "course-group/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}课程组{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+{% block nav_course_group %} active {% endblock %}
+
+
+{% block sub_content2 %}
+<div class="col-lg-8 col-md-10">
+    <div id="courseinfo"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+SATable.SimpleAjaxInfo({
+  id: 'coursegroupinfo',
+  title: '课程组信息',
+  getMethod: 'GET',
+  updateMethod: 'PATCH',
+  removeMethod: 'DELETE',
+  getURL: '{% url 'api-course-group-detail' gid %}',
+  updateURL: '{% url 'api-course-group-detail' gid %}',
+  removeURL: '{% url 'api-course-group-detail' gid %}',
+  removeToURL: document.referrer,
+  items: [
+    { name: 'meta', caption: '课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
+      { name: 'meta_caption', caption: '课程基类名称', type:'Text',typeInfo: { max_length: 150 } },
+     { name: 'gid', caption: '课程组ID', type: 'Number'},
+      { name: 'caption', caption: '课程组名称', type: 'Text', typeInfo: { max_length: 150 } },
+
+
+      { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
+    'Divide',
+    { name: 'available', caption: '可用', type: 'Boolean' },
+    'Divide',
+    { name: 'creator', caption: '创建者', type: 'Text', readOnly: true },
+    { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },
+    { name: 'updater', caption: '最后更新者', type: 'Text', readOnly: true },
+    { name: 'update_time', caption: '最后更新时间', type: 'Datetime', readOnly: true },
+
+  ]
+})
+</script>
+{% endblock %}

@@ -46,9 +46,13 @@ SAForm.Date = function(self, item) {
   var divInput = SATable.getDom.Div('col-md-9 input-append date form_datetime')
   var input = getDom.Input(item.name, '')
   $(input).attr('readonly', 'readonly').datetimepicker({
-    format: 'yyyy-mm-dd',
-    minView: 2,
-    maxView: 4
+     weekStart: 1,
+        todayBtn:  1,
+		autoclose: 1,
+		todayHighlight: 1,
+		startView: 2,
+		forceParse: 0,
+        showMeridian: 1
   })
 
 

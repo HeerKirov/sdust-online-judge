@@ -1098,6 +1098,8 @@ class MissionSerializers(object):
     class Mission(object):
         class List(serializers.ModelSerializer):
             meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
+            # start_time = serializers.DateTimeField()
+            # end_time = serializers.DateTimeField()
 
             def create(self, validated_data):
                 meta = validated_data['course_meta']
@@ -1111,6 +1113,8 @@ class MissionSerializers(object):
 
         class Instance(serializers.ModelSerializer):
             meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
+            # start_time = serializers.DateTimeField()
+            # end_time = serializers.DateTimeField()
 
             class Meta:
                 model = Mission

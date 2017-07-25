@@ -248,12 +248,21 @@ class OrganizationAdminPages(object):
             return Utils.Render.org_admin(request,'organization/categories/create.html',{
                 "oid": oid
             })
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+=======
+=======
+>>>>>>> HeerKirov/master
+=======
         @staticmethod
         def instance(request,oid,cid):
             return Utils.Render.org_admin(request,'organization/categories/instance.html',{
                 "oid": oid,
                 "cid": cid
             })
+>>>>>>> HeerKirov/master
     class EduAdmin(object):
         @staticmethod
         def list(request,oid):
@@ -273,6 +282,10 @@ class OrganizationAdminPages(object):
                 "oid": oid,
                 "uid": uid
             })
+<<<<<<< HEAD
+>>>>>>> HeerKirov/master
+=======
+>>>>>>> HeerKirov/master
 
 class MyOrganizationPages(object):
     class Organization(object):
@@ -295,7 +308,99 @@ class MyOrganizationPages(object):
 
         @staticmethod
         def instance(request, oid, uid):
+            readonly = IdentityChoices.edu_admin in request.user.profile.identities or \
+                    IdentityChoices.root in request.user.profile.identities
             return Utils.Render.edu_admin(request, 'myorganization/course-meta/instance.html', {
                 'oid': oid,
+                "uid": uid,
+                "readonly": "true" if not readonly else "false"
+            })
+    class CourseGroup(object):
+        @staticmethod
+        def list(request,oid,uid):
+            return Utils.Render.all_user(request, 'myorganization/course-meta/coursegroup/list.html',{
+                "oid": oid,
                 "uid": uid
             })
+
+        @staticmethod
+        def create(request,oid,uid):
+            return Utils.Render.all_user(request,"myorganization/course-meta/coursegroup/create.html",{
+                "oid": oid,
+                "uid": uid
+            })
+
+    class Course(object):
+        @staticmethod
+        def list(request,oid,uid):
+            return Utils.Render.all_user(request,'myorganization/course-meta/course/list.html',{
+                "oid": oid,
+                "uid": uid
+            })
+
+        @staticmethod
+        def create(request, oid, uid):
+            return Utils.Render.all_user(request, "myorganization/course-meta/course/create.html", {
+                "oid": oid,
+                "uid": uid
+            })
+
+    class Mission(object):
+        @staticmethod
+        def list(request, oid, uid):
+            return Utils.Render.all_user(request, 'myorganization/course-meta/mission/list.html', {
+                "oid": oid,
+                "uid": uid
+            })
+
+        @staticmethod
+        def create(request, oid, uid):
+            return Utils.Render.all_user(request, "myorganization/course-meta/mission/create.html", {
+                "oid": oid,
+                "uid": uid
+            })
+
+    class Category(object):
+        @staticmethod
+        def list(request, oid, uid):
+            return Utils.Render.all_user(request, 'myorganization/course-meta/category/list.html', {
+                "oid": oid,
+                "uid": uid
+            })
+
+        @staticmethod
+        def create(request, oid, uid):
+            return Utils.Render.all_user(request, "myorganization/course-meta/category/create.html", {
+                "oid": oid,
+                "uid": uid
+            })
+        @staticmethod
+        def instance(request, oid, mid,cid):
+            return Utils.Render.all_user(request, "myorganization/course-meta/category/instance.html", {
+                "oid": oid,
+                "mid": mid,
+                "cid": cid
+            })
+
+class CourseGroup(object):
+    @staticmethod
+    def instance(request, gid):
+        return Utils.Render.all_user(request, "course-group/instance.html", {
+            "gid": gid,
+        })
+
+
+class Course(object):
+    @staticmethod
+    def instance(request, cid):
+        return Utils.Render.all_user(request, "course/instance.html", {
+            "cid": cid,
+        })
+
+class Mission(object):
+    @staticmethod
+    def instance(request, id):
+        return Utils.Render.all_user(request, "mission/instance.html", {
+            "id": id,
+        })
+

@@ -1,0 +1,46 @@
+{% extends "myorganization/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}题目信息{% endblock %}
+{% block sub_content %}
+<div class="container">
+  <div class="row">
+    <div class="col-lg-3 col-md-4">
+      <div class="container">
+        <ul class="nav flex-column nav-pills">
+          <li class="nav-item">
+            <a class="nav-link {% block nav_organization_info %}{% endblock %}" href="{% url 'web-myorganization-instance' oid %}">机构信息</a>
+          </li>
+          <li class="nav-item">
+             <a class="nav-link {% block nav_eduadmin %}{% endblock %}" href="">教务管理员</a>
+         </li>
+          <li class="nav-item">
+            <a class="nav-link {% block nav_teacher %}{% endblock %}" href="">教师</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% block nav_student %}{% endblock %}" href="">学生</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% block nav_course_meta %}{% endblock %}" href="{% url 'web-course-meta-list' oid %}">课程基类</a>
+            <ul class="nav flex-column nav-pills">
+              <li class="nav-item"><a class="nav-link {% block nav_course_info %}{% endblock %}" href="{% url 'web-course-meta-instance' oid uid %}">&nbsp&nbsp&nbsp&nbsp基本信息</a></li>
+            <li class="nav-item"><a class="nav-link {% block nav_course_group %}{% endblock %}" href="{% url 'web-course-group-list' oid uid  %}">&nbsp&nbsp&nbsp&nbsp课程组</a></li>
+              <li class="nav-item"><a class="nav-link {% block nav_course %}{% endblock %}" href="{% url 'web-myorg-coursemeta-course-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp课程</a></li>
+              <li class="nav-item"><a class="nav-link {% block nav_mission %}{% endblock %}" href="{% url 'web-myorg-coursemeta-mission-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp任务</a></li>
+              <li class="nav-item"><a class="nav-link {% block nav_using_categories%}{% endblock %}" href="{% url 'web-myorg-coursemeta-category-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp使用的题库</a></li>
+
+            </ul>
+          </li>
+
+        </ul>
+      </div>
+      <br class="hidden-md-up">
+      <br class="hidden-md-up">
+    </div>
+    <div class="col-1 row">
+      <div class="nav-divider hidden-sm-down"></div>
+    </div>
+    {% block sub_content2 %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
