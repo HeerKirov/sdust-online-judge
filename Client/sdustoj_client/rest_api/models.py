@@ -735,6 +735,38 @@ class Course(Resource):
                                       through='CourseStudentRelation',
                                       through_fields=('course', 'student'))
 
+    def available_teachers(self, filter_exists=False):
+        """
+        获得该课程所有可用的教师的查询集。该查询集仅基于父机构的所有教师进行返回查询。
+        如果指定了filter_exists，那么就会自动筛选掉已经在课程中的教师。
+        :return: QuerySet<[Teacher]>
+        """
+        org = self.organization
+        if hasattr(org, 'teachers'):
+            all_teachers = org.teachers.all()
+            if filter_exists and hasattr(self, 'teachers'):
+                exists_teachers_id = [v['id'] for v in self.teachers.all().values('id')]
+                all_teachers = all_teachers.exclude(id__in=exists_teachers_id)
+            return all_teachers
+        else:
+            return Teacher.objects.none()
+
+    def available_students(self, filter_exists=False):
+        """
+        获得该课程所有可用的学生的查询集。该查询集仅基于父机构的所有学生进行返回查询。
+        如果指定了filter_exists，那么就会自动筛选掉已经在课程中的学生。
+        :return: QuerySet<[Teacher]>
+        """
+        org = self.organization
+        if hasattr(org, 'students'):
+            all_students = org.students.all()
+            if filter_exists and hasattr(self, 'students'):
+                exists_students_id = [v['id'] for v in self.students.all().values('id')]
+                all_students = all_students.exclude(id__in=exists_students_id)
+            return all_students
+        else:
+            return Student.objects.none()
+
 
 class CourseGroupRelation(Resource):
     id = models.BigAutoField(primary_key=True)

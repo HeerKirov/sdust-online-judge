@@ -44,7 +44,7 @@ orgAdmin_patterns = [
     url(r'^$',UserAdminPages.OrgAdmin.list, name='web-admin-orgadmin'),
     url(r'^create/',UserAdminPages.OrgAdmin.create, name='web-orgadmin-create'),
     url(r'^info/([\w\-.+@]+)/',UserAdminPages.OrgAdmin.instance, name='web-orgadmin-instance'),
-
+]
 myOrg_patterns = [
     url(r'^$', MyOrganizationPages.Organization.list, name='web-myorganization'),
     url(r'^info/([\w\-.+@]+)/$', MyOrganizationPages.Organization.instance, name='web-myorganization-instance'),
@@ -67,8 +67,6 @@ myOrg_patterns = [
     url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/category/$',MyOrganizationPages.Category.list,name="web-myorg-coursemeta-category-list"),
     url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/category/create/$',MyOrganizationPages.Category.create,name="web-myorg-coursemeta-category-create"),
     url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/category/info/([\w\-.+@]+)/$',MyOrganizationPages.Category.instance,name="web-myorg-coursemeta-category-instance"),
-
-
 ]
 
 courseGroup_patterns = [

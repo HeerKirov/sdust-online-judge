@@ -113,7 +113,18 @@ api_course_meta_router.register(
     base_name='api-course-meta-available-categories')
 # --------
 api_course_router = NestedSimpleRouter(api_router, r'courses', lookup='course')
-
+api_course_router.register(
+    r'teachers', UserViewSets.CourseUserList.TeacherViewSet, base_name='api-course-teacher')
+api_course_router.register(
+    r'teachers', UserViewSets.CourseUserInstance.TeacherViewSet, base_name='api-course-teacher')
+api_course_router.register(
+    r'available-teachers', UserViewSets.CourseUserList.TeacherAvailableViewSet, base_name='api-course-available-teacher')
+api_course_router.register(
+    r'students', UserViewSets.CourseUserList.StudentViewSet, base_name='api-course-student')
+api_course_router.register(
+    r'students', UserViewSets.CourseUserInstance.StudentViewSet, base_name='api-course-student')
+api_course_router.register(
+    r'available-students', UserViewSets.CourseUserList.StudentAvailableViewSet, base_name='api-course-available-student')
 
 api_patterns = []
 api_patterns += api_router.urls

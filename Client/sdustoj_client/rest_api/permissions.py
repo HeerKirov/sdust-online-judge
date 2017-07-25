@@ -91,8 +91,9 @@ class OrgPermission(AuthorityPermission):  # 机构内的permission的基类。
                         for organization in organizations:
                             if is_parent_organizations(org_id, organization):
                                 return True
-                    else:  # 是别的什么东西
-                        pass
+                    else:  # 是别的什么东西,直接给True
+                        return True  # 这里存在一定的风险。
+                        # 权限obj控制系统与queryset约束系统大概是存在一定的功能重叠的.
                 else:  # 如果是一个不是org权限的权限类型，那么不进行org判断直接True。
                     return True
 
