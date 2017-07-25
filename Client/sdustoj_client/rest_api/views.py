@@ -900,7 +900,7 @@ class MissionViewSets(object):
         class MissionMetaViewSet(ListNestedResourceViewSet):
             queryset = Mission.objects.all()
             serializer_class = MissionSerializers.Mission.List
-            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            permission_classes = (IsTeacherOrEduAdmin,)
             ordering_fields = ('caption', 'start_time', 'end_time')
             search_fields = ('caption',)
 
@@ -919,7 +919,7 @@ class MissionViewSets(object):
         class MissionViewSet(InstanceResourceViewSet):
             queryset = Mission.objects.all()
             serializer_class = MissionSerializers.Mission.Instance
-            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            permission_classes = (IsTeacherOrEduAdmin,)
             lookup_field = 'id'
 
             def perform_destroy(self, instance):
@@ -928,7 +928,7 @@ class MissionViewSets(object):
                 organization.update_numbers()
 
             def get_queryset(self):
-                # 限定访问列表。对于edu_admin/site，公开机构内全部/全部公开;对于T/S，仅包含关联部分
+                # 限定访问列表。对于T/edu_admin/site，公开机构内全部/全部公开;对于S，仅包含关联部分
                 # 关联判定：mission隶属于mission_group.而mission_group又属于course_unit.
                 profile = self.request.user.profile
                 queryset = self.queryset.none()
@@ -936,7 +936,8 @@ class MissionViewSets(object):
                 for identity, value in profile.identities.items():
                     if identity in SITE_IDENTITY_CHOICES and value is True:
                         return self.queryset
-                    elif identity == IdentityChoices.edu_admin and len(value) > 0:
+                    elif identity == IdentityChoices.edu_admin \
+                            or identity == IdentityChoices.teacher and len(value) > 0:
                         for oid in value:
                             queryset = queryset | self.queryset.filter(organization_id=oid)
                 units = (v['course_unit'] for v in profile.get_courses().values('course_unit'))

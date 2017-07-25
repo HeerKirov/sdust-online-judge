@@ -23,7 +23,7 @@
           {% if 'EDU_ADMIN' in user_info.user.get_identities or 'STUDENT' in user_info.user.get_identities%}
           <a class="nav-link {% block nav_student %}{% endblock %}" href="{% url 'web-student-list' oid %}">学生</a>
           {% endif %}
-          {% if 'EDU_ADMIN' in user_info.user.get_identities  %}
+          {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities  %}
           <a class="nav-link {% block nav_course_meta %}{% endblock %}" href="{% url 'web-course-meta-list' oid %}">课程基类</a>
           {% endif %}
         </nav>

@@ -1,16 +1,14 @@
-{% extends "course-group/adminBasic.html" %}
+{% extends "myorganization/course-meta/adminBasic.html" %}
 {% load staticfiles %}
 
 {% block title %}题库详情{% endblock %}
 
 {% block nav_myorganization %} active {% endblock %}
 
-
-{% block sub_content %}
-<div class="container row justify-content-sm-center">
-  <div class="col-lg-8 col-md-10">
+{% block nav_using_categories %} active {% endblock %}
+{% block sub_content2 %}
+<div class="col-lg-8 col-md-10">
     <div id="categoryinfo"></div>
-  </div>
 </div>
 {% endblock %}
 {% block script %}
@@ -26,13 +24,13 @@ SATable.SimpleAjaxInfo({
   removeURL: '{% url 'api-course-meta-category-detail'  mid cid %}',
   removeToURL: document.referrer,
   items: [
-    { name: 'id', caption: '使用题库ID', type:'Number' },
-    { name: 'category_id', caption: '可用题库ID', type:'Number' },
-    { name: 'title', caption: '题库名称', type: 'Text', typeInfo: { max_length: 150 } },
-    { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
-    { name: 'source', caption: '题库来源', type: 'Text', typeInfo: { max_length: 150 } },
-    { name: 'author', caption: '题库作者', type: 'Text', typeInfo: { max_length: 150 } },
-    { name: 'number_problem', caption: '题目数量', type:'Number' },
+    { name: 'category_id', caption: '题库ID', type:'Number', readOnly: true },
+    { name: 'title', caption: '题库名称', type: 'Text', readOnly: true, typeInfo: { max_length: 150 } },
+      'Divide',
+    { name: 'introduction', caption: '介绍', type: 'Text', readOnly: true, typeInfo: { article: true, max_length: 1024 } },
+    { name: 'source', caption: '题库来源', type: 'Text', readOnly: true, typeInfo: { max_length: 150 } },
+    { name: 'author', caption: '题库作者', type: 'Text', readOnly: true, typeInfo: { max_length: 150 } },
+    { name: 'number_problem', caption: '题目数量', type:'Number', readOnly: true },
   ]
 })
 </script>

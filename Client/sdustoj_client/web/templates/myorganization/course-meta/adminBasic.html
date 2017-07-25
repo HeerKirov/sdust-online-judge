@@ -1,4 +1,4 @@
-{% extends "myorganization/adminBasic.html" %}
+<x></x>{% extends "myorganization/adminBasic.html" %}
 {% load staticfiles %}
 
 {% block title %}题目信息{% endblock %}
@@ -11,15 +11,22 @@
           <li class="nav-item">
             <a class="nav-link {% block nav_organization_info %}{% endblock %}" href="{% url 'web-myorganization-instance' oid %}">机构信息</a>
           </li>
+        {% if 'EDU_ADMIN' in user_info.user.get_identities %}
           <li class="nav-item">
              <a class="nav-link {% block nav_eduadmin %}{% endblock %}" href="">教务管理员</a>
          </li>
+        {% endif %}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities%}
           <li class="nav-item">
             <a class="nav-link {% block nav_teacher %}{% endblock %}" href="">教师</a>
           </li>
+        {% endif %}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'STUDENT' in user_info.user.get_identities%}
           <li class="nav-item">
             <a class="nav-link {% block nav_student %}{% endblock %}" href="">学生</a>
           </li>
+        {% endif %}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities  %}
           <li class="nav-item">
             <a class="nav-link {% block nav_course_meta %}{% endblock %}" href="{% url 'web-course-meta-list' oid %}">课程基类</a>
             <ul class="nav flex-column nav-pills">
@@ -27,10 +34,12 @@
             <li class="nav-item"><a class="nav-link {% block nav_course_group %}{% endblock %}" href="{% url 'web-course-group-list' oid uid  %}">&nbsp&nbsp&nbsp&nbsp课程组</a></li>
               <li class="nav-item"><a class="nav-link {% block nav_course %}{% endblock %}" href="{% url 'web-myorg-coursemeta-course-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp课程</a></li>
               <li class="nav-item"><a class="nav-link {% block nav_mission %}{% endblock %}" href="{% url 'web-myorg-coursemeta-mission-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp任务</a></li>
+              {% if 'EDU_ADMIN' in user_info.user.get_identities %}
               <li class="nav-item"><a class="nav-link {% block nav_using_categories%}{% endblock %}" href="{% url 'web-myorg-coursemeta-category-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp使用的题库</a></li>
-
+              {% endif %}
             </ul>
           </li>
+        {% endif %}
 
         </ul>
       </div>

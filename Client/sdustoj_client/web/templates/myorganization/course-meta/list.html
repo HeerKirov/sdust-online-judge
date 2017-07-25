@@ -29,7 +29,9 @@ SATable.DRFTable({
     { name: 'update_time', caption: '最后更新', sort: true, type: 'Datetime' },
     { name: "available", caption: "可用", type: 'Boolean' },
   ],
+{% if 'EDU_ADMIN' in user_info.user.get_identities  %}
   createURL: "{% url 'web-categories-create' oid %}"
+{% endif %}
 })
 </script>
 

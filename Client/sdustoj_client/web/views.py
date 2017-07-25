@@ -148,6 +148,15 @@ class Utils(object):
                 context=context
             )
 
+        @staticmethod
+        def teacher_or_edu_admin(request, template, context=None):
+            return Utils.Render._identity_render(
+                request=request,
+                template=template,
+                id_expect=(IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root,),
+                context=context
+            )
+
 
 
 class MainPages(object):
@@ -357,19 +366,21 @@ class MyOrganizationPages(object):
     class CourseMeta(object):
         @staticmethod
         def list(request, oid):
-            return Utils.Render.edu_admin(request, 'myorganization/course-meta/list.html',{
+            return Utils.Render.teacher_or_edu_admin(request, 'myorganization/course-meta/list.html',{
                 'oid': oid
             })
 
         @staticmethod
         def instance(request, oid, uid):
-            readonly = IdentityChoices.edu_admin in request.user.profile.identities or \
-                    IdentityChoices.root in request.user.profile.identities
-            return Utils.Render.edu_admin(request, 'myorganization/course-meta/instance.html', {
+            identities = request.user.profile.get_identities()
+            writeable = IdentityChoices.edu_admin in identities or IdentityChoices.root in identities
+            return Utils.Render.teacher_or_edu_admin(request, 'myorganization/course-meta/instance.html', {
                 'oid': oid,
                 "uid": uid,
-                "readonly": "true" if not readonly else "false"
+                "readonly": "true" if not writeable else "false",
+                "writeable": writeable
             })
+
     class CourseGroup(object):
         @staticmethod
         def list(request,oid,uid):
@@ -380,7 +391,7 @@ class MyOrganizationPages(object):
 
         @staticmethod
         def create(request,oid,uid):
-            return Utils.Render.all_user(request,"myorganization/course-meta/coursegroup/create.html",{
+            return Utils.Render.edu_admin(request,"myorganization/course-meta/coursegroup/create.html",{
                 "oid": oid,
                 "uid": uid
             })
@@ -395,7 +406,7 @@ class MyOrganizationPages(object):
 
         @staticmethod
         def create(request, oid, uid):
-            return Utils.Render.all_user(request, "myorganization/course-meta/course/create.html", {
+            return Utils.Render.edu_admin(request, "myorganization/course-meta/course/create.html", {
                 "oid": oid,
                 "uid": uid
             })
@@ -433,9 +444,11 @@ class MyOrganizationPages(object):
         def instance(request, oid, mid,cid):
             return Utils.Render.all_user(request, "myorganization/course-meta/category/instance.html", {
                 "oid": oid,
+                "uid": mid,
                 "mid": mid,
                 "cid": cid
             })
+
 
 class CourseGroup(object):
     @staticmethod

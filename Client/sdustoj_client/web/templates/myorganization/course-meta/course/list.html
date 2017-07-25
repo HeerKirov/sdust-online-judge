@@ -28,7 +28,9 @@ SATable.DRFTable({
     { name: 'end_time', caption: '结课登录', sort: true, type: 'Date' },
 
   ],
-    createURL: "{% url 'web-myorg-coursemeta-course-create' oid uid%}"
+  {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+  createURL: "{% url 'web-myorg-coursemeta-course-create' oid uid%}"
+  {% endif %}
 })
 </script>
 {% endblock %}

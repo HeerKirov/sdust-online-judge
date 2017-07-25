@@ -30,7 +30,9 @@ SATable.DRFTable({
       { name: "create_time", caption: "创建时间", type: 'Datetime' },
       { name: "update_time", caption: "更新时间", type: 'Datetime' },
   ],
-    createURL: "{% url 'web-course-group-create' oid uid%}"
+  {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+  createURL: "{% url 'web-course-group-create' oid uid%}"
+  {% endif %}
 })
 </script>
 {% endblock %}

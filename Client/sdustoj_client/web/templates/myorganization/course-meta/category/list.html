@@ -21,7 +21,7 @@ SATable.DRFTable({
   url: "{% url 'api-course-meta-category-list' uid %}",
   search: true,
   columns: [
-     { name: "id", caption: "题库ID", type: 'Link' , typeInfo: { base_url: '{% url 'web-myorg-coursemeta-category-list' oid uid %}info/', key: 'id' }},
+     { name: "category_id", caption: "题库ID", type: 'Link' , typeInfo: { base_url: '{% url 'web-myorg-coursemeta-category-list' oid uid %}info/', key: 'id' }},
       { name: "title", caption: "题库名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-myorg-coursemeta-category-list' oid uid %}info/', key: 'id' } },
 
       {% comment %}{ name: "deleted", caption: "可用", type: 'Boolean' },
