@@ -1,5 +1,5 @@
 from django.conf.urls import url, include
-from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages
+from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages,CourseGroup,Course,Mission
 
 
 personal_patterns = [
@@ -52,8 +52,31 @@ myOrg_patterns = [
     url(r'^info/([\w\-.+@]+)/$', MyOrganizationPages.Organization.instance, name='web-myorganization-instance'),
     url(r'^info/([\w\-.+@]+)/course-meta/$', MyOrganizationPages.CourseMeta.list, name='web-course-meta-list'),
     url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/$', MyOrganizationPages.CourseMeta.instance, name='web-course-meta-instance'),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/coursegroup/$',MyOrganizationPages.CourseGroup.list,name="web-course-group-list"),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/coursegroup/create/$',MyOrganizationPages.CourseGroup.create,name="web-course-group-create"),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/course/$',MyOrganizationPages.Course.list,name="web-myorg-coursemeta-course-list"),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/course/create/$',MyOrganizationPages.Course.create,name="web-myorg-coursemeta-course-create"),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/mission/$',MyOrganizationPages.Mission.list,name="web-myorg-coursemeta-mission-list"),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/mission/create/$',MyOrganizationPages.Mission.create,name="web-myorg-coursemeta-mission-create"),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/category/$',MyOrganizationPages.Category.list,name="web-myorg-coursemeta-category-list"),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/category/create/$',MyOrganizationPages.Category.create,name="web-myorg-coursemeta-category-create"),
+    url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/category/info/([\w\-.+@]+)/$',MyOrganizationPages.Category.instance,name="web-myorg-coursemeta-category-instance"),
+
 
 ]
+
+courseGroup_patterns = [
+    url(r'^info/([\w\-.+@]+)/$',CourseGroup.instance,name="web-course-group-instance"),
+]
+
+course_patterns = [
+    url(r'^info/([\w\-.+@]+)/$',Course.instance,name="web-course-instance"),
+]
+
+mission_patterns = [
+    url(r'^info/([\w\-.+@]+)/$',Mission.instance,name="web-mission-instance"),
+]
+
 
 url_patterns = [
     url(r'home/', MainPages.home, name='web-home'),
@@ -65,5 +88,9 @@ url_patterns = [
     url(r'^myOrganizations/', include(myOrg_patterns)),
     url(r'^orgAdmin/', include(orgAdmin_patterns)),
     url(r'^userAdmin/', include(userAdmin_patterns)),
+    url(r'^courseGroup/',include(courseGroup_patterns)),
+    url(r'^course/',include(course_patterns)),
+    url(r'^mission/',include(mission_patterns)),
+
 
 ]

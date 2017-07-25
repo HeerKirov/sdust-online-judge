@@ -1,0 +1,36 @@
+{% extends "myorganization/course-meta/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}课程组{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+{% block nav_course_group %} active {% endblock %}
+
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="coursegroup"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+SATable.DRFTable({
+  id: 'coursegroup',
+  title: '所有课程组',
+  url: "{% url 'api-course-meta-course-group-list' uid %}",
+  search: true,
+  columns: [
+      { name: "gid", caption: "课程组ID", sort: true, type: 'Link', typeInfo: { base_url: '/JudgeOnline/web/courseGroup/info/', key: 'gid' } },
+
+    { name: "caption", caption: "课程组名称", sort: true, type: 'Link', typeInfo: { base_url: '/JudgeOnline/web/courseGroup/info/', key: 'gid' } },
+    { name: "available", caption: "可用", type: 'Boolean' },
+      { name: "deleted", caption: "deleted", type: 'Boolean' },
+      { name: "create_time", caption: "创建时间", type: 'Datetime' },
+      { name: "update_time", caption: "更新时间", type: 'Datetime' },
+  ],
+    createURL: "{% url 'web-course-group-create' oid uid%}"
+})
+</script>
+{% endblock %}

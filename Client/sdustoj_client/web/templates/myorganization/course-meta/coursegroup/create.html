@@ -1,0 +1,33 @@
+{% extends "myorganization/course-meta/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}创建课程组{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+{% block nav_course_group %} active {% endblock %}
+
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="coursegroup"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+SATable.SimpleAjaxForm({
+  id: 'coursegroup',
+  method: 'POST',
+  toSuccess: '{% url 'web-course-group-list' oid uid  %}',
+  url: '{% url 'api-course-meta-course-group-list' uid %}',
+  items: [
+    { name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
+    { name: 'caption', caption: '课程组名称', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'deleted', caption: 'deleted', type: 'Boolean', defaultTrue: true },
+
+    { name: 'introduction', caption: '简介', type: 'Text', typeInfo: { article:true, max_length: 150 } },
+  ]
+})
+</script>
+{% endblock %}

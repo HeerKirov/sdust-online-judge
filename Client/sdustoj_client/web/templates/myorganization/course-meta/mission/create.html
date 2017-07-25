@@ -1,0 +1,37 @@
+{% extends "myorganization/course-meta/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}任务{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+{% block nav_mission %} active {% endblock %}
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="mission"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+SATable.SimpleAjaxForm({
+  id: 'mission',
+  method: 'POST',
+  toSuccess: '{% url 'web-myorg-coursemeta-mission-list' oid uid  %}',
+  url: '{% url 'api-course-meta-mission-list' uid %}',
+  items: [
+
+    { name: 'caption', caption: '任务名称', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
+    { name: 'deleted', caption: 'deleted', type: 'Boolean', defaultTrue: true },
+
+    { name: 'introduction', caption: '简介', type: 'Text', typeInfo: { article:true, max_length: 150 } },
+    { name: 'start_time', caption: '任务开始时间',  type: 'Date'},
+    { name: 'end_time', caption: '任务结束时间',  type: 'Date' },
+  ]
+})
+</script>
+
+
+{% endblock %}

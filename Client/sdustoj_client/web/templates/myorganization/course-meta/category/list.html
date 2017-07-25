@@ -1,0 +1,34 @@
+{% extends "myorganization/course-meta/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}任务{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+{% block nav_using_categories %} active {% endblock %}
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="category"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+SATable.DRFTable({
+  id: 'category',
+  title: '所有题库',
+  url: "{% url 'api-course-meta-category-list' uid %}",
+  search: true,
+  columns: [
+     { name: "id", caption: "题库ID", type: 'Link' , typeInfo: { base_url: '{% url 'web-myorg-coursemeta-category-list' oid uid %}info/', key: 'id' }},
+      { name: "title", caption: "题库名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-myorg-coursemeta-category-list' oid uid %}info/', key: 'id' } },
+
+      {% comment %}{ name: "deleted", caption: "可用", type: 'Boolean' },
+    { name: 'start_time', caption: '开始时间', sort: true, type: 'Datetime' },
+    { name: 'end_time', caption: '结束时间', sort: true, type: 'Datetime' },{% endcomment %}
+  ],
+    createURL: "{% url 'web-myorg-coursemeta-category-create' oid uid%}"
+})
+</script>
+{% endblock %}
