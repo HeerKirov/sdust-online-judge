@@ -18,12 +18,12 @@
     <a class="navbar-brand hidden-sm-up">&nbsp</a>
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav mr-auto">
-        {% if 'ROOT' in user_info.identities or 'USER_ADMIN' in user_info.identities %}
+        {% if 'ROOT' in user_info.user.get_identities or 'USER_ADMIN' in user_info.user.get_identities %}
         <li class="nav-item">
           <a class="nav-link" href="{% url 'web-user-all' %}">管理用户</a>
         </li>
         {% endif %}
-        {% if 'ROOT' in user_info.identities or 'ORG_ADMIN' in user_info.identities %}
+        {% if 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
         <li class="nav-item">
           <a class="nav-link" href="{% url 'web-organization' %}">管理机构</a>
         </li>

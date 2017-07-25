@@ -139,6 +139,15 @@ class Utils(object):
                 context=context
             )
 
+        @staticmethod
+        def teacher(request, template, context=None):
+            return Utils.Render._identity_render(
+                request=request,
+                template=template,
+                id_expect=(IdentityChoices.teacher, IdentityChoices.root,),
+                context=context
+            )
+
 
 
 class MainPages(object):
@@ -297,6 +306,65 @@ class MyOrganizationPages(object):
         def instance(request, oid):
             return Utils.Render.all_user(request, 'myorganization/instance.html', {
                 'oid': oid
+            })
+
+
+    class EduAdmin(object):
+        @staticmethod
+        def list(request, oid):
+            return Utils.Render.all_user(request, 'myorganization/eduadmin/list.html',{
+                'oid': oid
+            })
+
+        @staticmethod
+        def instance(request, oid, uid):
+            return Utils.Render.all_user(request, 'myorganization/eduadmin/instance.html',{
+                'oid': oid,
+                'uid': uid
+            })
+
+    class Teacher(object):
+        @staticmethod
+        def list(request, oid):
+
+            return Utils.Render.all_user(request, 'myorganization/teacher/list.html', {
+                'oid': oid,
+
+            })
+
+        @staticmethod
+        def instance(request, oid, uid):
+            return Utils.Render.all_user(request, 'myorganization/teacher/instance.html', {
+                'oid': oid,
+                'uid': uid
+            })
+
+        @staticmethod
+        def create(request, oid):
+            return Utils.Render.all_user(request, 'myorganization/teacher/create.html', {
+                "oid": oid
+            })
+
+    class Student(object):
+        @staticmethod
+        def list(request, oid):
+
+            return Utils.Render.all_user(request, 'myorganization/student/list.html', {
+                'oid': oid,
+
+            })
+
+        @staticmethod
+        def instance(request, oid, uid):
+            return Utils.Render.all_user(request, 'myorganization/student/instance.html', {
+                'oid': oid,
+                'uid': uid
+            })
+
+        @staticmethod
+        def create(request, oid):
+            return Utils.Render.all_user(request, 'myorganization/student/create.html', {
+                "oid": oid
             })
 
     class CourseMeta(object):

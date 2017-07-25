@@ -330,6 +330,7 @@ class UserProfile(Resource):
             if IdentityChoices.org_admin in self.identities:
                 identities[IdentityChoices.org_admin] = True
 
+
         student_org = []
         student_identities = getattr(
             Student, 'objects').filter(profile=self).values('organization_id').distinct()

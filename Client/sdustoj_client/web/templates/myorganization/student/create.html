@@ -1,0 +1,143 @@
+{% extends "myorganization/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}创建{% endblock %}
+
+{% block nav_student %}active{% endblock %}
+
+{% block sub_content2 %}
+<div class="col-lg-8 col-md-10">
+    <div id="student-create"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+SATable.SimpleAjaxForm({
+  id: 'student-create',
+  method: 'POST',
+  toSuccess: '{% url 'web-studnet-list' oid %}',
+  url: '{% url 'api-organization-studnet-list' oid %}',
+  items: [
+    {
+      name: 'available',
+      caption: '可用',
+      type: 'Boolean',
+      defaultTrue: false
+    },
+    {
+      name: 'deleted',
+      caption: 'delete',
+      type: 'Boolean',
+      defaultTrue: false
+    },
+
+    {
+      name: 'identities',
+      caption: '权限',
+      type: 'Select',
+      typeInfo: {
+        many: true,
+        choices: [
+          { text: '学生', value: 'Student' },
+
+        ]
+      }
+    },
+
+    {
+      name: 'username',
+      caption: '用户名',
+      type: 'Text',
+      typeInfo: {
+        max_length: 150
+      }
+    },
+    {
+      name: 'name',
+      caption: '姓名',
+      type: 'Text',
+      typeInfo: {
+        max_length: 150
+      }
+    },
+    {
+      name: 'password',
+      caption: '密码',
+      type: 'Password',
+      typeInfo: {
+        max_length: 128,
+        confirm: true
+      }
+    },
+    {
+      name: 'sex',
+      caption: '性别',
+      type: 'Select',
+      typeInfo: {
+        many: false,
+        choices: [
+          { text: '保密', value: 'SECRET' },
+          { text: '男', value: 'MALE' },
+          { text: '女', value: 'FEMALE' }
+        ]
+      }
+    },
+    {
+      name: 'phone',
+      caption: '电话',
+      type: 'Text',
+      typeInfo: {
+        max_length: 32
+      }
+    },
+    {
+      name: 'email',
+      caption: '邮箱',
+      type: 'Email',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+    {
+      name: 'github',
+      caption: 'Github',
+      type: 'Text',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+    {
+      name: 'qq',
+      caption: 'QQ',
+      type: 'Text',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+    {
+      name: 'wechat',
+      caption: '微信',
+      type: 'Text',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+    {
+      name: 'blog',
+      caption: '博客',
+      type: 'Text',
+      typeInfo: {
+        max_length: 128
+      }
+    },
+      {
+          name: 'introduction',
+          caption: '介绍',
+          type: 'Text'
+      },
+  ]
+})
+</script>
+{% endblock %}
