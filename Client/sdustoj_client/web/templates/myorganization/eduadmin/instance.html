@@ -1,0 +1,64 @@
+{% extends "myorganization/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}教务管理员信息{% endblock %}
+
+{% block nav_myorganization %}active{% endblock %}
+{% block nav_eduadmin %} active {% endblock %}
+{% block sub_content2 %}
+
+  <div class="col-lg-8 col-md-10">
+    <div id="edu-admin-detail"></div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+SATable.SimpleAjaxInfo({
+  id: 'edu-admin-detail',
+  title: '用户账号',
+  getMethod: 'GET',
+  updateMethod: 'PATCH',
+  removeMethod: 'DELETE',
+  getURL: '{% url 'api-organization-edu-admins-detail' oid uid %}',
+  items: [
+    { name: 'username', caption: '用户名', type: 'Text', readOnly: true },
+    'Divide',
+    { name: 'identities', caption: '权限', type: 'Select', typeInfo: {
+      many: true,
+      choices: [
+          { text: '教务管理员', value: 'EDU_ADMIN' },
+      ]
+    } },
+    'Divide',
+    { name: 'name', caption: '姓名', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'sex', caption: '性别', type: 'Select', typeInfo: {
+      many: false,
+      choices: [
+          { text: '保密', value: 'SECRET' },
+          { text: '男', value: 'MALE' },
+          { text: '女', value: 'FEMALE' },
+      ]
+    } },
+    'Divide',
+    { name: 'email', caption: '邮箱', type: 'Text', typeInfo: { max_length: 128, email: true } },
+    { name: 'phone', caption: '电话', type: 'Text', typeInfo: { max_length: 32 } },
+    { name: 'github', caption: 'Github', type: 'Text', typeInfo: { max_length: 128 } },
+    { name: 'qq', caption: 'QQ', type: 'Text', typeInfo: { max_length: 128 } },
+    { name: 'wechat', caption: '微信', type: 'Text', typeInfo: { max_length: 128 } },
+    { name: 'blog', caption: '博客', type: 'Text', typeInfo: { max_length: 128 } },
+    'Divide',
+    { name: 'available', caption: '可用', type: 'Boolean' },
+    'Divide',
+    { name: 'last_login', caption: '最后登录', type: 'Datetime', readOnly: true },
+    { name: 'ip', caption: '最后登录IP', type: 'Text', readOnly: true },
+    'Divide',
+    { name: 'creator', caption: '创建者', type: 'Text', readOnly: true },
+    { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },
+    { name: 'updater', caption: '最后更新者', type: 'Text', readOnly: true },
+    { name: 'update_time', caption: '最后更新时间', type: 'Datetime', readOnly: true },
+  ]
+})
+</script>
+{% endblock %}
