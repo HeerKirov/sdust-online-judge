@@ -369,8 +369,9 @@ class UserProfile(Resource):
         # 刷新learning courses
         students = getattr(self, 'student_identities')
         if students is not None:
-            for c in (student.courses.all() for student in students.all()):
-                courses[c.cid] = 'learning'
+            for student in students.all():
+                for c in student.courses.all():
+                    courses[c.cid] = 'learning'
         self.courses = courses
         self.save()
 
@@ -711,6 +712,42 @@ class CourseGroup(Resource):
                                       through='CourseGroupTeacherRelation',
                                       through_fields=('course_group', 'teacher'))
 
+    @property
+    def meta_caption(self):
+        return self.meta.caption
+
+    def available_teachers(self, filter_exists=False):
+        """
+        获得该课程组所有可用的教师的查询集。该查询集仅基于父机构的所有教师进行返回查询。
+        如果指定了filter_exists，那么就会自动筛选掉已经在课程组中的教师。
+        :return: QuerySet<[Teacher]>
+        """
+        org = self.organization
+        if hasattr(org, 'teachers'):
+            all_teachers = org.teachers.all()
+            if filter_exists and hasattr(self, 'teachers'):
+                exists_teachers_id = [v['id'] for v in self.teachers.all().values('id')]
+                all_teachers = all_teachers.exclude(id__in=exists_teachers_id)
+            return all_teachers
+        else:
+            return Teacher.objects.none()
+
+    def available_courses(self, filter_exists=False):
+        """
+        获得所有可纳入的课程。调用参数使其过滤掉所有已经纳入的课程。
+        :param filter_exists: 
+        :return: 
+        """
+        org = self.organization
+        if hasattr(org, 'courses'):
+            all_courses = org.courses
+            if filter_exists and hasattr(self, 'courses'):
+                exists_courses_id = [v['cid'] for v in self.courses.all().values('cid')]
+                all_courses = all_courses.exclude(cid__in=exists_courses_id)
+            return all_courses
+        else:
+            return Course.objects.none()
+
 
 class Course(Resource):
     course_unit = models.OneToOneField(CourseUnit, related_name='course', primary_key=True,
@@ -766,6 +803,22 @@ class Course(Resource):
             return all_students
         else:
             return Student.objects.none()
+
+    def available_course_groups(self, filter_exists=False):
+        """
+        获得该课程可加入的所有课程组的查询集。通过参数过滤掉已经加入的课程组。
+        :param filter_exists: 
+        :return: 
+        """
+        org = self.organization
+        if hasattr(org, 'course_groups'):
+            all_groups = org.course_groups.all()
+            if filter_exists and hasattr(self, 'course_groups'):
+                exists_groups_id = [v['gid'] for v in self.course_groups.all().values('gid')]
+                all_groups = all_groups.exclude(gid__in=exists_groups_id)
+            return all_groups
+        else:
+            return CourseGroup.objects.none()
 
 
 class CourseGroupRelation(Resource):

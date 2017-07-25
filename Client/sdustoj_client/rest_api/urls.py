@@ -80,6 +80,8 @@ api_router.register(
     r'course-groups', CourseViewSets.CourseGroupInstance.CourseGroupViewSet, base_name='api-course-group')
 api_router.register(
     r'missions', MissionViewSets.MissionInstance.MissionViewSet, base_name='api-mission')
+api_router.register(
+    r'mission-groups', MissionViewSets.MissionGroupInstance.MissionGroupViewSet, base_name='api-mission-group')
 # --------
 api_organization_router = NestedSimpleRouter(api_router, r'organizations', lookup='organization')
 api_organization_router.register(
@@ -125,9 +127,24 @@ api_course_router.register(
     r'students', UserViewSets.CourseUserInstance.StudentViewSet, base_name='api-course-student')
 api_course_router.register(
     r'available-students', UserViewSets.CourseUserList.StudentAvailableViewSet, base_name='api-course-available-student')
+api_course_router.register(
+    r'groups', CourseViewSets.CourseGroupList.CourseGroupCourseViewSet, base_name='api-course-course-group')
+api_course_router.register(
+    r'groups', CourseViewSets.CourseGroupInstance.CourseGroupCourseViewSet, base_name='api-course-course-group')
+api_course_router.register(
+    r'available-groups', CourseViewSets.CourseGroupList.CourseGroupAvailableCourseViewSet,
+    base_name='api-course-available-course-group')
+api_course_router.register(
+    r'mission-groups', MissionViewSets.MissionGroupList.MissionGroupCourseViewSet, base_name='api-course-mission-group')
+# --------
+api_course_group_router = NestedSimpleRouter(api_router, r'course-groups', lookup='course_group')
+
+
+# --------
 
 api_patterns = []
 api_patterns += api_router.urls
 api_patterns += api_organization_router.urls
 api_patterns += api_course_meta_router.urls
 api_patterns += api_course_router.urls
+api_patterns += api_course_group_router.urls

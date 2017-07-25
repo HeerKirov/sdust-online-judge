@@ -820,7 +820,6 @@ class CourseUserSerializers(object):
         last_login = serializers.SlugRelatedField(read_only=True, slug_field='last_login', source='teacher')
         ip = serializers.SlugRelatedField(read_only=True, slug_field='ip', source='teacher')
 
-
         class Meta:
             model = CourseTeacherRelation
             read_only_fields = ('id',) + _RESOURCE_READONLY
@@ -1244,6 +1243,59 @@ class CourseSerializers(object):
                 exclude = ('organization', 'course_unit', 'teachers', 'courses',)
                 read_only_fields = ('gid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
 
+    class CourseCourseGroup(object):
+        # 课程所属的课程组
+        class List(serializers.ModelSerializer):
+            gid = serializers.SlugRelatedField(queryset=CourseGroup.objects.all(), slug_field='gid',
+                                               source='course_group')
+            caption = serializers.SlugRelatedField(slug_field='caption', read_only=True, source='course_group')
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='meta_caption',
+                                                        source='course_group')
+            meta = serializers.PrimaryKeyRelatedField(read_only=True, source='course_group')
+            introduction = serializers.SlugRelatedField(slug_field='introduction', read_only=True, source='course_group')
+
+            def create(self, validated_data):
+                course = validated_data['course']
+                course_group = validated_data['course_group']
+                available_course_groups = course.available_course_groups()
+                if course_group not in available_course_groups:
+                    raise ValidationError('course group is not available.')
+                elif course.course_groups.filter(gid=course_group.gid).exists():
+                    raise ValidationError('course group exists.')
+                instance = super().create(validated_data)
+                return instance
+
+            class Meta:
+                model = CourseGroupRelation
+                read_only_fields = ('id',) + _RESOURCE_READONLY
+                exclude = ('course', 'course_group')
+
+        # 课程所属的课程组
+        class Instance(serializers.ModelSerializer):
+            gid = serializers.SlugRelatedField(read_only=True, slug_field='gid', source='course_group')
+            caption = serializers.SlugRelatedField(slug_field='caption', read_only=True, source='course_group')
+            meta = serializers.PrimaryKeyRelatedField(read_only=True, source='course_group')
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='meta_caption',
+                                                        source='course_group')
+            introduction = serializers.SlugRelatedField(slug_field='introduction', read_only=True,
+                                                        source='course_group')
+
+            class Meta:
+                model = CourseGroupRelation
+                read_only_fields = ('id',) + _RESOURCE_READONLY
+                exclude = ('course', 'course_group')
+
+        # 课程可以加入的课程组
+        class ListAvailable(serializers.ModelSerializer):
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='caption', source='meta')
+
+            class Meta:
+                model = CourseGroup
+                exclude = ('course_unit', 'courses', 'teachers', 'organization')
+                read_only_fields = (
+                    'creator', 'updater', 'create_time', 'update_time',
+                )
+
 
 class MissionSerializers(object):
     class Mission(object):
@@ -1273,5 +1325,31 @@ class MissionSerializers(object):
                 read_only_fields = ('id', 'course_meta') + _RESOURCE_READONLY
 
     class MissionGroup(object):
-        pass
+        # 课程下属的任务组
+        class ListCourse(serializers.ModelSerializer):
+            meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
+
+            def create(self, validated_data):
+                unit = validated_data['course_unit']
+                if unit.type == 'GROUP':
+                    meta = unit.course_group.meta
+                else:
+                    meta = unit.course.meta
+                validated_data['course_meta'] = meta
+                validated_data['organization'] = meta.organization
+                return super().create(validated_data)
+
+            class Meta:
+                model = MissionGroup
+                exclude = ('organization', 'missions', 'course_unit')
+                read_only_fields = ('id', 'course_meta') + _RESOURCE_READONLY
+
+        # 任务组
+        class Instance(serializers.ModelSerializer):
+            meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
+
+            class Meta:
+                model = MissionGroup
+                exclude = ('organization', 'missions', 'course_unit')
+                read_only_fields = ('id', 'course_meta') + _RESOURCE_READONLY
 
