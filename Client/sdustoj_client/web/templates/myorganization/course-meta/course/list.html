@@ -1,0 +1,34 @@
+{% extends "myorganization/course-meta/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}课程组{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+{% block nav_course %} active {% endblock %}
+
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="course"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+SATable.DRFTable({
+  id: 'course',
+  title: '所有课程',
+  url: "{% url 'api-course-meta-course-list' uid %}",
+  search: true,
+  columns: [
+    { name: "caption", caption: "课程名称", sort: true, type: 'Link', typeInfo: { base_url: '/JudgeOnline/web/course/info/', key: 'cid' } },
+    { name: "available", caption: "可用", type: 'Boolean' },
+    { name: 'start_time', caption: '开课时间', sort: true, type: 'Date' },
+    { name: 'end_time', caption: '结课登录', sort: true, type: 'Date' },
+
+  ],
+    createURL: "{% url 'web-myorg-coursemeta-course-create' oid uid%}"
+})
+</script>
+{% endblock %}

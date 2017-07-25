@@ -133,6 +133,8 @@ class CreateResourceMixin(mixins.CreateModelMixin):
         extra_data = getattr(self, 'extra_data')
         extra_data['creator'] = request.user.username
         extra_data['updater'] = request.user.username
+        # extra_data['let_creator'] = request.user.username
+        # extra_data['let_updater'] = request.user.username
         extra_data['update_time'] = timezone.now()
         return super().create(request, *args, **kwargs)
 
@@ -244,7 +246,6 @@ class ListResourceViewSet(mixins.ListModelMixin,
 
 
 class ListReadonlyResourceViewSet(mixins.ListModelMixin,
-                                  CreateResourceMixin,
                                   ExtraDataMixin,
                                   viewsets.GenericViewSet):
     pass

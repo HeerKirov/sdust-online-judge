@@ -95,6 +95,125 @@ ORG_IDENTITY_CHOICES = (
 )
 
 
+class PublicFieldMixin(object):
+    @property
+    def let_name(self):
+        return getattr(self, 'name')
+
+    @let_name.setter
+    def let_name(self, value):
+        setattr(self, 'name', value)
+        getattr(self, 'profile').name = value
+
+    @property
+    def let_available(self):
+        return getattr(self, 'available')
+
+    @let_available.setter
+    def let_available(self, value):
+        setattr(self, 'available', value)
+        getattr(self, 'profile').available = value
+
+    @property
+    def let_deleted(self):
+        return getattr(self, 'deleted')
+
+    @let_deleted.setter
+    def let_deleted(self, value):
+        setattr(self, 'deleted', value)
+        getattr(self, 'profile').deleted = value
+
+    @property
+    def sex(self):
+        return getattr(self, 'profile').sex
+
+    @sex.setter
+    def sex(self, value):
+        getattr(self, 'profile').sex = value
+
+    @property
+    def phone(self):
+        return getattr(self, 'profile').phone
+
+    @phone.setter
+    def phone(self, value):
+        getattr(self, 'profile').phone = value
+
+    @property
+    def email(self):
+        return getattr(self, 'profile').email
+
+    @email.setter
+    def email(self, value):
+        getattr(self, 'profile').email = value
+
+    @property
+    def github(self):
+        return getattr(self, 'profile').github
+
+    @github.setter
+    def github(self, value):
+        getattr(self, 'profile').github = value
+
+    @property
+    def qq(self):
+        return getattr(self, 'profile').qq
+
+    @qq.setter
+    def qq(self, value):
+        getattr(self, 'profile').qq = value
+
+    @property
+    def wechat(self):
+        return getattr(self, 'profile').wechat
+
+    @wechat.setter
+    def wechat(self, value):
+        getattr(self, 'profile').wechat = value
+
+    @property
+    def blog(self):
+        return getattr(self, 'profile').blog
+
+    @blog.setter
+    def blog(self, value):
+        getattr(self, 'profile').blog = value
+
+    @property
+    def introduction(self):
+        return getattr(self, 'profile').introduction
+
+    @introduction.setter
+    def introduction(self, value):
+        getattr(self, 'profile').introduction = value
+
+    @property
+    def last_login(self):
+        return getattr(self, 'profile').last_login
+
+    @property
+    def ip(self):
+        return getattr(self, 'profile').ip
+
+    @property
+    def let_creator(self):
+        return getattr(self, 'creator')
+
+    @let_creator.setter
+    def let_creator(self, value):
+        setattr(self, 'creator', value)
+        getattr(self, 'profile').creator = value
+
+    @property
+    def let_updater(self):
+        return getattr(self, 'updater')
+
+    @let_updater.setter
+    def let_updater(self, value):
+        setattr(self, 'updater', value)
+        getattr(self, 'profile').updater = value
+
+
 class UserProfile(Resource):
     SEX_CHOICES = ('MALE', 'FEMALE', 'SECRET')
 
@@ -131,6 +250,69 @@ class UserProfile(Resource):
     courses = pg_fields.JSONField(default={})
 
     @property
+    def let_name(self):
+        return self.name
+
+    @let_name.setter
+    def let_name(self, value):
+        self.name = value
+        if hasattr(self, 'edu_admin_identities'):
+            for i in self.edu_admin_identities.all():
+                i.name = value
+        if hasattr(self, 'teacher_identities'):
+            for i in self.teacher_identities.all():
+                i.name = value
+        if hasattr(self, 'student_identities'):
+            for i in self.student_identities.all():
+                i.name = value
+
+    @property
+    def let_creator(self):
+        return self.creator
+
+    @let_creator.setter
+    def let_creator(self, value):
+        self.creator = value
+        if hasattr(self, 'edu_admin_identities'):
+            for i in self.edu_admin_identities.all():
+                i.creator = value
+        if hasattr(self, 'teacher_identities'):
+            for i in self.teacher_identities.all():
+                i.creator = value
+        if hasattr(self, 'student_identities'):
+            for i in self.student_identities.all():
+                i.creator = value
+
+    @property
+    def let_updater(self):
+        return self.updater
+
+    @let_updater.setter
+    def let_updater(self, value):
+        self.updater = value
+        if hasattr(self, 'edu_admin_identities'):
+            for i in self.edu_admin_identities.all():
+                i.updater = value
+        if hasattr(self, 'teacher_identities'):
+            for i in self.teacher_identities.all():
+                i.updater = value
+        if hasattr(self, 'student_identities'):
+            for i in self.student_identities.all():
+                i.updater = value
+
+    def has_identities(self, *args):
+        """
+        是否拥有其中之一的权限。
+        :param args: 
+        :return: 
+        """
+        for identity, value in self.identities.items():
+            if value:
+                for arg in args:
+                    if arg == identity:
+                        return True
+        return False
+
     def get_identities(self):
         ret = []
         for k, v in self.identities.items():
@@ -173,6 +355,25 @@ class UserProfile(Resource):
         self.identities = identities
         self.save()
 
+    def update_courses_cache(self):
+        """
+        刷新缓存的课程cid。
+        :return: 
+        """
+        courses = {}
+        # 刷新teaching courses
+        teachers = getattr(self, 'teacher_identities')
+        if teachers is not None:
+            for c in (teacher.courses.all() for teacher in teachers.all()):
+                courses[c.cid] = 'teaching'
+        # 刷新learning courses
+        students = getattr(self, 'student_identities')
+        if students is not None:
+            for c in (student.courses.all() for student in students.all()):
+                courses[c.cid] = 'learning'
+        self.courses = courses
+        self.save()
+
     @staticmethod
     def create_profile(**kwargs):
         username = kwargs['username']
@@ -209,16 +410,81 @@ class UserProfile(Resource):
         快速获得该用户关联的机构。仅在该用户是机构成员时才有有效结果。自动筛掉了root用户并按id排序.
         :return: QuerySet<[Organization]>
         """
-        user = self.user
-        edu_organizations = getattr(Organization, 'objects').filter(edu_admins__user=user)
-        teacher_organizations = getattr(Organization, 'objects').filter(teachers__user=user)
-        student_organizations = getattr(Organization, 'objects').filter(students__user=user)
-        organizations = edu_organizations | teacher_organizations | student_organizations
-        organizations = organizations.exclude(name='ROOT').order_by('id')
-        return organizations
+        # user = self.user
+        # edu_organizations = getattr(Organization, 'objects').filter(edu_admins__user=user)
+        # teacher_organizations = getattr(Organization, 'objects').filter(teachers__user=user)
+        # student_organizations = getattr(Organization, 'objects').filter(students__user=user)
+        # organizations = edu_organizations | teacher_organizations | student_organizations
+        # organizations = organizations.exclude(name='ROOT').order_by('id')
+        # return organizations
+        organizations_id = []
+        for identity, value in self.identities.items():
+            if identity in ORG_IDENTITY_CHOICES and len(value) > 0:
+                organizations_id += value
+        return Organization.objects.filter(id__in=organizations_id).all()
+
+    def get_courses(self, **kwargs):
+        """
+        快速获得该用户关联的课程。
+        当存在参数时，按照参数筛选“teaching”和“learning”的课程。如果参数有“admin”且用户是教务管理员，则列出全部机构内课程。
+        1.通过course.objects->student.objects->id匹配，二重积
+        2.通过relation.objects->student.id匹配，一重积，不过要并集
+        3.通过cache缓存，course.objects->id匹配，一重积，可以直接用in语法
+        根据设计文档，这里选择了方案3.
+        :return: QuerySet<[Course]>
+        """
+        if len(kwargs) > 0:
+            teaching = 'teaching' in kwargs and kwargs['teaching'] is True
+            learning = 'learning' in kwargs and kwargs['learning'] is True
+            admin = 'admin' in kwargs and kwargs['admin'] is True
+        else:
+            teaching = True
+            learning = True
+            admin = True
+        courses_id = []
+        for course, c_type in self.courses.items():
+            if c_type == 'teaching' and teaching:
+                courses_id.append(course)
+            elif c_type == 'learning' and learning:
+                courses_id.append(course)
+        courses_edu = Course.objects.filter(cid__in=courses_id).all()
+        if admin:
+            organizations_id = []
+            for identity, value in self.identities.items():
+                if identity == IdentityChoices.edu_admin and len(value) > 0:
+                    organizations_id += value
+            courses_admin = Course.objects.filter(organization__id__in=organizations_id).all()
+        else:
+            courses_admin = Course.objects.none()
+        return courses_edu | courses_admin
+
+    def get_course_groups(self, **kwargs):
+        """
+        获取所有管理的课程组。对于教师，会返回管理的课程组;对于教务管理员，会返回管理机构下的所有课程组。
+        该函数不通过缓存，直接查询。
+        :return: 
+        """
+        if len(kwargs) > 0:
+            teaching = kwargs['teaching'] if 'teaching' in kwargs else False
+            admin = kwargs['admin'] if 'admin' in kwargs else False
+        else:
+            teaching = True
+            admin = True
+        course_groups = CourseGroup.objects.none()
+        if admin and self.has_identities(IdentityChoices.edu_admin):
+            organizations = self.get_organizations()
+            for org in organizations:
+                if hasattr(org, 'course_groups'):
+                    course_groups = course_groups | org.course_groups.all()
+        if teaching and self.has_identities(IdentityChoices.teacher):
+            teacher_identities = Teacher.objects.filter(profile=self).all()
+            for teacher in teacher_identities:
+                if hasattr(teacher, 'course_groups'):
+                    course_groups = course_groups | teacher.course_groups.all()
+        return course_groups
 
 
-class Student(Resource):
+class Student(Resource, PublicFieldMixin):
     id = models.BigAutoField(primary_key=True)
 
     user = models.ForeignKey(User, related_name='student_identities', to_field='id',
@@ -255,7 +521,7 @@ class Student(Resource):
         return self.profile.email
 
 
-class Teacher(Resource):
+class Teacher(Resource, PublicFieldMixin):
     id = models.BigAutoField(primary_key=True)
 
     user = models.ForeignKey(User, related_name='teacher_identities', to_field='id',
@@ -289,7 +555,7 @@ class Teacher(Resource):
         return self.profile.email
 
 
-class EduAdmin(Resource):
+class EduAdmin(Resource, PublicFieldMixin):
     id = models.BigAutoField(primary_key=True)
 
     user = models.ForeignKey(User, related_name='edu_admin_identities', to_field='id',
@@ -310,15 +576,6 @@ class EduAdmin(Resource):
         },
     )
     name = models.CharField(max_length=150)
-
-    def get_sex(self):
-        return self.profile.sex
-
-    def get_phone(self):
-        return self.profile.phone
-
-    def get_email(self):
-        return self.profile.email
 
 
 # -- Organization -----------------------------------------------------------------------
@@ -405,7 +662,6 @@ class CourseMeta(Resource):
                                      on_delete=models.CASCADE)
 
     caption = models.CharField(max_length=150)
-
     categories = models.ManyToManyField('Category', related_name='course_meta',
                                         through='CourseMetaCategoryRelation',
                                         through_fields=('course_meta', 'category'))
@@ -414,6 +670,18 @@ class CourseMeta(Resource):
     number_course_groups = models.IntegerField(default=0)
     number_categories = models.IntegerField(default=0)
     number_problems = models.IntegerField(default=0)
+
+    def update_numbers(self):
+        self.number_courses = getattr(Course, 'objects').filter(meta=self).count()
+        self.number_course_groups = getattr(CourseGroup, 'objects').filter(meta=self).count()
+        self.number_categories = self.categories.count()
+        self.number_problems = sum(i.number_problem for i in self.categories.all())
+        self.save()
+
+    def available_categories(self):
+        parent_available = self.organization.available_categories()
+        exist_id = [i.id for i in self.categories.all()]  # 获得该meta旗下的所有的已用题库的id-list
+        return parent_available.exclude(id__in=exist_id).all()
 
 
 class CourseUnit(models.Model):
@@ -510,6 +778,7 @@ class CourseGroupTeacherRelation(Resource):
 
 class Mission(Resource):
     id = models.BigAutoField(primary_key=True)
+    caption = models.CharField(max_length=150)
     course_meta = models.ForeignKey(CourseMeta, related_name='missions',
                                     to_field='id', on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, related_name='missions',
@@ -523,6 +792,7 @@ class Mission(Resource):
 
 class MissionGroup(Resource):
     id = models.BigAutoField(primary_key=True)
+    caption = models.CharField(max_length=150)
     course_meta = models.ForeignKey(CourseMeta, related_name='mission_groups',
                                     to_field='id', on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, related_name='mission_groups',

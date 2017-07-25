@@ -432,11 +432,16 @@ class UserSerializers(object):
     # admin - 教务管理员
     class ListEduAdmin(serializers.ModelSerializer):
         password = serializers.CharField(max_length=128, write_only=True)
-        identities = serializers.ListField(child=serializers.CharField(),
-                                           source='get_identities',
-                                           allow_null=True,
-                                           allow_empty=True,
-                                           read_only=True)
+        sex = serializers.CharField()
+        phone = serializers.CharField()
+        email = serializers.CharField()
+        github = serializers.CharField()
+        qq = serializers.CharField()
+        wechat = serializers.CharField()
+        blog = serializers.CharField()
+        introduction = serializers.CharField()
+        last_login = serializers.DateTimeField(read_only=True)
+        ip = serializers.IPAddressField(read_only=True)
 
         @staticmethod
         def validate_username(value):
@@ -450,14 +455,6 @@ class UserSerializers(object):
         def validate_sex(value):
             return Utils.validate_sex(value)
 
-        @staticmethod
-        def validate_identities(value):
-            ret = {}
-            for it in value:
-                if it == IdentityChoices.edu_admin:
-                    ret[it] = True
-            return ret
-
         def create(self, validated_data):
             organization = validated_data['organization']
             profile = UserProfile.create_profile(**validated_data)
@@ -465,28 +462,39 @@ class UserSerializers(object):
                 user=profile.user,
                 profile=profile,
                 username=profile.username,
-                organization=organization
+                name=profile.name,
+                organization=organization,
+                # 缓存项和重复项
+                available=profile.available,
+                deleted=profile.deleted,
+                creator=profile.creator,
+                updater=profile.updater,
+                update_time=profile.update_time
             )
             edu_admin.save()
             profile.update_identities()
-            return profile
+            return edu_admin
 
         class Meta:
-            model = UserProfile
-            exclude = ('user', 'courses', 'is_staff')
+            model = EduAdmin
+            exclude = ('user', 'profile', 'organization')
             read_only_fields = (
                 'creator', 'updater', 'create_time', 'update_time',
-                'last_login', 'ip'
             )
 
     # admin - 教务管理员
     class InstanceEduAdmin(serializers.ModelSerializer):
-        password = serializers.CharField(max_length=128, write_only=True)
-        identities = serializers.ListField(child=serializers.CharField(),
-                                           source='get_identities',
-                                           allow_null=True,
-                                           allow_empty=True,
-                                           read_only=True)
+        password = serializers.CharField(max_length=128, write_only=True, required=False)
+        sex = serializers.CharField()
+        phone = serializers.CharField()
+        email = serializers.CharField()
+        github = serializers.CharField()
+        qq = serializers.CharField()
+        wechat = serializers.CharField()
+        blog = serializers.CharField()
+        introduction = serializers.CharField()
+        last_login = serializers.DateTimeField(read_only=True)
+        ip = serializers.IPAddressField(read_only=True)
 
         @staticmethod
         def validate_password(value):
@@ -496,60 +504,70 @@ class UserSerializers(object):
         def validate_sex(value):
             return Utils.validate_sex(value)
 
-        @staticmethod
-        def validate_identities(value):
-            ret = {}
-            for it in value:
-                if it == IdentityChoices.edu_admin:
-                    ret[it] = True
-            return ret
-
-        class Meta:
-            model = UserProfile
-            exclude = ('user', 'courses', 'is_staff')
-            read_only_fields = (
-                'creator', 'updater', 'create_time', 'update_time',
-                'last_login', 'ip'
-            )
-
         def update(self, instance, validated_data):
             if 'password' in validated_data:
                 instance.user.set_password(validated_data.pop('password'))
                 instance.user.save()
             ret = super().update(instance, validated_data)
-            ret.update_identities()
+            profile = ret.profile
+            profile.update_identities()
+            # 下面更新那些缓存项和重复项
+            profile.updater = ret.updater
+            profile.name = ret.name
+            profile.available = ret.available
+            profile.deleted = ret.deleted
+            profile.save()
             return instance
 
+        class Meta:
+            model = EduAdmin
+            exclude = ('user', 'profile', 'organization')
+            read_only_fields = (
+                'username',
+                'creator', 'updater', 'create_time', 'update_time',
+            )
 
+
+# 机构下的用户
 class OrgUserSerializers(object):
     # 教务管理员
     class ListEduAdmin(serializers.ModelSerializer):
-        identities = serializers.ListField(child=serializers.CharField(),
-                                           source='get_identities',
-                                           allow_null=True,
-                                           allow_empty=True,
-                                           read_only=True)
+        sex = serializers.CharField(read_only=True)
+        phone = serializers.CharField(read_only=True)
+        email = serializers.CharField(read_only=True)
+        github = serializers.CharField(read_only=True)
+        qq = serializers.CharField(read_only=True)
+        wechat = serializers.CharField(read_only=True)
+        blog = serializers.CharField(read_only=True)
+        introduction = serializers.CharField(read_only=True)
+        last_login = serializers.DateTimeField(read_only=True)
+        ip = serializers.IPAddressField(read_only=True)
 
         class Meta:
-            model = UserProfile
-            exclude = ('user', 'courses', 'is_staff')
+            model = EduAdmin
+            exclude = ('user', 'profile', 'organization')
             read_only_fields = (
                 'creator', 'updater', 'create_time', 'update_time',
-                'last_login', 'ip'
             )
 
     # 教务管理员
     class InstanceEduAdmin(serializers.ModelSerializer):
-        identities = serializers.ListField(child=serializers.CharField(),
-                                           source='get_identities',
-                                           allow_null=True,
-                                           allow_empty=True,
-                                           read_only=True)
+        sex = serializers.CharField(read_only=True)
+        phone = serializers.CharField(read_only=True)
+        email = serializers.CharField(read_only=True)
+        github = serializers.CharField(read_only=True)
+        qq = serializers.CharField(read_only=True)
+        wechat = serializers.CharField(read_only=True)
+        blog = serializers.CharField(read_only=True)
+        introduction = serializers.CharField(read_only=True)
+        last_login = serializers.DateTimeField(read_only=True)
+        ip = serializers.IPAddressField(read_only=True)
 
         class Meta:
             model = UserProfile
-            exclude = ('user', 'courses', 'is_staff')
+            exclude = ('user', 'profile', 'organization')
             read_only_fields = (
+                'username',
                 'creator', 'updater', 'create_time', 'update_time',
                 'last_login', 'ip'
             )
@@ -590,6 +608,7 @@ class OrgUserSerializers(object):
                 user=profile.user,
                 profile=profile,
                 username=profile.username,
+                name=profile.name,
                 organization=organization
             )
             teacher.save()
@@ -681,6 +700,7 @@ class OrgUserSerializers(object):
                 user=profile.user,
                 profile=profile,
                 username=profile.username,
+                name=profile.name,
                 organization=organization
             )
             student.save()
@@ -735,6 +755,19 @@ class OrgUserSerializers(object):
             ret = super().update(instance, validated_data)
             ret.update_identities()
             return instance
+
+
+# 课程下的用户
+class CourseUserSerializers(object):
+    # 教师
+    class ListTeacher(serializers.ModelSerializer):
+        teacher_id = serializers.PrimaryKeyRelatedField(queryset=Teacher.objects.all(), source='teacher')
+        # teacher_
+
+        class Meta:
+            model = CourseTeacherRelation
+            read_only_fields = ('id',) + _RESOURCE_READONLY
+            exclude = ('course',)
 
 
 class OrganizationSerializers(object):
@@ -930,6 +963,56 @@ class CategorySerializers(object):
                 model = Category
                 exclude = ('problems',)
 
+    class CourseMetaCategory(object):
+        # 课程基类正在使用的题库
+        class List(serializers.ModelSerializer):
+            category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category')
+            title = serializers.SlugRelatedField(slug_field='title', read_only=True, source='category')
+            introduction = serializers.SlugRelatedField(slug_field='introduction', read_only=True, source='category')
+            source = serializers.SlugRelatedField(slug_field='source', read_only=True, source='category')
+            author = serializers.SlugRelatedField(slug_field='author', read_only=True, source='category')
+            number_problem = serializers.SlugRelatedField(slug_field='number_problem', read_only=True,
+                                                          source='category')
+
+            def create(self, validated_data):
+                course_meta = validated_data['course_meta']  # 得到parent的meta
+                goal_category_id = validated_data['category'].id  # 欲添加的题库的id
+                available_id = [i['id'] for i in course_meta.available_categories().values('id')]
+                if goal_category_id not in available_id:
+                    # 如果想要添加的题库不在可添加的题库内
+                    raise ValidationError('category is not available.')
+                elif course_meta.categories.filter(id=goal_category_id).exists():
+                    raise ValidationError('category exists.')
+                validated_data = dict_sub(validated_data, 'category', 'course_meta')
+                validated_data['organization'] = course_meta.organization
+                return super().create(validated_data)
+
+            class Meta:
+                model = CourseMetaCategoryRelation
+                fields = ('id', 'category_id', 'title', 'introduction', 'source', 'author', 'number_problem')
+                read_only_fields = _RESOURCE_READONLY
+
+        # 课程基类正在使用的题库
+        class Instance(serializers.ModelSerializer):
+            category_id = serializers.PrimaryKeyRelatedField(read_only=True, source='category')
+            title = serializers.SlugRelatedField(slug_field='title', read_only=True, source='category')
+            introduction = serializers.SlugRelatedField(slug_field='introduction', read_only=True, source='category')
+            source = serializers.SlugRelatedField(slug_field='source', read_only=True, source='category')
+            author = serializers.SlugRelatedField(slug_field='author', read_only=True, source='category')
+            number_problem = serializers.SlugRelatedField(slug_field='number_problem', read_only=True,
+                                                          source='category')
+
+            class Meta:
+                model = CourseMetaCategoryRelation
+                fields = ('id', 'category_id', 'title', 'introduction', 'source', 'author', 'number_problem')
+                read_only_fields = _RESOURCE_READONLY
+
+        # 课程基类可用的题库
+        class ListAvailable(serializers.ModelSerializer):
+            class Meta:
+                model = Category
+                exclude = ('problems',)
+
 
 class CourseSerializers(object):
     class CourseMeta(object):
@@ -944,8 +1027,100 @@ class CourseSerializers(object):
                                     'number_problems',
                                     'creator', 'updater', 'create_time', 'update_time',)
 
+        class InstanceOrg(serializers.ModelSerializer):
+            class Meta:
+                model = CourseMeta
+                exclude = ('organization', 'categories')
+                read_only_fields = ('number_courses',
+                                    'number_course_groups',
+                                    'number_categories',
+                                    'number_problems',
+                                    'creator', 'updater', 'create_time', 'update_time',)
+
     class Course(object):
-        pass
+        class List(serializers.ModelSerializer):
+            meta = serializers.PrimaryKeyRelatedField(read_only=True)
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='caption', source='meta')
+
+            def create(self, validated_data):
+                unit = CourseUnit.objects.create(type='COURSE')
+                meta = validated_data['meta']
+                unit.save()
+                validated_data['course_unit'] = unit
+                validated_data['cid'] = unit.id
+                validated_data['organization'] = meta.organization
+                return super().create(validated_data)
+
+            class Meta:
+                model = Course
+                exclude = ('organization', 'course_unit', 'teachers', 'students',)
+                read_only_fields = ('cid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
+
+        class Instance(serializers.ModelSerializer):
+            meta = serializers.PrimaryKeyRelatedField(read_only=True)
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='caption', source='meta')
+
+            class Meta:
+                model = Course
+                exclude = ('organization', 'course_unit', 'teachers', 'students',)
+                read_only_fields = ('cid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
 
     class CourseGroup(object):
+        class List(serializers.ModelSerializer):
+            meta = serializers.PrimaryKeyRelatedField(read_only=True)
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='caption', source='meta')
+
+            def create(self, validated_data):
+                unit = CourseUnit.objects.create(type='GROUP')
+                meta = validated_data['meta']
+                unit.save()
+                validated_data['course_unit'] = unit
+                validated_data['gid'] = unit.id
+                validated_data['organization'] = meta.organization
+                return super().create(validated_data)
+
+            class Meta:
+                model = CourseGroup
+                exclude = ('organization', 'course_unit', 'teachers', 'courses',)
+                read_only_fields = ('gid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
+
+        class Instance(serializers.ModelSerializer):
+            meta = serializers.PrimaryKeyRelatedField(read_only=True)
+            meta_caption = serializers.SlugRelatedField(read_only=True, slug_field='caption', source='meta')
+
+            class Meta:
+                model = CourseGroup
+                exclude = ('organization', 'course_unit', 'teachers', 'courses',)
+                read_only_fields = ('gid', 'meta', 'meta_caption', 'creator', 'updater', 'create_time', 'update_time',)
+
+
+class MissionSerializers(object):
+    class Mission(object):
+        class List(serializers.ModelSerializer):
+            meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
+            # start_time = serializers.DateTimeField()
+            # end_time = serializers.DateTimeField()
+
+            def create(self, validated_data):
+                meta = validated_data['course_meta']
+                validated_data['organization'] = meta.organization
+                return super().create(validated_data)
+
+            class Meta:
+                model = Mission
+                exclude = ('organization', 'problems')
+                read_only_fields = ('id', 'course_meta') + _RESOURCE_READONLY
+
+        class Instance(serializers.ModelSerializer):
+            meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
+            # start_time = serializers.DateTimeField()
+            # end_time = serializers.DateTimeField()
+
+            class Meta:
+                model = Mission
+                exclude = ('organization', 'problems')
+                read_only_fields = ('id', 'course_meta') + _RESOURCE_READONLY
+
+    class MissionGroup(object):
         pass
+

@@ -1,10 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-meixie
-</body>
-</html>
+{% extends "myorganization/course-meta/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}课程基类信息{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+{% block nav_course_info %} active {% endblock %}
+
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="classmeta"></div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+    <script>
+    SATable.SimpleAjaxInfo({
+  id: 'classmeta',
+  title: '课程基类信息',
+  getMethod: 'GET',
+  updateMethod: 'PATCH',
+  removeMethod: 'DELETE',
+  getURL: '{% url 'api-course-meta-detail' uid %}',
+  updateURL: '{% url 'api-course-meta-detail' uid %}',
+  removeURL: '{% url 'api-course-meta-detail' uid %}',
+  removeToURL: '{% url 'web-course-meta-list' oid %}',
+  items: [
+    { name: 'id', caption: '课程基类ID', type: 'Text', readOnly: true },
+    { name: 'caption', caption: '课程基类名称', type: 'Text', readOnly:{{ readonly }}, typeInfo: { max_length: 150 } },
+    { name: 'available', caption: '可用', type: 'Boolean' ,readOnly:{{ readonly }}},
+    'Divide',
+    { name: 'creator', caption: '创建者', type: 'Text', readOnly: true },
+    { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },
+    { name: 'updater', caption: '最后更新者', type: 'Text', readOnly: true },
+    { name: 'update_time', caption: '最后更新时间', type: 'Datetime', readOnly: true },
+    'Divide',
+
+      { name: 'number_problems', caption: '题目数量', type: 'Number', readOnly: true},
+    { name: 'number_courses', caption: '课程数量', type: 'Number', readOnly: true },
+    { name: 'number_course_groups', caption: '课程组数量', type: 'Number', readOnly: true },
+    { name: 'number_categories', caption: '题库数量', type: 'Number', readOnly: true },
+  ]
+})
+    </script>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "course-group/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}题库详情{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+
+{% block sub_content %}
+<div class="container row justify-content-sm-center">
+  <div class="col-lg-8 col-md-10">
+    <div id="categoryinfo"></div>
+  </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+SATable.SimpleAjaxInfo({
+  id: 'categoryinfo',
+  title: '题库信息',
+  getMethod: 'GET',
+  updateMethod: 'PATCH',
+  removeMethod: 'DELETE',
+  getURL: '{% url 'api-course-meta-category-detail' mid cid  %}',
+  updateURL: '{% url 'api-course-meta-category-detail'  mid cid %}',
+  removeURL: '{% url 'api-course-meta-category-detail'  mid cid %}',
+  removeToURL: document.referrer,
+  items: [
+    { name: 'id', caption: '使用题库ID', type:'Number' },
+    { name: 'category_id', caption: '可用题库ID', type:'Number' },
+    { name: 'title', caption: '题库名称', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
+    { name: 'source', caption: '题库来源', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'author', caption: '题库作者', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'number_problem', caption: '题目数量', type:'Number' },
+  ]
+})
+</script>
+{% endblock %}
