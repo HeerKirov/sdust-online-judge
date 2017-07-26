@@ -1,0 +1,34 @@
+{% extends "course/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}任务详情{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+
+{% block sub_content2 %}
+
+  <div class="col-lg-8 col-md-10">
+    <div id="mission-group-create"></div>
+  </div>
+
+{% endblock %}
+{% block script %}
+<script>
+SATable.SimpleAjaxForm({
+  id: 'mission-group-create',
+  method: 'POST',
+  toSuccess: '{% url 'web-course-mission-group-list' cid %}',
+  url: '{% url 'api-course-group-mission-group-list' cid %}',
+  items: [
+
+    { name: 'caption', caption: '任务组名称', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
+    { name: 'deleted', caption: 'deleted', type: 'Boolean', defaultTrue: false },
+
+
+  ]
+})
+
+</script>
+{% endblock %}

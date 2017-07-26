@@ -1,0 +1,52 @@
+{% extends "course/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}添加学生{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+{% block nav_teacher %} active {% endblock %}
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="student"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+function getOptions(ret) {
+  var results = ret.results
+  var data = []
+  for (var i in results) {
+    var obj = results[i]
+    var text = obj.student_id + ': ' + obj.name
+    var value = obj.username
+    data.push({ text: text, value: value })
+  }
+  return data
+}
+SATable.SimpleAjaxForm({
+  id: 'student',
+  method: 'POST',
+  toSuccess: '{% url 'web-course-student-list' cid %}',
+  url: '{% url 'api-course-student-list' cid %}',
+  items: [
+      { name: 'username', caption: '可选学生', type: 'Select', typeInfo: {
+        many: false,
+        ajax: true,
+        ajaxInfo: {
+            type: 'GET',
+            url: '{% url 'api-course-available-student-list' cid %}',
+            dataType: 'json',
+        },
+        responseHandler: SATable.DRF.keepRequest,
+        dataGenerator: getOptions
+    } },
+  ]
+
+})
+</script>
+
+ 
+{% endblock %}

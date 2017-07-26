@@ -25,18 +25,10 @@ SATable.SimpleAjaxInfo({
   {% if 'EDU_ADMIN' in user_info.user.get_identities %}
   updateURL: '{% url 'api-organization-student-detail' oid uid %}',
   removeURL: '{% url 'api-organization-student-detail' oid uid %}',
-  removeToURL: '{% url 'api-organization-student-list' oid %}',
+  removeToURL: '{% url 'web-student-list' oid %}',
  {% endif %}
   items: [
     { name: 'username', caption: '用户名', type: 'Text', readOnly: true },
-    'Divide',
-    { name: 'identities', caption: '权限', type: 'Select', typeInfo: {
-      many: true,
-      choices: [
-          { text: '无', value: 'None' },
-          { text: '学生', value: 'Student' },
-      ]
-    } },
     'Divide',
     { name: 'name', caption: '姓名', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'sex', caption: '性别', type: 'Select', typeInfo: {

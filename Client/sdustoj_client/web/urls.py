@@ -1,5 +1,5 @@
 from django.conf.urls import url, include
-from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages,CourseGroup,Course,Mission
+from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages,CourseGroup,Course,Mission,MissionGroup
 
 
 personal_patterns = [
@@ -75,12 +75,30 @@ courseGroup_patterns = [
 
 course_patterns = [
     url(r'^info/([\w\-.+@]+)/$',Course.instance,name="web-course-instance"),
+    url(r'^info/([\w\-.+@]+)/groupin/$',Course.Groupin.list,name="web-course-groupin-list"),
+    url(r'^info/([\w\-.+@]+)/groupin/info/([\w\-.+@]+)/$',Course.Groupin.instance,name="web-course-groupin-detail"),
+    url(r'^info/([\w\-.+@]+)/teacher/$',Course.Teacher.list,name="web-course-teacher-list"),
+    url(r'^info/([\w\-.+@]+)/teacher/info/([\w\-.+@]+)/$', Course.Teacher.instance, name="web-course-teacher-detail"),
+    url(r'^info/([\w\-.+@]+)/teacher/create/$',Course.Teacher.create,name="web-course-teacher-create"),
+    url(r'^info/([\w\-.+@]+)/student/$',Course.Student.list,name="web-course-student-list"),
+    url(r'^info/([\w\-.+@]+)/student/info/([\w\-.+@]+)/$', Course.Student.instance, name="web-course-student-detail"),
+    url(r'^info/([\w\-.+@]+)/student/create/$',Course.Student.create,name="web-course-student-create"),
+    url(r'^info/([\w\-.+@]+)/mission-group/$',Course.MissionGroup.list,name="web-course-mission-group-list"),
+    url(r'^info/([\w\-.+@]+)/mission-group/info/([\w\-.+@]+)/$', Course.MissionGroup.instance, name="web-course-mission-group-detail"),
+    url(r'^info/([\w\-.+@]+)/mission-group/create$',Course.MissionGroup.create,name="web-course-mission-group-create"),
 ]
 
 mission_patterns = [
     url(r'^info/([\w\-.+@]+)/$',Mission.instance,name="web-mission-instance"),
+
 ]
 
+mission_group_patterns = [
+    url(r'^info/([\w\-.+@]+)/$',MissionGroup.instance,name="web-mission-group-instance"),
+    url(r'^info/([\w\-.+@]+)/mission/$',MissionGroup.Mission.list,name="web-mission-group-mission-list"),
+    url(r'^info/([\w\-.+@]+)/mission/info/([\w\-.+@]+)/$',MissionGroup.Mission.instance,name="web-mission-group-mission-detail"),
+    url(r'^info/([\w\-.+@]+)/mission/create/$',MissionGroup.Mission.create,name="web-mission-group-mission-create"),
+]
 
 url_patterns = [
     url(r'home/', MainPages.home, name='web-home'),
@@ -95,6 +113,6 @@ url_patterns = [
     url(r'^courseGroup/',include(courseGroup_patterns)),
     url(r'^course/',include(course_patterns)),
     url(r'^mission/',include(mission_patterns)),
-
+    url(r'^mission-group/',include(mission_group_patterns)),
 
 ]
