@@ -133,6 +133,11 @@ class IsTeacherOrEduAdmin(OrgPermission):
     write_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root]
 
 
+class IsTeacherOrEduAdminReadonly(OrgPermission):
+    read_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root]
+    write_identities = [IdentityChoices.root]
+
+
 class IsTeacherReadonly(OrgPermission):
     read_identities = [IdentityChoices.teacher, IdentityChoices.root]
     write_identities = [IdentityChoices.root]

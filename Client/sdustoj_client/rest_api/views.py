@@ -5,7 +5,8 @@ from django.shortcuts import get_object_or_404
 
 from .models import *
 from . import permissions
-from .serializers import PersonalSerializers, UserSerializers, OrgUserSerializers, CourseUserSerializers
+from .serializers import PersonalSerializers, UserSerializers, OrgUserSerializers
+from .serializers import CourseUserSerializers, CourseGroupUserSerializer
 from .serializers import OrganizationSerializers, CategorySerializers
 from .serializers import CourseSerializers, MissionSerializers
 from .utils import UserDisabled, AlreadyLogin, OrgNestedMixin
@@ -438,6 +439,61 @@ class UserViewSets(object):
             parent_related_name = 'course'  # 在当前models中，上级model的关联名
             parent_pk = 'cid'  # 上级model的主键名
 
+    # course group下属的用户
+    class CourseGroupUserList(object):
+        # 课程组拥有的教师 - deep2 - relation
+        class TeacherViewSet(ListNestedResourceViewSet):
+            queryset = CourseGroupTeacherRelation.objects.all()
+            serializer_class = CourseGroupUserSerializer.ListTeacher
+            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            ordering_fields = ('id',)
+
+            parent_queryset = CourseGroup.objects.all()
+            parent_lookup = 'course_group_gid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'course_group'  # 在当前models中，上级model的关联名
+            parent_pk = 'gid'  # 上级model的主键名
+
+        # 课程组可以添加的教师 - deep2
+        class TeacherAvailableViewSet(ListReadonlyNestedResourceViewSet):
+            queryset = Teacher.objects.all()
+            serializer_class = CourseGroupUserSerializer.ListAvailableTeacher
+            permission_classes = (IsEduAdminReadonly,)
+            ordering_fields = ('id',)
+
+            parent_queryset = CourseGroup.objects.all()
+            parent_lookup = 'course_group_gid'
+            parent_pk = 'gid'
+            parent_related_name = 'course_group'
+
+            def _set_queryset(self, **kwargs):
+                # 有关可以使用的题库的选定规则：
+                # 机构使用的题库，仅显示与该机构有直接关联的题库；
+                # 机构可以使用的题库，仅显示该机构还没添加、但是(上级机构添加了的题库|上级机构是root时的所有题库).
+                parent_queryset = getattr(self, 'parent_queryset')
+                parent_lookup = getattr(self, 'parent_lookup')
+                parent_pk = getattr(self, 'parent_pk')
+                parent_related_name = getattr(self, 'parent_related_name')
+
+                lookup = kwargs[parent_lookup]  # 查询得到上级course_group的gid
+                parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})  # 查询得到该course
+                self.queryset = parent.available_teachers(filter_exists=True)
+
+                return parent_related_name, parent
+
+    # course group下属的用户
+    class CourseGroupUserInstance(object):
+        # 课程组拥有的教师 - deep2 - relation
+        class TeacherViewSet(InstanceNestedResourceViewSet):
+            queryset = CourseGroupTeacherRelation.objects.all()
+            serializer_class = CourseGroupUserSerializer.InstanceTeacher
+            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            lookup_field = 'id'
+
+            parent_queryset = CourseGroup.objects.all()
+            parent_lookup = 'course_group_gid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'course_group'  # 在当前models中，上级model的关联名
+            parent_pk = 'gid'  # 上级model的主键名
+
 
 # 机构api
 class OrganizationViewSets(object):
@@ -718,6 +774,7 @@ class CourseViewSets(object):
                     return queryset
 
     class CourseList(object):
+        # 课程基类下的课程
         class CourseViewSet(ListNestedResourceViewSet):
             queryset = Course.objects.all()
             serializer_class = CourseSerializers.Course.List
@@ -735,6 +792,7 @@ class CourseViewSets(object):
                 instance.organization.update_numbers()
                 return instance
 
+        # 我教的课程
         class CourseTeachingViewSet(ListReadonlyResourceViewSet):
             queryset = Course.objects.all()
             serializer_class = CourseSerializers.Course.List
@@ -746,6 +804,7 @@ class CourseViewSets(object):
                 profile = self.request.user.profile
                 return profile.get_courses(teaching=True)
 
+        # 我学习的课程
         class CourseLearningViewSet(ListReadonlyResourceViewSet):
             queryset = Course.objects.all()
             serializer_class = CourseSerializers.Course.List
@@ -757,7 +816,47 @@ class CourseViewSets(object):
                 profile = self.request.user.profile
                 return profile.get_courses(learning=True)
 
+        # 课程组所拥有的课程 - deep2 - relation
+        class CourseCourseGroupViewSet(ListNestedResourceViewSet):
+            queryset = CourseGroupRelation.objects.all()
+            serializer_class = CourseSerializers.CourseGroupCourse.List
+            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            ordering_fields = ('id',)
+
+            parent_queryset = CourseGroup.objects.all()
+            parent_lookup = 'course_group_gid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'course_group'  # 在当前models中，上级model的关联名
+            parent_pk = 'gid'  # 上级model的主键名
+
+        # 课程组可以添加的课程 - deep2
+        class CourseAvailableCourseGroupViewSet(ListReadonlyNestedResourceViewSet):
+            queryset = Course.objects.all()
+            serializer_class = CourseSerializers.CourseGroupCourse.ListAvailable
+            permission_classes = (IsEduAdminReadonly,)
+            ordering_fields = ('id',)
+
+            parent_queryset = CourseGroup.objects.all()
+            parent_lookup = 'course_group_gid'
+            parent_pk = 'gid'
+            parent_related_name = 'course_group'
+
+            def _set_queryset(self, **kwargs):
+                # 有关可以使用的题库的选定规则：
+                # 机构使用的题库，仅显示与该机构有直接关联的题库；
+                # 机构可以使用的题库，仅显示该机构还没添加、但是(上级机构添加了的题库|上级机构是root时的所有题库).
+                parent_queryset = getattr(self, 'parent_queryset')
+                parent_lookup = getattr(self, 'parent_lookup')
+                parent_pk = getattr(self, 'parent_pk')
+                parent_related_name = getattr(self, 'parent_related_name')
+
+                lookup = kwargs[parent_lookup]  # 查询得到上级course_group的gid
+                parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})  # 查询得到该course
+                self.queryset = parent.available_courses(filter_exists=True)
+
+                return parent_related_name, parent
+
     class CourseInstance(object):
+        # 课程
         class CourseViewSet(InstanceResourceViewSet):
             queryset = Course.objects.all()
             serializer_class = CourseSerializers.Course.Instance
@@ -778,6 +877,18 @@ class CourseViewSets(object):
                     if identity in SITE_IDENTITY_CHOICES and value is True:
                         return self.queryset
                 return profile.get_courses()
+
+        # 课程组所拥有的课程 - deep2 - relation
+        class CourseCourseGroupViewSet(InstanceNestedResourceViewSet):
+            queryset = CourseGroupRelation.objects.all()
+            serializer_class = CourseSerializers.CourseGroupCourse.Instance
+            permission_classes = (IsTeacherReadonlyOrEduAdmin,)
+            lookup_field = 'id'
+
+            parent_queryset = CourseGroup.objects.all()
+            parent_lookup = 'course_group_gid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'course_group'  # 在当前models中，上级model的关联名
+            parent_pk = 'gid'  # 上级model的主键名
 
     class CourseGroupList(object):
         # 课程组
@@ -914,6 +1025,42 @@ class MissionViewSets(object):
                 instance.organization.update_numbers()
                 return instance
 
+        # 任务组下的任务 - deep2 - relation
+        class MissionMissionGroupViewSet(ListNestedResourceViewSet):
+            queryset = MissionGroupRelation.objects.all()
+            serializer_class = MissionSerializers.MissionMissionGroup.List
+            permission_classes = (IsStudentReadonlyOrAnyOrg,)
+            ordering_fields = ('id',)
+
+            parent_queryset = MissionGroup.objects.all()
+            parent_lookup = 'mission_group_id'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'mission_group'  # 在当前models中，上级model的关联名
+            parent_pk = 'id'  # 上级model的主键名
+
+        # 任务组下可以添加的任务 - deep2
+        class MissionAvailableMissionGroupViewSet(ListReadonlyNestedResourceViewSet):
+            queryset = Mission.objects.all()
+            serializer_class = MissionSerializers.MissionMissionGroup.ListAvailable
+            permission_classes = (IsTeacherOrEduAdminReadonly,)
+            ordering_fields = ('id',)
+
+            parent_queryset = MissionGroup.objects.all()
+            parent_lookup = 'mission_group_id'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'mission_group'  # 在当前models中，上级model的关联名
+            parent_pk = 'id'  # 上级model的主键名
+
+            def _set_queryset(self, **kwargs):
+                parent_queryset = getattr(self, 'parent_queryset')
+                parent_lookup = getattr(self, 'parent_lookup')
+                parent_pk = getattr(self, 'parent_pk')
+                parent_related_name = getattr(self, 'parent_related_name')
+
+                lookup = kwargs[parent_lookup]  # 查询得到上级course的cid
+                parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})  # 查询得到该course
+                self.queryset = parent.available_missions(filter_exists=True)
+
+                return parent_related_name, parent
+
     class MissionInstance(object):
         # 任务
         class MissionViewSet(InstanceResourceViewSet):
@@ -951,6 +1098,18 @@ class MissionViewSets(object):
                     queryset = queryset | mission_group.missions.all()
                 return queryset
 
+        # 任务组下的任务 - deep2 - relation
+        class MissionMissionGroupViewSet(InstanceNestedResourceViewSet):
+            queryset = MissionGroupRelation.objects.all()
+            serializer_class = MissionSerializers.MissionMissionGroup.List
+            permission_classes = (IsStudentReadonlyOrAnyOrg,)
+            lookup_field = 'id'
+
+            parent_queryset = MissionGroup.objects.all()
+            parent_lookup = 'mission_group_id'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'mission_group'  # 在当前models中，上级model的关联名
+            parent_pk = 'id'  # 上级model的主键名
+
     class MissionGroupList(object):
         # 课程下的任务组
         class MissionGroupCourseViewSet(ListNestedResourceViewSet):
@@ -962,6 +1121,24 @@ class MissionViewSets(object):
 
             parent_queryset = CourseUnit.objects.all()
             parent_lookup = 'course_cid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'course_unit'  # 在当前models中，上级model的关联名
+            parent_pk = 'id'  # 上级model的主键名
+
+            def perform_create(self, serializer):
+                instance = super().perform_create(serializer)
+                instance.organization.update_numbers()
+                return instance
+
+        # 课程组下的任务组
+        class MissionGroupCourseGroupViewSet(ListNestedResourceViewSet):
+            queryset = MissionGroup.objects.all()
+            serializer_class = MissionSerializers.MissionGroup.ListCourseGroup
+            permission_classes = (IsTeacherOrEduAdmin,)
+            ordering_fields = ('caption', 'weight')
+            search_fields = ('caption',)
+
+            parent_queryset = CourseUnit.objects.all()
+            parent_lookup = 'course_group_gid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
             parent_related_name = 'course_unit'  # 在当前models中，上级model的关联名
             parent_pk = 'id'  # 上级model的主键名
 
@@ -996,7 +1173,9 @@ class MissionViewSets(object):
                         for oid in value:
                             queryset = queryset | self.queryset.filter(organization_id=oid)
                 units = (v['course_unit'] for v in profile.get_courses().values('course_unit'))
+                g_units = (v['course_unit'] for v in profile.get_course_groups().values('course_unit'))
                 course_units = course_units | CourseUnit.objects.filter(id__in=units)
+                course_units = course_units | CourseUnit.objects.filter(id__in=g_units)
                 # 从课程单元查任务组，再查任务
                 mission_groups = MissionGroup.objects.none()
                 for course_unit in course_units:

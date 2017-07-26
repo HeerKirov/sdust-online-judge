@@ -740,7 +740,7 @@ class CourseGroup(Resource):
         """
         org = self.organization
         if hasattr(org, 'courses'):
-            all_courses = org.courses
+            all_courses = org.courses.all()
             if filter_exists and hasattr(self, 'courses'):
                 exists_courses_id = [v['cid'] for v in self.courses.all().values('cid')]
                 all_courses = all_courses.exclude(cid__in=exists_courses_id)
@@ -771,6 +771,10 @@ class Course(Resource):
     students = models.ManyToManyField('Student', related_name='courses',
                                       through='CourseStudentRelation',
                                       through_fields=('course', 'student'))
+
+    @property
+    def meta_caption(self):
+        return self.meta.caption
 
     def available_teachers(self, filter_exists=False):
         """
@@ -874,6 +878,10 @@ class Mission(Resource):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
 
+    @property
+    def meta_caption(self):
+        return self.course_meta.caption
+
 
 class MissionGroup(Resource):
     id = models.BigAutoField(primary_key=True)
@@ -888,6 +896,17 @@ class MissionGroup(Resource):
                                       through='MissionGroupRelation',
                                       through_fields=('mission_group', 'mission'))
     weight = models.DecimalField(default=1, max_digits=19, decimal_places=10)
+
+    def available_missions(self, filter_exists=False):
+        org = self.organization
+        if hasattr(org, 'missions'):
+            missions = org.missions.all()
+            if filter_exists and hasattr(self, 'missions'):
+                exists_id = [v['id'] for v in self.missions.all().values('id')]
+                missions = missions.exclude(id__in=exists_id)
+            return missions
+        else:
+            return Mission.objects.none()
 
 
 class MissionGroupRelation(Resource):
