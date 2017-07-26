@@ -19,18 +19,9 @@ SATable.SimpleAjaxInfo({
   id: 'edu-admin-detail',
   title: '用户账号',
   getMethod: 'GET',
-  updateMethod: 'PATCH',
-  removeMethod: 'DELETE',
   getURL: '{% url 'api-organization-edu-admins-detail' oid uid %}',
   items: [
     { name: 'username', caption: '用户名', type: 'Text', readOnly: true },
-    'Divide',
-    { name: 'identities', caption: '权限', type: 'Select', typeInfo: {
-      many: true,
-      choices: [
-          { text: '教务管理员', value: 'EDU_ADMIN' },
-      ]
-    } },
     'Divide',
     { name: 'name', caption: '姓名', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'sex', caption: '性别', type: 'Select', typeInfo: {

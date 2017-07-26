@@ -1,14 +1,14 @@
-{% extends "myorganization/adminBasic.html" %}
+{% extends "course/adminBasic.html" %}
 {% load staticfiles %}
 
-{% block title %}教师信息{% endblock %}
+{% block title %}学生信息{% endblock %}
 
 {% block nav_myorganization %}active{% endblock %}
-{% block nav_teacher %} active {% endblock %}
+{% block nav_student %} active {% endblock %}
 {% block sub_content2 %}
 
   <div class="col-lg-8 col-md-10">
-    <div id="edu-admin-detail"></div>
+    <div id="course-teacher-detail"></div>
   </div>
 
 {% endblock %}
@@ -16,19 +16,26 @@
 {% block script %}
 <script>
 SATable.SimpleAjaxInfo({
- id: 'edu-admin-detail',
-  title: '教师信息',
+ id: 'course-teacher-detail',
+  title: '学生信息',
   getMethod: 'GET',
   updateMethod: 'PATCH',
   removeMethod: 'DELETE',
-  getURL: '{% url 'api-organization-teacher-detail' oid uid %}',
+  getURL: '{% url 'api-course-student-detail' cid  id %}',
   {% if 'EDU_ADMIN' in user_info.user.get_identities %}
-  updateURL: '{% url 'api-organization-teacher-detail' oid uid %}',
-  removeURL: '{% url 'api-organization-teacher-detail' oid uid %}',
-  removeToURL: '{% url 'web-teacher-list' oid %}',
+  removeURL: '{% url 'api-course-student-detail' cid  id %}',
+  removeToURL: '{% url 'web-course-student-list' cid  %}',
   {% endif %}
   items: [
     { name: 'username', caption: '用户名', type: 'Text', readOnly: true },
+    'Divide',
+    { name: 'identities', caption: '权限', type: 'Select', typeInfo: {
+      many: true,
+      choices: [
+          { text: '无', value: 'None' },
+          { text: '教师', value: 'Teacher' },
+      ]
+    } },
     'Divide',
     { name: 'name', caption: '姓名', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'sex', caption: '性别', type: 'Select', typeInfo: {

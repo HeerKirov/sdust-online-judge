@@ -14,12 +14,17 @@
     <div class="col-lg-3 col-md-4">
       <div class="container">
         <nav class="nav flex-column nav-pills">
-          <a class="nav-link {% block nav_course %}{% endblock %}" href="">课程详细信息信息</a>
-          <a class="nav-link {% block nav_eduadmin %}{% endblock %}" href="">下属课程</a>
-          <a class="nav-link {% block nav_teacher %}{% endblock %}" href="">教师</a>
-          <a class="nav-link {% block nav_student %}{% endblock %}" href="">学生</a>
-          <a class="nav-link {% block nav_course_meta %}{% endblock %}" href="}">任务组</a>
-            <a class="nav-link {% block nav_course_meta2 %}{% endblock %}" href="">所在课程</a>
+        {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+          <a class="nav-link {% block nav_course_info %}{% endblock %}" href="{% url 'web-course-instance' cid %}">课程详细信息</a>
+        {% endif %}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+          <a class="nav-link {% block nav_groupin %}{% endblock %}" href="{% url 'web-course-groupin-list' cid %}">所在课程组</a>
+        {% endif %}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER' in user_info.user.get_identities%}
+          <a class="nav-link {% block nav_teacher %}{% endblock %}" href="{% url 'web-course-teacher-list' cid %}">教师</a>
+        {% endif %}
+          <a class="nav-link {% block nav_student %}{% endblock %}" href="{% url 'web-course-student-list' cid %}">学生</a>
+          <a class="nav-link {% block nav_mission %}{% endblock %}" href="{% url 'web-course-mission-group-list' cid %}">任务组</a>
 
         </nav>
       </div>

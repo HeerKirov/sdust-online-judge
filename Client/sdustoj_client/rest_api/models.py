@@ -364,8 +364,9 @@ class UserProfile(Resource):
         # 刷新teaching courses
         teachers = getattr(self, 'teacher_identities')
         if teachers is not None:
-            for c in (teacher.courses.all() for teacher in teachers.all()):
-                courses[c.cid] = 'teaching'
+            for teacher in teachers.all():
+                for c in teacher.courses.all():
+                    courses[c.cid] = 'teaching'
         # 刷新learning courses
         students = getattr(self, 'student_identities')
         if students is not None:
