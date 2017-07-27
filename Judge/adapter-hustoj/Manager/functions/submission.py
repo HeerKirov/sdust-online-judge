@@ -165,7 +165,6 @@ def _handler(sid):  # 处理某个提交。
     max_memory = -1
     max_status = 4
     for test_data_id, solution_id in status.items():  # 遍历查询所有测试数据的提交的测试数据ID和hustoj提交的ID。
-        solution = None
         while True:
             try:
                 solution = mysql_session.query(mysql_models.Solution).filter_by(solution_id=solution_id).first()
