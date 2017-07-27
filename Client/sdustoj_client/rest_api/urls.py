@@ -167,6 +167,19 @@ api_mission_group_router.register(
 api_mission_group_router.register(
     r'available-missions', MissionViewSets.MissionList.MissionAvailableMissionGroupViewSet,
     base_name='api-mission-group-available-mission')
+# --------
+api_mission_router = NestedSimpleRouter(api_router, r'missions', lookup='mission')
+api_mission_router.register(
+    r'problems', MissionViewSets.ProblemList.ProblemViewSet, base_name='api-mission-problem')
+api_mission_router.register(
+    r'problems', MissionViewSets.ProblemInstance.ProblemViewSet, base_name='api-mission-problem')
+api_mission_router.register(
+    r'available-problems', MissionViewSets.ProblemList.ProblemAvailableViewSet,
+    base_name='api-mission-available-problem')
+api_mission_router.register(
+    r'submissions', MissionViewSets.SubmissionList.SubmissionViewSet, base_name='api-mission-submission')
+api_mission_router.register(
+    r'submissions', MissionViewSets.SubmissionInstance.SubmissionViewSet, base_name='api-mission-submission')
 
 # --------
 api_patterns = []
@@ -176,3 +189,4 @@ api_patterns += api_course_meta_router.urls
 api_patterns += api_course_router.urls
 api_patterns += api_course_group_router.urls
 api_patterns += api_mission_group_router.urls
+api_patterns += api_mission_router.urls

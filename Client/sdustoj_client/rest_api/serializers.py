@@ -1545,3 +1545,90 @@ class MissionSerializers(object):
                 exclude = ('organization', 'missions', 'course_unit')
                 read_only_fields = ('id', 'course_meta') + _RESOURCE_READONLY
 
+
+class ProblemSerializers(object):
+    class Problem(serializers.ModelSerializer):
+        class Meta:
+            model = Problem
+            exclude = ('number_invalid_word',)
+
+    class Environment(serializers.ModelSerializer):
+        class Meta:
+            model = Environment
+            fields = ('id', 'name')
+
+    class Limit(serializers.ModelSerializer):
+        class Meta:
+            model = Limit
+            exclude = ('problem',)
+
+
+class ProblemRelationSerializers(object):
+    class List(serializers.ModelSerializer):
+        problem = ProblemSerializers.Problem(read_only=True)
+
+        def create(self, validated_data):
+            problem = validated_data['problem']
+            mission = validated_data['mission']
+            available_problems = mission.available_problems()
+            if problem not in available_problems:
+                raise ValidationError('problem is not available.')
+            elif mission.problems.filter(id=problem.id).exists():
+                raise ValidationError('problem exists.')
+            instance = super().create(validated_data)
+            return instance
+
+        class Meta:
+            model = MissionProblemRelation
+            exclude = ('mission', )
+            read_only_fields = ('id',) + _RESOURCE_READONLY
+
+    class Instance(serializers.ModelSerializer):
+        problem = ProblemSerializers.Problem(read_only=True)
+
+        class Meta:
+            model = MissionProblemRelation
+            exclude = ('mission', )
+            read_only_fields = ('id',) + _RESOURCE_READONLY
+
+    class ListAvailable(serializers.ModelSerializer):
+        category = serializers.SlugRelatedField(slug_field='title', read_only=True)
+        directory = serializers.ListField(read_only=True)
+        problem = ProblemSerializers.Problem(read_only=True)
+
+        class Meta:
+            model = CategoryProblemRelation
+            fields = ('id', 'category', 'directory', 'problem')
+
+
+class SubmissionSerializers(object):
+    class List(serializers.ModelSerializer):
+        problem = serializers.PrimaryKeyRelatedField(read_only=True)
+        problem_title = serializers.SlugRelatedField(read_only=True, slug_field='title', source='problem')
+        environment = serializers.SlugRelatedField(queryset=Environment.objects.all(), slug_field='name')
+        user = serializers.SlugRelatedField(read_only=True, slug_field='username')
+        user_name = serializers.SlugRelatedField(read_only=True, slug_field='name', source='user')
+        code = serializers.CharField(write_only=True)
+
+        def create(self, validated_data):
+            # todo
+            pass
+
+        class Meta:
+            model = Submission
+            read_only_fields = ('id', 'sid', 'time', 'length', 'memory', 'status', 'finished',
+                                'submit_time', 'update_time', 'ip')
+            exclude = ('organization', 'mission')
+
+    class Instance(serializers.ModelSerializer):
+        problem = serializers.PrimaryKeyRelatedField(read_only=True)
+        problem_title = serializers.SlugRelatedField(read_only=True, slug_field='title', source='problem')
+        environment = serializers.SlugRelatedField(read_only=True, slug_field='name')
+        user = serializers.SlugRelatedField(read_only=True, slug_field='username')
+        user_name = serializers.SlugRelatedField(read_only=True, slug_field='name', source='user')
+
+        class Meta:
+            model = Submission
+            read_only_fields = ('id', 'sid', 'time', 'length', 'memory', 'status', 'finished',
+                                'submit_time', 'update_time', 'ip')
+            exclude = ('organization', 'mission')

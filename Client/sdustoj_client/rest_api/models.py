@@ -412,13 +412,6 @@ class UserProfile(Resource):
         快速获得该用户关联的机构。仅在该用户是机构成员时才有有效结果。自动筛掉了root用户并按id排序.
         :return: QuerySet<[Organization]>
         """
-        # user = self.user
-        # edu_organizations = getattr(Organization, 'objects').filter(edu_admins__user=user)
-        # teacher_organizations = getattr(Organization, 'objects').filter(teachers__user=user)
-        # student_organizations = getattr(Organization, 'objects').filter(students__user=user)
-        # organizations = edu_organizations | teacher_organizations | student_organizations
-        # organizations = organizations.exclude(name='ROOT').order_by('id')
-        # return organizations
         organizations_id = []
         for identity, value in self.identities.items():
             if identity in ORG_IDENTITY_CHOICES and len(value) > 0:
@@ -458,7 +451,7 @@ class UserProfile(Resource):
             courses_admin = Course.objects.filter(organization__id__in=organizations_id).all()
         else:
             courses_admin = Course.objects.none()
-        return courses_edu | courses_admin
+        return (courses_edu | courses_admin).distinct()
 
     def get_course_groups(self, **kwargs):
         """
@@ -483,7 +476,7 @@ class UserProfile(Resource):
             for teacher in teacher_identities:
                 if hasattr(teacher, 'course_groups'):
                     course_groups = course_groups | teacher.course_groups.all()
-        return course_groups
+        return course_groups.distinct()
 
 
 class Student(Resource, PublicFieldMixin):
@@ -883,6 +876,33 @@ class Mission(Resource):
     def meta_caption(self):
         return self.course_meta.caption
 
+    def available_problem_relations(self):
+        """
+        给出任务可以使用的全部的题目的依赖关系的查询集，包括已经添加在内的题目。
+        :return: 
+        """
+        meta = self.course_meta
+        available_cat = meta.categories.all()  # 给出所处课程基类被分配使用的全部题库
+        relations = CategoryProblemRelation.objects.none()
+        for cat in available_cat.all():
+            relations = relations | CategoryProblemRelation.objects.filter(category=cat).all()
+        return relations.distinct()
+
+    def available_problems(self):
+        """
+        给出任务可以使用的全部的题目的查询集，包括已经添加的题目在内。
+        :return: 
+        """
+        meta = self.course_meta
+        available_cat = meta.categories.all()
+        problems = Problem.objects.none()
+        for cat in available_cat.all():
+            problems = problems | cat.problems.all()
+        return problems.distinct()
+
+    def __str__(self):
+        return "< %s: %s >" % (self.id, self.caption)
+
 
 class MissionGroup(Resource):
     id = models.BigAutoField(primary_key=True)
@@ -946,10 +966,16 @@ class Problem(models.Model):
     number_category = models.IntegerField()
     number_invalid_word = models.IntegerField()
 
+    def __str__(self):
+        return "< %s: %s >" % (self.id, self.title)
+
 
 class Environment(models.Model):
     id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=128)
+
+    def __str__(self):
+        return "< %s: %s >" % (self.id, self.name)
 
 
 class Limit(models.Model):

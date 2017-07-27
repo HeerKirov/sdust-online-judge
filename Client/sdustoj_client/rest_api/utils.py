@@ -324,7 +324,6 @@ class NestedResourceViewSet(ListNestedMixin,
 
 
 class ListReadonlyNestedViewSet(ListNestedMixin,
-                                ExtraDataMixin,
                                 NestedMixin,
                                 viewsets.GenericViewSet):
     pass
@@ -332,7 +331,6 @@ class ListReadonlyNestedViewSet(ListNestedMixin,
 
 class ListNestedViewSet(ListNestedMixin,
                         CreateNestedMixin,
-                        ExtraDataMixin,
                         NestedMixin,
                         viewsets.GenericViewSet):
     pass
@@ -341,15 +339,19 @@ class ListNestedViewSet(ListNestedMixin,
 class InstanceNestedViewSet(RetrieveNestedMixin,
                             UpdateResourceMixin,
                             DestroyNestedMixin,
-                            ExtraDataMixin,
                             NestedMixin,
                             viewsets.GenericViewSet):
     pass
 
 
+class InstanceReadonlyNestedViewSet(RetrieveNestedMixin,
+                                    NestedMixin,
+                                    viewsets.GenericViewSet):
+    pass
+
+
 class InstanceDeleteNestedViewSet(RetrieveNestedMixin,
                                   DestroyNestedMixin,
-                                  ExtraDataMixin,
                                   NestedMixin,
                                   viewsets.GenericViewSet):
     pass
