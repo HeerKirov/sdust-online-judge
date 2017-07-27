@@ -2,7 +2,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.types import LargeBinary, BigInteger
+from sqlalchemy.types import LargeBinary, BigInteger, Float
 from sqlalchemy.dialects.postgresql import INET, JSONB, ARRAY
 
 from config import PG_SETTINGS
@@ -78,3 +78,38 @@ class CategoryProblemRelation(_Base):
     category_id = Column(BigInteger)
     problem_id = Column(BigInteger)
     directory = Column(ARRAY(String(length=128)))
+
+
+class Submission(_Base):
+    __tablename__ = 'rest_api_submission'
+
+    id = Column(BigInteger, primary_key=True)
+    sid = Column(BigInteger, unique=True)
+    time = Column(Integer)
+    memory = Column(Integer)
+    length = Column(Integer)
+    status = Column(String(length=4))
+    score = Column(Float, nullable=True)
+    finished = Column(Boolean)
+    update_time = Column(DateTime)
+
+
+class CompileInfo(_Base):
+    __tablename__ = 'rest_api_compileinfo'
+
+    submission_id = Column(BigInteger, primary_key=True)
+    info = Column(String)
+
+
+class TestDataStatus(_Base):
+    __tablename__ = 'rest_api_testdatastatus'
+
+    submission_id = Column(BigInteger, primary_key=True)
+    status = Column(JSONB)
+
+
+class SubmissionCode(_Base):
+    __tablename__ = 'rest_api_submissioncode'
+
+    submission_id = Column(BigInteger, primary_key=True)
+    code = Column(JSONB)
