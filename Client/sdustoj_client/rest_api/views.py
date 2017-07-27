@@ -14,7 +14,7 @@ from .utils import ListResourceViewSet, InstanceResourceViewSet
 from .utils import ListReadonlyResourceViewSet, InstanceReadonlyResourceViewSet, ListReadonlyNestedResourceViewSet
 from .utils import ListNestedResourceViewSet, InstanceNestedResourceViewSet, InstanceReadonlyNestedResourceViewSet
 from .utils import ListNestedViewSet, ListReadonlyNestedViewSet, InstanceDeleteNestedViewSet
-from .utils import InstanceReadonlyNestedViewSet
+from .utils import InstanceReadonlyNestedViewSet, CreateNestedViewSet
 from .permissions import *
 
 
@@ -1229,7 +1229,7 @@ class MissionViewSets(object):
         # 任务下的题目 - deep2 - relation
         class ProblemViewSet(InstanceNestedResourceViewSet):
             queryset = MissionProblemRelation.objects.all()
-            serializer_class = ProblemRelationSerializers.List
+            serializer_class = ProblemRelationSerializers.Instance
             permission_classes = (IsStudentReadonlyOrAnyOrg,)
             lookup_field = 'id'
 
@@ -1253,9 +1253,9 @@ class MissionViewSets(object):
             parent_pk = 'id'  # 上级model的主键名
 
             def perform_create(self, serializer):
-                instance = super().perform_create(serializer)
-                # todo 提交到Server端
-                return instance
+                extra_data = getattr(self, 'extra_data')
+                extra_data['profile'] = self.request.user.profile
+                return super().perform_create(serializer)
 
     class SubmissionInstance(object):
         # 任务下的提交

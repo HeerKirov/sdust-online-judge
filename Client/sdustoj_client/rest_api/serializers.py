@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
+from rest_framework import serializers
+from rest_framework.serializers import ValidationError
+
+from config import CLIENT_SETTINGS
+from .submissions import submit
 from .models import *
 from .utils import dict_sub
-from rest_framework.serializers import ValidationError
 
 _RESOURCE_READONLY = ('creator', 'updater', 'create_time', 'update_time')
 
@@ -1547,7 +1550,19 @@ class MissionSerializers(object):
 
 
 class ProblemSerializers(object):
-    class Problem(serializers.ModelSerializer):
+    class ProblemList(serializers.ModelSerializer):
+        class Meta:
+            model = Problem
+            exclude = ('number_invalid_word',)
+
+    class ProblemInstance(serializers.ModelSerializer):
+        class Limit(serializers.ModelSerializer):
+            class Meta:
+                model = Limit
+                exclude = ('problem',)
+
+        limit = Limit(read_only=True, many=True, source='get_limits')
+
         class Meta:
             model = Problem
             exclude = ('number_invalid_word',)
@@ -1557,15 +1572,11 @@ class ProblemSerializers(object):
             model = Environment
             fields = ('id', 'name')
 
-    class Limit(serializers.ModelSerializer):
-        class Meta:
-            model = Limit
-            exclude = ('problem',)
-
 
 class ProblemRelationSerializers(object):
     class List(serializers.ModelSerializer):
-        problem = ProblemSerializers.Problem(read_only=True)
+        problem = ProblemSerializers.ProblemList(read_only=True)
+        problem_id = serializers.PrimaryKeyRelatedField(queryset=Problem.objects.all(), source='problem')
 
         def create(self, validated_data):
             problem = validated_data['problem']
@@ -1584,7 +1595,7 @@ class ProblemRelationSerializers(object):
             read_only_fields = ('id',) + _RESOURCE_READONLY
 
     class Instance(serializers.ModelSerializer):
-        problem = ProblemSerializers.Problem(read_only=True)
+        problem = ProblemSerializers.ProblemInstance(read_only=True)
 
         class Meta:
             model = MissionProblemRelation
@@ -1594,7 +1605,7 @@ class ProblemRelationSerializers(object):
     class ListAvailable(serializers.ModelSerializer):
         category = serializers.SlugRelatedField(slug_field='title', read_only=True)
         directory = serializers.ListField(read_only=True)
-        problem = ProblemSerializers.Problem(read_only=True)
+        problem = ProblemSerializers.ProblemList(read_only=True)
 
         class Meta:
             model = CategoryProblemRelation
@@ -1603,29 +1614,81 @@ class ProblemRelationSerializers(object):
 
 class SubmissionSerializers(object):
     class List(serializers.ModelSerializer):
-        problem = serializers.PrimaryKeyRelatedField(read_only=True)
+        problem = serializers.PrimaryKeyRelatedField(queryset=Problem.objects.all())
         problem_title = serializers.SlugRelatedField(read_only=True, slug_field='title', source='problem')
-        environment = serializers.SlugRelatedField(queryset=Environment.objects.all(), slug_field='name')
+        environment = serializers.PrimaryKeyRelatedField(queryset=Environment.objects.all())
+        env_name = serializers.SlugRelatedField(read_only=True, slug_field='name', source='environment')
         user = serializers.SlugRelatedField(read_only=True, slug_field='username')
         user_name = serializers.SlugRelatedField(read_only=True, slug_field='name', source='user')
         code = serializers.CharField(write_only=True)
 
         def create(self, validated_data):
-            # todo
-            pass
+            # 需要做范围限制判定。
+            # 1 题目限制在mission的范围内
+            # 3 编程环境限制在题目范围内
+            # 之后手动生成提交信息
+            # 提交到server端
+            # 生成submission实例
+            profile = validated_data['profile']
+            problem = validated_data['problem']
+            mission = validated_data['mission']
+            env = validated_data['environment']
+            code = validated_data['code']
+            user = CLIENT_SETTINGS['username']
+            if problem not in mission.problems.all():
+                raise ValidationError('problem is not available.')
+            if env not in problem.get_environments():
+                raise ValidationError('environment is not available.')
+            submission_json = {
+                'problem_id': problem.id,
+                'env_id': env.id,
+                'code': code,
+                'user': user,
+                'contest': '%s' % (mission.id,),
+            }
+            result = submit(submission_json)
+            submission = Submission(
+                sid=result['id'],
+                problem=problem,
+                environment=env,
+                time=result['time'],
+                memory=result['memory'],
+                length=result['length'],
+                user=profile,
+                status=result['status'],
+                finished=result['finished'],
+                submit_time=result['submit_time'],
+                update_time=result['update_time'],
+                ip=profile.ip,
+                mission=mission,
+                organization=mission.organization
+            )
+            submission.save()
+            compile_info = CompileInfo(submission=submission)
+            compile_info.save()
+            test_data_status = TestDataStatus(submission=submission, status={})
+            test_data_status.save()
+            submission_code = SubmissionCode(submission=submission, code={})
+            submission_code.save()
+            return submission
 
         class Meta:
             model = Submission
-            read_only_fields = ('id', 'sid', 'time', 'length', 'memory', 'status', 'finished',
+            read_only_fields = ('id', 'time', 'length', 'memory', 'status', 'finished',
                                 'submit_time', 'update_time', 'ip')
-            exclude = ('organization', 'mission')
+            exclude = ('organization', 'mission', 'sid')
 
     class Instance(serializers.ModelSerializer):
         problem = serializers.PrimaryKeyRelatedField(read_only=True)
         problem_title = serializers.SlugRelatedField(read_only=True, slug_field='title', source='problem')
-        environment = serializers.SlugRelatedField(read_only=True, slug_field='name')
+        environment = serializers.PrimaryKeyRelatedField(read_only=True)
+        env_name = serializers.SlugRelatedField(read_only=True, slug_field='name', source='environment')
         user = serializers.SlugRelatedField(read_only=True, slug_field='username')
         user_name = serializers.SlugRelatedField(read_only=True, slug_field='name', source='user')
+
+        code = serializers.SlugRelatedField(read_only=True, slug_field='code')
+        compile_info = serializers.SlugRelatedField(read_only=True, slug_field='info')
+        test_data_status = serializers.SlugRelatedField(read_only=True, slug_field='status')
 
         class Meta:
             model = Submission

@@ -969,6 +969,22 @@ class Problem(models.Model):
     def __str__(self):
         return "< %s: %s >" % (self.id, self.title)
 
+    def get_limits(self):
+        if hasattr(self, 'limits'):
+            return self.limits
+        else:
+            return Limit.objects.none()
+
+    def get_environments(self):
+        if hasattr(self, 'limits'):
+            limits = self.limits
+            environments = Environment.objects.none()
+            for limit in limits.all():
+                environments = environments | Environment.objects.filter(id=limit.environment_id)
+            return environments.distinct()
+        else:
+            return Environment.objects.none()
+
 
 class Environment(models.Model):
     id = models.BigIntegerField(primary_key=True)
@@ -1061,6 +1077,8 @@ class Submission(models.Model):
         ('TLE', 'Time Limit Exceed'),
         ('MLE', 'Memory Limit Exceed'),
         ('OLE', 'Output Limit Exceed'),
+        ('IW', 'Invalid Word'),
+        ('LLE', 'Length Limit Exceed'),
         ('RD', 'Running Done'),
         ('JD', 'Judging'),
         ('WA', 'Wrong Answer'),
@@ -1082,6 +1100,7 @@ class Submission(models.Model):
     user = models.ForeignKey(UserProfile, related_name='submissions', null=True,
                              to_field='user', on_delete=models.SET_NULL)
     status = models.CharField(max_length=4, default='PD', choices=STATUS_CHOICES)
+    score = models.FloatField(default=None, null=True)
     finished = models.BooleanField(default=False)
 
     submit_time = models.DateTimeField()
