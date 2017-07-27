@@ -792,7 +792,7 @@ class SubmissionSerializers:
 
         class Meta:
             model = Submission
-            exclude = ('problem', 'client', 'judge')
+            exclude = ('problem', 'client', 'judge', 'score_info')
             read_only_fields = ('time', 'memory', 'length',
                                 'status', 'finished',
                                 'submit_time', 'update_time', 'ip', 'score')
@@ -840,7 +840,7 @@ class SubmissionSerializers:
 
         class Meta:
             model = Submission
-            exclude = ('problem', )
+            exclude = ('problem', 'score_info')
             read_only_fields = ('time', 'memory', 'length',
                                 'user', 'status', 'finished',
                                 'submit_time', 'update_time', 'ip', 'judge', 'score')
@@ -882,7 +882,7 @@ class SubmissionSerializers:
 
         class Meta:
             model = Submission
-            exclude = ('problem', 'judge', 'client')
+            exclude = ('problem', 'judge', 'client', 'score_info')
             read_only_fields = ('time', 'memory', 'length',
                                 'user', 'contest', 'status', 'finished',
                                 'submit_time', 'update_time', 'ip', 'score')
@@ -909,7 +909,7 @@ class SubmissionSerializers:
 
         class Meta:
             model = Submission
-            exclude = ('problem', )
+            exclude = ('problem', 'score_info')
             read_only_fields = ('time', 'memory', 'length',
                                 'user', 'contest', 'status', 'finished',
                                 'submit_time', 'update_time', 'ip', 'judge', 'client', 'score')

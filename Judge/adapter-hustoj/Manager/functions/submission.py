@@ -145,6 +145,7 @@ def update(**kwargs):
 
 
 def _handler(sid):  # 处理某个提交。
+    global mysql_session, pg_session
     status = Submission.get_status(sid)  # sdustoj上的提交ID -> 提交的内容字典(sdustoj上的测试数据ID,hustoj上的提交ID)
     if status is None:  # 如果字典不存在，也就是这个提交没有被标记处理，那么就离开。
         return
@@ -164,7 +165,17 @@ def _handler(sid):  # 处理某个提交。
     max_memory = -1
     max_status = 4
     for test_data_id, solution_id in status.items():  # 遍历查询所有测试数据的提交的测试数据ID和hustoj提交的ID。
-        solution = mysql_session.query(mysql_models.Solution).filter_by(solution_id=solution_id).first()
+        solution = None
+        while True:
+            try:
+                solution = mysql_session.query(mysql_models.Solution).filter_by(solution_id=solution_id).first()
+            except OperationalError:
+                # MySQL数据库因为长连接断开。重连一次。
+                mysql_session = MysqlSession()
+                solution = None
+            if solution is not None:
+                break
+
         # 从hustoj查询这个提交。
         result = solution.result  # 获得提交的结果状态
         info[str(test_data_id)]['status'] = status_map[result]  # 这个map将hustoj的结果编号映射到sdustoj的缩写上去。
