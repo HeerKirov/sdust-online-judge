@@ -1,0 +1,38 @@
+{% extends "course-group/adminBasic2.html" %}
+{% load staticfiles %}
+
+{% block title %}教室{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+{% block nav_teacher %} active {% endblock %}
+
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="teacher"></div>
+</div>
+
+{% endblock %}
+
+
+{% block script %}
+<script>
+SATable.DRFTable({
+  id: 'teacher',
+  title: '教师列表',
+  url: "{% url 'api-course-group-teacher-list' gid %}",
+  search: true,
+  columns: [
+    { name: 'username', caption: '用户名', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'web-course-group-teacher-list' gid %}info/', key: 'id' } },
+    { name: 'name', caption: '姓名', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-course-group-teacher-list' gid %}info/', key: 'id' } },
+    { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
+    { name: 'last_login', caption: '最后登录', sort: true, type: 'Datetime' },
+    { name: "available", caption: "可用", type: 'Boolean' },
+  ],
+{% if 'EDU_ADMIN' in user_info.user.get_identities %}
+  createURL: "{% url 'web-course-group-teacher-create' gid%}"
+  {% endif %}
+})
+</script>
+
+{% endblock %}

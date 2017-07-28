@@ -1,10 +1,10 @@
-{% extends "course/adminBasic2.html" %}
+{% extends "course-group/adminBasic2.html" %}
 {% load staticfiles %}
 
 {% block title %}任务详情{% endblock %}
 
 {% block nav_myorganization %} active {% endblock %}
-
+{% block nav_mission %} active {% endblock %}
 
 {% block sub_content2 %}
 
@@ -18,8 +18,8 @@
 SATable.SimpleAjaxForm({
   id: 'mission-group-create',
   method: 'POST',
-  toSuccess: '{% url 'web-course-mission-group-list' cid %}',
-  url: '{% url 'api-course-group-mission-group-list' cid %}',
+  toSuccess: '{% url 'web-course-group-mission-group-list' gid %}',
+  url: '{% url 'api-course-group-mission-group-list' gid %}',
   items: [
 
     { name: 'caption', caption: '任务组名称', type: 'Text', typeInfo: { max_length: 150 } },

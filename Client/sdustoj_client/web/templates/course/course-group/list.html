@@ -1,4 +1,4 @@
-{% extends "course/adminBasic.html" %}
+{% extends "course/adminBasic2.html" %}
 {% load staticfiles %}
 
 {% block title %}所在课程组{% endblock %}
@@ -30,6 +30,9 @@ SATable.DRFTable({
       { name: "create_time", caption: "创建时间", type: 'Datetime' },
       { name: "update_time", caption: "更新时间", type: 'Datetime' },
   ],
+    {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+  createURL: "{% url 'web-course-student-create' cid%}"
+  {% endif %}
 })
 </script>
 {% endblock %}

@@ -453,28 +453,85 @@ class MyOrganizationPages(object):
 class CourseGroup(object):
     @staticmethod
     def instance(request, gid):
-        return Utils.Render.all_user(request, "course-group/instance.html", {
+        return Utils.Render.teacher_or_edu_admin(request, "course-group/instance.html", {
             "gid": gid,
         })
+    class CourseBelong(object):
+        @staticmethod
+        def list(request,gid):
+            return  Utils.Render.teacher_or_edu_admin(request,"course-group/coursebelong/list.html",{
+                "gid": gid
+            })
 
+        @staticmethod
+        def instance(request,gid,id):
+            return Utils.Render.teacher_or_edu_admin(request,"course-group/coursebelong/instance.html",{
+                "gid": gid,
+                "id": id
+            })
+        @staticmethod
+        def create(request,gid):
+            return Utils.Render.edu_admin(request,"course-group/coursebelong/create.html",{
+                "gid": gid,
+
+            })
+    class Teacher(object):
+        @staticmethod
+        def list(request, gid):
+            return Utils.Render.teacher_or_edu_admin(request, "course-group/teacher/list.html", {
+                "gid": gid,
+            })
+
+        @staticmethod
+        def instance(request, gid, id):
+            return Utils.Render.teacher_or_edu_admin(request, "course-group/teacher/instance.html", {
+                "gid": gid,
+                "id": id,
+            })
+
+        @staticmethod
+        def create(request, gid):
+            return Utils.Render.edu_admin(request, "course-group/teacher/create.html", {
+                "gid": gid
+            })
+
+    class MissionGroup(object):
+        @staticmethod
+        def list(request, gid):
+            return Utils.Render.teacher_or_edu_admin(request, "course-group/mission-group/list.html", {
+                "gid": gid,
+            })
+
+        @staticmethod
+        def instance(request, gid, id):
+            return Utils.Render.teacher_or_edu_admin(request, "course-group/mission-group/instance.html", {
+                "gid": gid,
+                "id": id,
+            })
+
+        @staticmethod
+        def create(request, gid):
+            return Utils.Render.teacher_or_edu_admin(request, "course-group/mission-group/create.html", {
+                "gid": gid
+            })
 
 class Course(object):
     @staticmethod
     def instance(request, cid):
-        return Utils.Render.all_user(request, "course/instance.html", {
+        return Utils.Render.teacher_or_edu_admin(request, "course/instance.html", {
             "cid": cid,
         })
 
     class Groupin(object):
         @staticmethod
         def list(request, cid):
-            return Utils.Render.all_user(request, "course/course-group/list.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "course/course-group/list.html", {
                 "cid": cid,
             })
 
         @staticmethod
         def instance(request, cid, id):
-            return Utils.Render.all_user(request, "course/course-group/instance.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "course/course-group/instance.html", {
                 "cid": cid,
                 "id": id,
             })
@@ -482,60 +539,60 @@ class Course(object):
     class Teacher(object):
         @staticmethod
         def list(request, cid):
-            return Utils.Render.all_user(request, "course/teacher/list.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "course/teacher/list.html", {
                 "cid": cid,
             })
 
         @staticmethod
         def instance(request, cid, id):
-            return Utils.Render.all_user(request, "course/teacher/instance.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "course/teacher/instance.html", {
                 "cid": cid,
                 "id": id,
             })
 
         @staticmethod
         def create(request, cid):
-            return Utils.Render.all_user(request, "course/teacher/create.html", {
+            return Utils.Render.edu_admin(request, "course/teacher/create.html", {
                 "cid": cid
             })
 
     class Student(object):
         @staticmethod
         def list(request, cid):
-            return Utils.Render.all_user(request, "course/student/list.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "course/student/list.html", {
                 "cid": cid,
             })
 
         @staticmethod
         def instance(request, cid, id):
-            return Utils.Render.all_user(request, "course/student/instance.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "course/student/instance.html", {
                 "cid": cid,
                 "id": id,
             })
 
         @staticmethod
         def create(request, cid):
-            return Utils.Render.all_user(request, "course/student/create.html", {
+            return Utils.Render.edu_admin(request, "course/student/create.html", {
                 "cid": cid
             })
 
     class MissionGroup(object):
         @staticmethod
         def list(request, cid):
-            return Utils.Render.all_user(request, "course/mission-group/list.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "course/mission-group/list.html", {
                 "cid": cid,
             })
 
         @staticmethod
         def instance(request, cid, id):
-            return Utils.Render.all_user(request, "course/mission-group/instance.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "course/mission-group/instance.html", {
                 "cid": cid,
                 "id": id,
             })
 
         @staticmethod
         def create(request, cid):
-            return Utils.Render.all_user(request, "course/mission-group/create.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "course/mission-group/create.html", {
                 "cid": cid
             })
 
@@ -553,8 +610,6 @@ class MissionGroup(object):
             "id": id,
         })
 
-
-
     class Mission(object):
         @staticmethod
         def list(request, id):
@@ -571,6 +626,18 @@ class MissionGroup(object):
 
         @staticmethod
         def create(request, id):
-            return Utils.Render.all_user(request, "mission-group/mission/create.html", {
+            return Utils.Render.teacher_or_edu_admin(request, "mission-group/mission/create.html", {
                 "id": id
             })
+
+class TeachingAdminPages(object):
+    class TeachingCourse(object):
+        @staticmethod
+        def list(request):
+            return Utils.Render.teacher(request,"teaching/teachingcourse/list.html")
+    class TeachingCourseGroup(object):
+        @staticmethod
+        def list(request):
+            return Utils.Render.teacher(request,"teaching/teachingcoursegroup/list.html")
+
+
