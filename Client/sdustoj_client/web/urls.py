@@ -89,6 +89,7 @@ course_patterns = [
     url(r'^info/([\w\-.+@]+)/$',Course.instance,name="web-course-instance"),
     url(r'^info/([\w\-.+@]+)/groupin/$',Course.Groupin.list,name="web-course-groupin-list"),
     url(r'^info/([\w\-.+@]+)/groupin/info/([\w\-.+@]+)/$',Course.Groupin.instance,name="web-course-groupin-detail"),
+    url(r'^info/([\w\-.+@]+)/groupin/create/$',Course.Groupin.create,name="web-course-groupin-create"),
     url(r'^info/([\w\-.+@]+)/teacher/$',Course.Teacher.list,name="web-course-teacher-list"),
     url(r'^info/([\w\-.+@]+)/teacher/info/([\w\-.+@]+)/$', Course.Teacher.instance, name="web-course-teacher-detail"),
     url(r'^info/([\w\-.+@]+)/teacher/create/$',Course.Teacher.create,name="web-course-teacher-create"),
