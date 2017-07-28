@@ -1,5 +1,5 @@
 from django.conf.urls import url, include
-from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages,CourseGroup,Course,Mission,MissionGroup
+from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages,CourseGroup,Course,Mission,TeachingAdminPages,MissionGroup
 
 
 personal_patterns = [
@@ -71,6 +71,18 @@ myOrg_patterns = [
 
 courseGroup_patterns = [
     url(r'^info/([\w\-.+@]+)/$',CourseGroup.instance,name="web-course-group-instance"),
+    url(r'^info/([\w\-.+@]+)/coursebelong/$',CourseGroup.CourseBelong.list,name="web-course-group-coursebelong-list"),
+    url(r'^info/([\w\-.+@]+)/coursebelong/info/([\w\-.+@]+)/$',CourseGroup.CourseBelong.instance,name="web-course-group-coursebelong-instance"),
+    url(r'^info/([\w\-.+@]+)/coursebelong/create/$', CourseGroup.CourseBelong.create, name="web-course-group-coursebelong-create"),
+    url(r'^info/([\w\-.+@]+)/teacher/$', CourseGroup.Teacher.list, name="web-course-group-teacher-list"),
+    url(r'^info/([\w\-.+@]+)/teacher/create/$', CourseGroup.Teacher.create, name="web-course-group-teacher-create"),
+    url(r'^info/([\w\-.+@]+)/teacher/info/([\w\-.+@]+)/$', CourseGroup.Teacher.instance, name="web-course-group-teacher-instance"),
+    url(r'^info/([\w\-.+@]+)/mission-group/$', CourseGroup.MissionGroup.list, name="web-course-group-mission-group-list"),
+    url(r'^info/([\w\-.+@]+)/mission-group/info/([\w\-.+@]+)/$', CourseGroup.MissionGroup.instance,
+        name="web-course-group-mission-group-detail"),
+    url(r'^info/([\w\-.+@]+)/mission-group/create/$', CourseGroup.MissionGroup.create,
+        name="web-course-group-mission-group-create"),
+
 ]
 
 course_patterns = [
@@ -85,14 +97,20 @@ course_patterns = [
     url(r'^info/([\w\-.+@]+)/student/create/$',Course.Student.create,name="web-course-student-create"),
     url(r'^info/([\w\-.+@]+)/mission-group/$',Course.MissionGroup.list,name="web-course-mission-group-list"),
     url(r'^info/([\w\-.+@]+)/mission-group/info/([\w\-.+@]+)/$', Course.MissionGroup.instance, name="web-course-mission-group-detail"),
-    url(r'^info/([\w\-.+@]+)/mission-group/create$',Course.MissionGroup.create,name="web-course-mission-group-create"),
+    url(r'^info/([\w\-.+@]+)/mission-group/create/$',Course.MissionGroup.create,name="web-course-mission-group-create"),
 ]
 
 mission_patterns = [
     url(r'^info/([\w\-.+@]+)/$',Mission.instance,name="web-mission-instance"),
-
 ]
 
+teachingcourse_patterns = [
+    url(r'^$',TeachingAdminPages.TeachingCourse.list,name='web-teaching-course-list'),
+]
+
+teachingcoursegroup_patterns = [
+    url(r'^$',TeachingAdminPages.TeachingCourseGroup.list,name='web-teaching-course-group-list'),
+]
 mission_group_patterns = [
     url(r'^info/([\w\-.+@]+)/$',MissionGroup.instance,name="web-mission-group-instance"),
     url(r'^info/([\w\-.+@]+)/mission/$',MissionGroup.Mission.list,name="web-mission-group-mission-list"),
@@ -113,6 +131,8 @@ url_patterns = [
     url(r'^courseGroup/',include(courseGroup_patterns)),
     url(r'^course/',include(course_patterns)),
     url(r'^mission/',include(mission_patterns)),
+    url(r'^teachingcourse/',include(teachingcourse_patterns)),
+    url(r'^teachingcoursegroup/',include(teachingcoursegroup_patterns)),
     url(r'^mission-group/',include(mission_group_patterns)),
 
 ]

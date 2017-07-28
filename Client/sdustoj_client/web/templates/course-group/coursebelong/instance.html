@@ -1,19 +1,18 @@
-{% extends "course/adminBasic2.html" %}
+{% extends "course-group/adminBasic2.html" %}
 {% load staticfiles %}
 
-{% block title %}课程{% endblock %}
+{% block title %}课程组{% endblock %}
 
 {% block nav_myorganization %} active {% endblock %}
-{% block nav_course_info %} active {% endblock %}
+{% block nav_course_belong %} active {% endblock %}
+
 
 {% block sub_content2 %}
-
 <div class="col-lg-8 col-md-10">
     <div id="courseinfo"></div>
 </div>
 
 {% endblock %}
-
 {% block script %}
 <script>
 SATable.SimpleAjaxInfo({
@@ -22,20 +21,18 @@ SATable.SimpleAjaxInfo({
   getMethod: 'GET',
   updateMethod: 'PATCH',
   removeMethod: 'DELETE',
-  getURL: '{% url 'api-course-detail' cid %}',
-  updateURL: '{% url 'api-course-detail' cid %}',
-  removeURL: '{% url 'api-course-detail' cid %}',
+  getURL: '{% url 'api-course-group-course-detail' gid id %}',
+  removeURL: '{% url 'api-course-group-course-detail' gid id %}',
   removeToURL: document.referrer,
   items: [
     { name: 'meta', caption: '课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
-    { name: 'meta_caption', caption: '课程基类名称', type:'Text',typeInfo: { max_length: 150 } },
-    { name: 'cid', caption: '课程ID', type:'Number' },
-    { name: 'caption', caption: '课程名称', type: 'Text', typeInfo: { max_length: 150 } },
-    { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
-    { name: 'start_time', caption: '开课时间',  type: 'Date'},
-    { name: 'end_time', caption: '结课登录',  type: 'Date' },
-      'Divide',
+      { name: 'meta_caption', caption: '课程基类名称', type:'Text',typeInfo: { max_length: 150 } },
+     { name: 'gid', caption: '课程组ID', type: 'Number'},
+      { name: 'caption', caption: '课程组名称', type: 'Text', typeInfo: { max_length: 150 } },
 
+
+      { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
+    'Divide',
     { name: 'available', caption: '可用', type: 'Boolean' },
     'Divide',
     { name: 'creator', caption: '创建者', type: 'Text', readOnly: true },

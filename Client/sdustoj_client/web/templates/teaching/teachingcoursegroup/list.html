@@ -1,0 +1,36 @@
+{% extends "teaching/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}我教授的课程组{% endblock %}
+
+{% block nav_teaching_course_group %}active{% endblock %}
+
+{% block sub_content %}
+<div class="container">
+  <div class="col-xs-12">
+    <div id="course"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+SATable.DRFTable({
+  id: 'course',
+  title: '我教授的课程',
+  url: "{% url 'api-teaching-course-groups-list' %}",
+  search: true,
+  columns: [
+
+    { name: "gid", caption: "课程组ID", sort: true, type: 'Link', typeInfo: { base_url: '/JudgeOnline/web/courseGroup/info/', key: 'gid' } },
+
+    { name: "caption", caption: "课程组名称", sort: true, type: 'Link', typeInfo: { base_url: '/JudgeOnline/web/courseGroup/info/', key: 'gid' } },
+    { name: "available", caption: "可用", type: 'Boolean' },
+      { name: "deleted", caption: "deleted", type: 'Boolean' },
+      { name: "create_time", caption: "创建时间", type: 'Datetime' },
+      { name: "update_time", caption: "更新时间", type: 'Datetime' },
+  ],
+
+})
+</script>
+{% endblock %}

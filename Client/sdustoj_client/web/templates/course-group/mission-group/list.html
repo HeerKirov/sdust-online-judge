@@ -1,7 +1,7 @@
-{% extends "course/adminBasic2.html" %}
+{% extends "course-group/adminBasic2.html" %}
 {% load staticfiles %}
 
-{% block title %}任务{% endblock %}
+{% block title %}任务组{% endblock %}
 
 {% block nav_myorganization %} active {% endblock %}
 
@@ -18,17 +18,19 @@
 SATable.DRFTable({
   id: 'mission',
   title: '所有任务组',
-  url: "{% url 'api-course-mission-group-list' cid %}",
+  url: "{% url 'api-course-group-mission-group-list' gid %}",
   search: true,
   columns: [
      { name: "caption", caption: "任务组名称", sort: true, type: 'Link', typeInfo:   { base_url: '/JudgeOnline/web/mission-group/info/', key: 'id' }   },
+       { name: "weight", caption: "权重", sort: true, type: 'Text'  },
+
     { name: "available", caption: "可用", type: 'Boolean' },
       { name: "deleted", caption: "deleted", type: 'Boolean' },
-    { name: 'start_time', caption: '任务开始时间', sort: true, type: 'Datetime' },
-    { name: 'end_time', caption: '任务结束时间', sort: true, type: 'Datetime' },
+    { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
+    { name: 'update_time', caption: '更新束时间', sort: true, type: 'Datetime' },
   ],
     {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER' in user_info.user.get_identities %}
-    createURL: "{% url 'web-course-mission-group-create' cid%}"
+    createURL: "{% url 'web-course-group-mission-group-create' gid%}"
     {% endif %}
 })
 </script>
