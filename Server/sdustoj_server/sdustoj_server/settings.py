@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'web',
 
     'rest_framework_docs',
-    'whitenoise',   
+    'whitenoise',
 ]
 
 MIDDLEWARE = [
