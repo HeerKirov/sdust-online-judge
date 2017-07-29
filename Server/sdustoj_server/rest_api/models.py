@@ -355,6 +355,7 @@ class Submission(Model):
         ('JD', 'Judging'),
         ('WA', 'Wrong Answer'),
         ('PE', 'Presentation Error'),
+        ('UE', 'Punctuation Error'),
         ('AC', 'Accepted'),
     )
 

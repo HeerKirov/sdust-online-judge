@@ -53,6 +53,8 @@
 #define OJ_RE 10
 #define OJ_CE 11
 #define OJ_CO 12
+
+# define OJ_UE 14
 static char lock_file[BUFFER_SIZE]=LOCKFILE;
 static char host_name[BUFFER_SIZE];
 static char user_name[BUFFER_SIZE];
@@ -81,11 +83,13 @@ static char oj_redisqname[BUFFER_SIZE];
 static bool STOP = false;
 static int DEBUG = 0;
 static int ONCE = 0;
+#ifdef _mysql_h
 static MYSQL *conn;
 static MYSQL_RES *res;
 static MYSQL_ROW row;
 //static FILE *fp_log;
 static char query[BUFFER_SIZE];
+#endif
 
 void call_for_exit(int s) {
 	STOP = true;
@@ -190,9 +194,11 @@ void init_mysql_conf() {
 
 
 		}
+#ifdef _mysql_h
 		sprintf(query,
 				"SELECT solution_id FROM solution WHERE language in (%s) and result<2 and MOD(solution_id,%d)=%d ORDER BY result ASC,solution_id ASC limit %d",
 				oj_lang_set, oj_tot, oj_mod, max_running * 2);
+#endif
 		sleep_tmp = sleep_time;
 		//	fclose(fp);
 	}
@@ -224,15 +230,17 @@ void run_client(int runid, int clientid) {
 	//sprintf(err,"%s/run%d/error.out",oj_home,clientid);
 	//freopen(err,"a+",stderr);
 
-	if (!DEBUG)
+	if (!DEBUG)  // 正常状态下运行。
 		execl("/usr/bin/judge_client", "/usr/bin/judge_client", runidstr, buf,
 				oj_home, (char *) NULL);
+		//写入的参数（除去0）：solutionid，clientid，judge的home文件夹位置。
 	else
 		execl("/usr/bin/judge_client", "/usr/bin/judge_client", runidstr, buf,
 				oj_home, "debug", (char *) NULL);
 
 	//exit(0);
 }
+#ifdef _mysql_h
 int executesql(const char * sql) {
 
 	if (mysql_real_query(conn, sql, strlen(sql))) {
@@ -244,7 +252,9 @@ int executesql(const char * sql) {
 	} else
 		return 0;
 }
+#endif
 
+#ifdef _mysql_h
 int init_mysql() {
 	if (conn == NULL) {
 		conn = mysql_init(NULL);		// init the database connection
@@ -265,6 +275,7 @@ int init_mysql() {
 		return executesql("set names utf8");
 	}
 }
+#endif
 FILE * read_cmd_output(const char * fmt, ...) {
 	char cmd[BUFFER_SIZE];
 
@@ -326,6 +337,7 @@ int _get_jobs_http(int * jobs) {
 		jobs[i++] = 0;
 	return ret;
 }
+#ifdef _mysql_h
 int _get_jobs_mysql(int * jobs) {
 	if (mysql_real_query(conn, query, strlen(query))) {
 		if (DEBUG)
@@ -336,15 +348,21 @@ int _get_jobs_mysql(int * jobs) {
 	res = mysql_store_result(conn);
 	int i = 0;
 	int ret = 0;
-	while ((row = mysql_fetch_row(res)) != NULL) {
+	while (res!=NULL && (row = mysql_fetch_row(res)) != NULL) {
 		jobs[i++] = atoi(row[0]);
 	}
+
+	if(res!=NULL&&!executesql("commit")){
+		mysql_free_result(res);                         // free the memory
+		res=NULL;
+	}                        
+	else i=0;
 	ret = i;
 	while (i <= max_running * 2)
 		jobs[i++] = 0;
 	return ret;
 }
-
+#endif
 int _get_jobs_redis(int * jobs){
         int ret=0;
         const char * cmd="redis-cli -h %s -p %d -a %s --raw rpop %s";
@@ -373,11 +391,16 @@ int get_jobs(int * jobs) {
 		if(oj_redis){
                         return _get_jobs_redis(jobs);
                 }else{
+#ifdef _mysql_h
                         return _get_jobs_mysql(jobs);
+#else
+			return 0;
+#endif
                 }
 	}
 }
 
+#ifdef _mysql_h
 bool _check_out_mysql(int solution_id, int result) {
 	char sql[BUFFER_SIZE];
 	sprintf(sql,
@@ -387,13 +410,14 @@ bool _check_out_mysql(int solution_id, int result) {
 		syslog(LOG_ERR | LOG_DAEMON, "%s", mysql_error(conn));
 		return false;
 	} else {
-		if (mysql_affected_rows(conn) > 0ul)
+		if (conn!=NULL&&mysql_affected_rows(conn) > 0ul)
 			return true;
 		else
 			return false;
 	}
 
 }
+#endif
 
 bool _check_out_http(int solution_id, int result) {
 	login();
@@ -410,8 +434,13 @@ bool check_out(int solution_id, int result) {
         if(oj_redis) return true;
 	if (http_judge) {
 		return _check_out_http(solution_id, result);
-	} else
+	} else{
+#ifdef _mysql_h
 		return _check_out_mysql(solution_id, result);
+#else
+		return 0;
+#endif
+	}
 
 }
 int work() {
@@ -430,15 +459,17 @@ int work() {
 
 	//sleep_time=sleep_tmp;
 	/* get the database info */
-	if (!get_jobs(jobs))
-		retcnt = 0;
+	if (!get_jobs(jobs)){
+		return 0;
+	}
 	/* exec the submit */
 	for (int j = 0; jobs[j] > 0; j++) {
-		runid = jobs[j];
+		runid = jobs[j];  // 看起来，runid是一个solutionid？
 		if (runid % oj_tot != oj_mod)
 			continue;
 		if (DEBUG)
 			write_log("Judging solution %d", runid);
+		// 如果工作数量多于最大运行的client数
 		if (workcnt >= max_running) {           // if no more client can running
 			tmp_pid = waitpid(-1, NULL, 0);     // wait 4 one child exit
 			for (i = 0; i < max_running; i++){     // get the client id
@@ -455,14 +486,18 @@ int work() {
 				if (ID[i] == 0)
 					break;    // got the client id
 		}
+		//上面的循环将clientid放到了i中。
 		if(i<max_running){
 			if (workcnt < max_running && check_out(runid, OJ_CI)) {
 				workcnt++;
 				ID[i] = fork();                                   // start to fork
-				if (ID[i] == 0) {
+				//fork一个子进程放在id[i]中。
+				if (ID[i] == 0) {  // 能进来的是子进程。父进程直接跳过离开。
 					if (DEBUG)
 						write_log("<<=sid=%d===clientid=%d==>>\n", runid, i);
+					//运行client，参数是solutionid和clientid。
 					run_client(runid, i);    // if the process is the son, run it
+
 					exit(0);
 				}
 
@@ -484,8 +519,13 @@ int work() {
 		printf("tmp_pid = %d\n", tmp_pid);
 	}
 	if (!http_judge) {
-		mysql_free_result(res);                         // free the memory
+#ifdef _mysql_h
+		if(res!=NULL) {
+			mysql_free_result(res);                         // free the memory
+			res=NULL;
+		}
 		executesql("commit");
+#endif
 	}
 	if (DEBUG && retcnt)
 		write_log("<<%ddone!>>", retcnt);
@@ -531,15 +571,18 @@ int daemon_init(void)
 {
 	pid_t pid;
 
-	if ((pid = fork()) < 0)
+	if ((pid = fork()) < 0)  // fork一个子进程。如果<0表示error，直接退出。
 		return (-1);
 
-	else if (pid != 0)
+	else if (pid != 0)  // 这表示在fork之后，判断当前进程是父进程。
 		exit(0); /* parent exit */
+		//之后杀死父进程，仅保留子进程。
 
 	/* child continues */
-
+	// 前面杀死父进程是为了制作守护进程，避免控制终端将其挂起。
 	setsid(); /* become session leader */
+	// 使本进程成为进程组长。
+	// 根据进程组长的调用特性，此时该进程脱离原先的进程组独立，同时脱离终端。
 
 	chdir(oj_home); /* change working directory */
 
@@ -549,13 +592,14 @@ int daemon_init(void)
 	close(1); /* close stdout */
 	
 	close(2); /* close stderr */
+	//为了不浪费资源而关闭上述文件资源
 	
 	int fd = open( "/dev/null", O_RDWR );
-	dup2( fd, 0 );
-	dup2( fd, 1 );
+	dup2( fd, 0 );  // 这里复制文件描述符到其他几个地方。
+	dup2( fd, 1 );  // 这样的做法是手动将IO导向null设备。
 	dup2( fd, 2 );
 	if ( fd > 2 ){
-		close( fd );
+		close( fd );  // 然后关闭原先的描述符。
 	}
 
 	return (0);
@@ -567,13 +611,13 @@ int main(int argc, char** argv) {
 	if (argc > 1)
 		strcpy(oj_home, argv[1]);
 	else
-		strcpy(oj_home, "/home/judge");
-	chdir(oj_home);    // change the dir
+		strcpy(oj_home, "/home/judge");  // 设定judge账户的目录位置
+	chdir(oj_home);    // 改变工作目录到judge工作区内
 
-	sprintf(lock_file,"%s/etc/judge.pid",oj_home);
+	sprintf(lock_file,"%s/etc/judge.pid",oj_home);  // 文件锁的位置？
 	if (!DEBUG)
-		daemon_init();
-	if ( already_running()) {
+		daemon_init();  // 初始化守护进程
+	if ( already_running()) {  // 如果程序已经在运行了就退出
 		syslog(LOG_ERR | LOG_DAEMON,
 				"This daemon program is already running!\n");
 		printf("%s already has one judged on it!\n",oj_home);
@@ -584,20 +628,28 @@ int main(int argc, char** argv) {
 //	struct timespec final_sleep;
 //	final_sleep.tv_sec=0;
 //	final_sleep.tv_nsec=500000000;
+#ifdef _mysql_h
 	init_mysql_conf();	// set the database info
+#endif
 	signal(SIGQUIT, call_for_exit);
 	signal(SIGKILL, call_for_exit);
 	signal(SIGTERM, call_for_exit);
 	int j = 1;
-	while (1) {			// start to run
-		while (j && (http_judge || !init_mysql())) {
+	while (1) {			// 外层循环保证一直执行。
+		while (j && (http_judge
+#ifdef _mysql_h
+			 || !init_mysql()
+#endif
+		)) {
 
 			j = work();
+			// 执行任务。当任务返回0时结束内层循环然后等待下一轮。
 
+			if(ONCE) break;
 		}
-		if(ONCE) break;
-		sleep(sleep_time);
-		j = 1;
+		if(ONCE) break;  // 如果有once参数就是只有一次执行，那么直接跳出。
+		sleep(sleep_time);  // 休息一下～
+		j = 1;  // 重置内层循环的参数。
 	}
 	return 0;
 }
