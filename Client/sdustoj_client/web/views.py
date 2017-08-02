@@ -536,6 +536,13 @@ class Course(object):
                 "id": id,
             })
 
+        @staticmethod
+        def create(request, cid):
+            return Utils.Render.edu_admin(request, "course/course-group/create.html", {
+                "cid": cid
+            })
+
+
     class Teacher(object):
         @staticmethod
         def list(request, cid):

@@ -1,11 +1,11 @@
 {% extends "course/adminBasic2.html" %}
 {% load staticfiles %}
 
-{% block title %}添加学生{% endblock %}
+{% block title %}添加课程组{% endblock %}
 
 {% block nav_myorganization %} active {% endblock %}
 
-{% block nav_student %} active {% endblock %}
+{% block nav_groupin %} active {% endblock %}
 {% block sub_content2 %}
 
 <div class="col-lg-8 col-md-10">
@@ -20,8 +20,8 @@ function getOptions(ret) {
   var data = []
   for (var i in results) {
     var obj = results[i]
-    var text = obj.student_id + ': ' + obj.name
-    var value = obj.username
+    var text = obj.gid+ ': ' + obj.caption
+    var value = obj.gid
     data.push({ text: text, value: value })
   }
   return data
@@ -29,15 +29,15 @@ function getOptions(ret) {
 SATable.SimpleAjaxForm({
   id: 'student',
   method: 'POST',
-  toSuccess: '{% url 'web-course-student-list' cid %}',
-  url: '{% url 'api-course-student-list' cid %}',
+  toSuccess: '{% url 'web-course-groupin-list' cid %}',
+  url: '{% url 'api-course-course-group-list' cid %}',
   items: [
-      { name: 'username', caption: '可选学生', type: 'Select', typeInfo: {
+      { name: 'gid', caption: '可选课程组', type: 'Select', typeInfo: {
         many: false,
         ajax: true,
         ajaxInfo: {
             type: 'GET',
-            url: '{% url 'api-course-available-student-list' cid %}',
+            url: '{% url 'api-course-available-course-group-list' cid %}',
             dataType: 'json',
         },
         responseHandler: SATable.DRF.keepRequest,
