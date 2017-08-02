@@ -494,3 +494,4 @@ flycheck_*.el
 /Client/sdustoj_client/environment_updater_cache
 /Client/sdustoj_client/problem_updater_cache
 /Client/sdustoj_client/category_updater_cache
+/Client/sdustoj_client/submission_updater_cache
