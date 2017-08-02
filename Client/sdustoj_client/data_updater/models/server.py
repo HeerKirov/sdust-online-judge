@@ -80,6 +80,17 @@ class CategoryProblemRelation(_Base):
     directory = Column(ARRAY(String(length=128)))
 
 
+class Mission(_Base):
+    __tablename__ = 'rest_api_mission'
+
+    id = Column(BigInteger, primary_key=True)
+    mode = Column(String(length=6))
+    config = Column(JSONB)
+
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
+
+
 class Submission(_Base):
     __tablename__ = 'rest_api_submission'
 
@@ -92,6 +103,10 @@ class Submission(_Base):
     score = Column(Float, nullable=True)
     finished = Column(Boolean)
     update_time = Column(DateTime)
+    mission_id = Column(BigInteger)
+    user_id = Column(Integer)
+    problem_id = Column(BigInteger)
+    organization_id = Column(BigInteger)
 
 
 class CompileInfo(_Base):
@@ -113,3 +128,18 @@ class SubmissionCode(_Base):
 
     submission_id = Column(BigInteger, primary_key=True)
     code = Column(JSONB)
+
+
+class Rank(_Base):
+    __tablename__ = 'rest_api_rank'
+
+    id = Column(BigInteger, primary_key=True)
+    mission_id = Column(BigInteger)
+    user_id = Column(Integer)
+    organization_id = Column(BigInteger)
+
+    sub_count = Column(Integer)
+    solved = Column(Integer)
+    penalty = Column(BigInteger)
+    sum_score = Column(Float)
+    result = Column(JSONB)

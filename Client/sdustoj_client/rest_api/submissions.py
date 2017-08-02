@@ -31,5 +31,5 @@ def submit(submission_json):
         result = request_submit(submission_json)
         chance_left -= 1
     if result is None:
-        print('submitting submissio failed')
+        print('submitting submission failed')
     return result

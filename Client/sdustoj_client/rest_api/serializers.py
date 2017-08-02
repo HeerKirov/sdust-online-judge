@@ -9,6 +9,15 @@ from .submissions import submit
 from .models import *
 from .utils import dict_sub
 
+
+def now_dt():
+    """
+    返回一个当地时间。
+    :return: 
+    """
+    now = datetime.now() + timedelta(hours=8)  # 这坑爹的时区处理……
+    return now
+
 _RESOURCE_READONLY = ('creator', 'updater', 'create_time', 'update_time')
 
 
@@ -1430,6 +1439,24 @@ class MissionSerializers(object):
             meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
             start_time = serializers.DateTimeField()
             end_time = serializers.DateTimeField()
+            config = serializers.JSONField(write_only=True, required=False, allow_null=True)
+            mode = serializers.CharField(write_only=True)
+
+            def validate(self, attrs):
+                if attrs['start_time'] >= attrs['end_time']:
+                    raise ValidationError('Start time must be early than End time.')
+                mode = attrs['mode']
+                if mode == 'CUSTOM':  # 要求自定义的情况下必须提供config信息
+                    if 'config' in attrs:
+                        config = attrs['config']  # 这个东西需要做严格的验证。
+                        message = Mission.validate_config(config)
+                        if message is not None:
+                            raise ValidationError(message)
+                    else:
+                        raise ValidationError('You must give the config if you want custom.')
+                else:  # 采用自定义模式下，config的信息不管用，直接从默认配置里拉取
+                    attrs['config'] = Mission.default_mode_config(mode)
+                return attrs
 
             def create(self, validated_data):
                 meta = validated_data['course_meta']
@@ -1445,6 +1472,23 @@ class MissionSerializers(object):
             meta_caption = serializers.SlugRelatedField(slug_field='caption', source='course_meta', read_only=True)
             start_time = serializers.DateTimeField()
             end_time = serializers.DateTimeField()
+            config = serializers.JSONField(required=False, allow_null=True)
+
+            def validate(self, attrs):
+                if attrs['start_time'] >= attrs['end_time']:
+                    raise ValidationError('Start time must be early than End time.')
+                mode = attrs['mode']
+                if mode == 'CUSTOM':  # 要求自定义的情况下必须提供config信息
+                    if 'config' in attrs:
+                        config = attrs['config']  # 这个东西需要做严格的验证。
+                        message = Mission.validate_config(config)
+                        if message is not None:
+                            raise ValidationError(message)
+                    else:
+                        raise ValidationError('You must give the config if you want custom.')
+                else:  # 采用自定义模式下，config的信息不管用，直接从默认配置里拉取
+                    attrs['config'] = Mission.default_mode_config(mode)
+                return attrs
 
             class Meta:
                 model = Mission
@@ -1575,8 +1619,11 @@ class ProblemSerializers(object):
 
 class ProblemRelationSerializers(object):
     class List(serializers.ModelSerializer):
-        problem = ProblemSerializers.ProblemList(read_only=True)
         problem_id = serializers.PrimaryKeyRelatedField(queryset=Problem.objects.all(), source='problem')
+        title = serializers.SlugRelatedField(read_only=True, source='problem', slug_field='title')
+        introduction = serializers.SlugRelatedField(read_only=True, source='problem', slug_field='introduction')
+        source = serializers.SlugRelatedField(read_only=True, source='problem', slug_field='source')
+        author = serializers.SlugRelatedField(read_only=True, source='problem', slug_field='author')
 
         def create(self, validated_data):
             problem = validated_data['problem']
@@ -1674,7 +1721,7 @@ class SubmissionSerializers(object):
 
         class Meta:
             model = Submission
-            read_only_fields = ('id', 'time', 'length', 'memory', 'status', 'finished',
+            read_only_fields = ('id', 'time', 'length', 'memory', 'status', 'finished', 'score',
                                 'submit_time', 'update_time', 'ip')
             exclude = ('organization', 'mission', 'sid')
 
@@ -1692,6 +1739,14 @@ class SubmissionSerializers(object):
 
         class Meta:
             model = Submission
-            read_only_fields = ('id', 'sid', 'time', 'length', 'memory', 'status', 'finished',
+            read_only_fields = ('id', 'sid', 'time', 'length', 'memory', 'status', 'finished', 'score',
                                 'submit_time', 'update_time', 'ip')
             exclude = ('organization', 'mission')
+
+
+class RankSerializers(object):
+    class Instance(serializers.ModelSerializer):
+        class Meta:
+            model = Rank
+            exclude = ('organization', 'mission', 'user')
+            read_only_fields = ('sub_count', 'solved', 'penalty', 'sum_score', 'result') + _RESOURCE_READONLY

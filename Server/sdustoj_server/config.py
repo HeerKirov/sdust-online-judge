@@ -1,16 +1,16 @@
 # 数据库的设定
 PG_SETTINGS = {
-    'host': '120.25.229.109',
+    'host': 'localhost',
     'port': '5432',
     'db': 'sdustoj_server',
-    'user': 'ojuser',
-    'password': '262144'
+    'user': 'oj',
+    'password': '1234'
 }
 
 REDIS_SETTINGS = {
-    'host': '120.25.229.109',
+    'host': 'localhost',
     'port': '6379',
-    'password': '262144',
+    'password': '1234',
     'db': 0
 }
 
@@ -49,5 +49,5 @@ OJ_STATUS_SCORE = {
 
 # 代表结束的状态
 OJ_FINAL_STATUS = [
-    'AC', 'PE', 'WA', 'TLE', 'MLE', 'OLE', 'RE', 'CE'
+    'AC', 'PE', 'WA', 'TLE', 'MLE', 'OLE', 'RE', 'CE', 'UE'
 ]

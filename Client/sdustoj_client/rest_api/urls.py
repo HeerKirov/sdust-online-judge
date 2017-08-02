@@ -180,6 +180,8 @@ api_mission_router.register(
     r'submissions', MissionViewSets.SubmissionList.SubmissionViewSet, base_name='api-mission-submission')
 api_mission_router.register(
     r'submissions', MissionViewSets.SubmissionInstance.SubmissionViewSet, base_name='api-mission-submission')
+api_mission_router.register(
+    r'ranks', MissionViewSets.RankInstance.RankViewSet, base_name='api-mission-rank')
 
 # --------
 api_patterns = []

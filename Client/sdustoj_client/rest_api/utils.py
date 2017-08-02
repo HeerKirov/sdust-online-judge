@@ -5,9 +5,19 @@ import django_filters
 from .models import IdentityChoices, Organization
 from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import get_object_or_404
+from datetime import datetime, timedelta
 
 
 # -- Tools ----
+
+def now_dt():
+    """
+    返回一个当地时间。
+    :return: 
+    """
+    now = datetime.now() + timedelta(hours=8)  # 这坑爹的时区处理……
+    return now
+
 
 def dict_sub(dictionary, *args):
     """

@@ -3,6 +3,18 @@ from django.utils import timezone
 from django.contrib.auth.models import User, AbstractUser
 from django.contrib.postgres import fields as pg_fields
 from django.utils.translation import ugettext_lazy as _
+from datetime import datetime, timedelta
+
+
+# -- Tool -------------------------------------------------------------------------------
+
+def now_dt():
+    """
+    返回一个当地时间。
+    :return: 
+    """
+    now = datetime.now() + timedelta(hours=8)  # 这坑爹的时区处理……
+    return now
 
 
 # -- Resource ---------------------------------------------------------------------------
@@ -249,6 +261,9 @@ class UserProfile(Resource):
     identities = pg_fields.JSONField(default={})
     courses = pg_fields.JSONField(default={})
 
+    def __str__(self):
+        return "<Profile %s: %s>" % (self.username, self.name)
+
     @property
     def let_name(self):
         return self.name
@@ -300,6 +315,23 @@ class UserProfile(Resource):
             for i in self.student_identities.all():
                 i.updater = value
 
+    def is_org_manager(self):
+        """
+        包装的函数。判断user是否具有一般情况下管理机构的权限。
+        :return: 
+        """
+        return self.has_identities(IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root)
+
+    def is_mission_manager(self):
+        """
+        包装的函数。当用户是有资格管理任务的用户时返回true。
+        :return: 
+        """
+        return self.has_identities(IdentityChoices.root,
+                                   IdentityChoices.org_admin,
+                                   IdentityChoices.edu_admin,
+                                   IdentityChoices.teacher)
+
     def has_identities(self, *args):
         """
         是否拥有其中之一的权限。
@@ -307,7 +339,7 @@ class UserProfile(Resource):
         :return: 
         """
         for identity, value in self.identities.items():
-            if value:
+            if value is True or len(value) > 0:
                 for arg in args:
                     if arg == identity:
                         return True
@@ -410,12 +442,15 @@ class UserProfile(Resource):
     def get_organizations(self):
         """
         快速获得该用户关联的机构。仅在该用户是机构成员时才有有效结果。自动筛掉了root用户并按id排序.
+        如果该用户是ROOT或者是ORG_ADMIN，那么自动获得全部机构的列表。
         :return: QuerySet<[Organization]>
         """
         organizations_id = []
         for identity, value in self.identities.items():
             if identity in ORG_IDENTITY_CHOICES and len(value) > 0:
                 organizations_id += value
+            elif (identity == IdentityChoices.root or identity == IdentityChoices.org_admin) and value is True:
+                return Organization.objects.exclude(name='ROOT').exclude(deleted=True).all()
         return Organization.objects.filter(id__in=organizations_id).all()
 
     def get_courses(self, **kwargs):
@@ -506,6 +541,9 @@ class Student(Resource, PublicFieldMixin):
     grade = models.CharField(max_length=32, null=True)
     class_in = models.CharField(max_length=128, null=True)
 
+    def __str__(self):
+        return "<Student %s: %s>" % (self.username, self.name)
+
     def get_sex(self):
         return self.profile.sex
 
@@ -540,6 +578,9 @@ class Teacher(Resource, PublicFieldMixin):
 
     teacher_id = models.CharField(max_length=32)
 
+    def __str__(self):
+        return "<Teacher %s: %s>" % (self.username, self.name)
+
     def get_sex(self):
         return self.profile.sex
 
@@ -571,6 +612,9 @@ class EduAdmin(Resource, PublicFieldMixin):
         },
     )
     name = models.CharField(max_length=150)
+
+    def __str__(self):
+        return "<Edu Admin %s: %s>" % (self.username, self.name)
 
 
 # -- Organization -----------------------------------------------------------------------
@@ -624,8 +668,13 @@ class Organization(Resource):
 
         self.number_course_meta = number_course_meta
 
-        # todo number_courses number_course_groups number_categories number_problems都还没有做！
         self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(organization=self).count()
+        self.number_courses = getattr(Course, 'objects').filter(organization=self).count()
+        self.number_course_groups = getattr(CourseGroup, 'objects').filter(organization=self).count()
+        self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(orgaization=self).count()
+        self.number_problems = sum(v['category'].number_problem
+                                   for v in getattr(OrganizationCategoryRelation, 'objects').
+                                   filter(organization=self).value('category'))
 
         self.save()
 
@@ -665,6 +714,9 @@ class CourseMeta(Resource):
     number_course_groups = models.IntegerField(default=0)
     number_categories = models.IntegerField(default=0)
     number_problems = models.IntegerField(default=0)
+
+    def __str__(self):
+        return "<Course Meta %s: %s>" % (self.id, self.caption)
 
     def update_numbers(self):
         self.number_courses = getattr(Course, 'objects').filter(meta=self).count()
@@ -706,6 +758,9 @@ class CourseGroup(Resource):
                                       through='CourseGroupTeacherRelation',
                                       through_fields=('course_group', 'teacher'))
 
+    def __str__(self):
+        return "<Course Group %s: %s>" % (self.id, self.caption)
+
     @property
     def meta_caption(self):
         return self.meta.caption
@@ -718,7 +773,7 @@ class CourseGroup(Resource):
         """
         org = self.organization
         if hasattr(org, 'teachers'):
-            all_teachers = org.teachers.all()
+            all_teachers = org.teachers.exclude(deleted=True).all()
             if filter_exists and hasattr(self, 'teachers'):
                 exists_teachers_id = [v['id'] for v in self.teachers.all().values('id')]
                 all_teachers = all_teachers.exclude(id__in=exists_teachers_id)
@@ -734,7 +789,7 @@ class CourseGroup(Resource):
         """
         org = self.organization
         if hasattr(org, 'courses'):
-            all_courses = org.courses.all()
+            all_courses = org.courses.exclude(deleted=True).all()
             if filter_exists and hasattr(self, 'courses'):
                 exists_courses_id = [v['cid'] for v in self.courses.all().values('cid')]
                 all_courses = all_courses.exclude(cid__in=exists_courses_id)
@@ -766,6 +821,9 @@ class Course(Resource):
                                       through='CourseStudentRelation',
                                       through_fields=('course', 'student'))
 
+    def __str__(self):
+        return "<Course %s: %s>" % (self.id, self.caption)
+
     @property
     def meta_caption(self):
         return self.meta.caption
@@ -778,7 +836,7 @@ class Course(Resource):
         """
         org = self.organization
         if hasattr(org, 'teachers'):
-            all_teachers = org.teachers.all()
+            all_teachers = org.teachers.exclude(deleted=True).all()
             if filter_exists and hasattr(self, 'teachers'):
                 exists_teachers_id = [v['id'] for v in self.teachers.all().values('id')]
                 all_teachers = all_teachers.exclude(id__in=exists_teachers_id)
@@ -794,7 +852,7 @@ class Course(Resource):
         """
         org = self.organization
         if hasattr(org, 'students'):
-            all_students = org.students.all()
+            all_students = org.students.exclude(deleted=True).all()
             if filter_exists and hasattr(self, 'students'):
                 exists_students_id = [v['id'] for v in self.students.all().values('id')]
                 all_students = all_students.exclude(id__in=exists_students_id)
@@ -810,7 +868,7 @@ class Course(Resource):
         """
         org = self.organization
         if hasattr(org, 'course_groups'):
-            all_groups = org.course_groups.all()
+            all_groups = org.course_groups.exclude(deleted=True).all()
             if filter_exists and hasattr(self, 'course_groups'):
                 exists_groups_id = [v['gid'] for v in self.course_groups.all().values('gid')]
                 all_groups = all_groups.exclude(gid__in=exists_groups_id)
@@ -859,6 +917,24 @@ class CourseGroupTeacherRelation(Resource):
 
 # -- Mission ----------------------------------------------------------------------------
 
+class MissionState:
+    not_started = 'NOT_STARTED'
+    running = 'RUNNING'
+    ended = 'ENDED'
+
+MISSION_STATE = (
+    'NOT_STARTED',
+    'RUNNING',
+    'ENDED'
+)
+MISSION_MODE = (
+    ('CUSTOM', 'CUSTOM'),
+    ('ACM', 'ACM'),
+    ('C4', 'C4'),
+    ('CCF', 'CCF')
+)
+
+
 class Mission(Resource):
     id = models.BigAutoField(primary_key=True)
     caption = models.CharField(max_length=150)
@@ -871,6 +947,90 @@ class Mission(Resource):
                                       through_fields=('mission', 'problem'))
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
+
+    mode = models.CharField(choices=MISSION_MODE, max_length=6, default='CUSTOM')
+    config = pg_fields.JSONField(null=True)
+
+    @staticmethod
+    def validate_config(data):
+        """
+        用来验证config的配置是否合法。
+        :param data: 
+        :return: 如果合法，返回None，否则返回错误字符串。
+        """
+        template = {
+            'type': {
+                'acm': None,
+                'oi': {
+                    'valid_submission': {
+                        'highest': None,
+                        'latest': None
+                    }
+                }
+            },
+            'submission_display': {
+                'self': None,
+                'all': None,
+                'no': None
+            },
+            'score_display': {
+                'yes': None,
+                'close': None,
+                'no': None
+            }
+        }
+
+        def validate_level(json, temp):
+            for config_name, config_list in temp.items():
+                if config_name not in json:
+                    return 'Config "%s" is not exist.' % (config_name,)
+                flag = False
+                for item, sub_config in config_list.items():
+                    if json[config_name] == item:  # 匹配到了可用的内容。
+                        flag = True
+                        if sub_config is not None:  # 表示匹配到了当前选项存在参数。
+                            if "%s_config" % (config_name,) not in json:
+                                return 'Sub config of "%s" is not exist.' % (config_name,)
+                            ret = validate_level("%s_config" % (config_name,), sub_config)
+                            if ret is not None:
+                                return ret
+                        break
+                if not flag:  # 这表示没有正确的匹配。
+                    return 'Config "%s" is not valid.' % (config_name,)
+            return None
+        return validate_level(data, template)
+
+    @staticmethod
+    def default_mode_config(mode):
+        acm_config = {
+            'type': 'acm',
+            'submission_display': 'self',
+            'score_display': 'yes'
+        }
+        c4_config = {
+            'type': 'oi',
+            'type_config': {
+                'valid_submission': 'highest'
+            },
+            'submission_display': 'self',
+            'score_display': 'yes'
+        }
+        ccf_config = {
+            'type': 'oi',
+            'type_config': {
+                'valid_submission': 'latest'
+            },
+            'submission_display': 'self',
+            'score_display': 'close'
+        }
+        if mode == 'ACM':
+            return acm_config
+        elif mode == 'C4':
+            return c4_config
+        elif mode == 'CCF':
+            return ccf_config
+        else:
+            return None
 
     @property
     def meta_caption(self):
@@ -900,8 +1060,27 @@ class Mission(Resource):
             problems = problems | cat.problems.all()
         return problems.distinct()
 
+    def get_state(self):
+        """
+        返回该任务的进行状态，使用一个具有代号的字符串来表示。
+        :return: MISSION_STATE
+        """
+        now = now_dt()
+        if now > self.end_time.replace(tzinfo=None):
+            return MissionState.ended
+        elif now >= self.start_time.replace(tzinfo=None):
+            return MissionState.running
+        else:
+            return MissionState.not_started
+
+    def get_config(self):
+        if self.mode == 'CUSTOM':
+            return self.config
+        else:
+            return Mission.default_mode_config(self.mode)
+
     def __str__(self):
-        return "< %s: %s >" % (self.id, self.caption)
+        return "<Mission %s: %s >" % (self.id, self.caption)
 
 
 class MissionGroup(Resource):
@@ -918,10 +1097,13 @@ class MissionGroup(Resource):
                                       through_fields=('mission_group', 'mission'))
     weight = models.DecimalField(default=1, max_digits=19, decimal_places=10)
 
+    def __str__(self):
+        return "<Mission Group %s: %s>" % (self.id, self.caption)
+
     def available_missions(self, filter_exists=False):
         org = self.organization
         if hasattr(org, 'missions'):
-            missions = org.missions.all()
+            missions = org.missions.exclude(deleted=True).all()
             if filter_exists and hasattr(self, 'missions'):
                 exists_id = [v['id'] for v in self.missions.all().values('id')]
                 missions = missions.exclude(id__in=exists_id)
@@ -948,6 +1130,19 @@ class MissionProblemRelation(Resource):
     weight = models.DecimalField(default=1, max_digits=19, decimal_places=10)
 
 
+class Rank(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    mission = models.ForeignKey(Mission, related_name='ranks', to_field='id', on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, related_name='ranks', to_field='id', on_delete=models.CASCADE)
+    user = models.ForeignKey(UserProfile, to_field='user', related_name='ranks', on_delete=models.CASCADE)
+
+    sub_count = models.IntegerField(default=0)
+    solved = models.IntegerField(default=0)
+    penalty = models.BigIntegerField(default=0)
+    sum_score = models.FloatField(default=0)
+    result = pg_fields.JSONField()
+
+
 # -- Problem ------------------------------------------------------------------
 
 class Problem(models.Model):
@@ -967,7 +1162,7 @@ class Problem(models.Model):
     number_invalid_word = models.IntegerField()
 
     def __str__(self):
-        return "< %s: %s >" % (self.id, self.title)
+        return "<Problem %s: %s >" % (self.id, self.title)
 
     def get_limits(self):
         if hasattr(self, 'limits'):
@@ -991,7 +1186,7 @@ class Environment(models.Model):
     name = models.CharField(max_length=128)
 
     def __str__(self):
-        return "< %s: %s >" % (self.id, self.name)
+        return "<Environment %s: %s >" % (self.id, self.name)
 
 
 class Limit(models.Model):
@@ -1007,6 +1202,9 @@ class Limit(models.Model):
     memory_limit = models.IntegerField(default=-1)
     # 代码长度限制
     length_limit = models.IntegerField(default=-1)
+
+    def __str__(self):
+        return "<Limit %s: %s>" % (self.id, self.env_name)
 
 
 # -- Category -----------------------------------------------------------------
@@ -1112,12 +1310,18 @@ class Submission(models.Model):
     organization = models.ForeignKey(Organization, related_name='submissions', null=True,
                                      to_field='id', on_delete=models.SET_NULL)
 
+    def __str__(self):
+        return "<Submission %s of by %s>" % (self.id, self.problem_id, self.environment_id)
+
 
 class CompileInfo(models.Model):
     # 所属的提交
     submission = models.OneToOneField(Submission, related_name='compile_info', to_field='id', primary_key=True)
     # 编译信息
     info = models.TextField(null=True)
+
+    def __str__(self):
+        return "<Compile Info %s>" % (self.submission_id,)
 
 
 class TestDataStatus(models.Model):
@@ -1127,6 +1331,9 @@ class TestDataStatus(models.Model):
     # 状态
     status = pg_fields.JSONField()
 
+    def __str__(self):
+        return "<Test Data Status %s>" % (self.submission_id,)
+
 
 class SubmissionCode(models.Model):
     # 所属的提交
@@ -1134,3 +1341,6 @@ class SubmissionCode(models.Model):
                                       to_field='id', primary_key=True)
     # 代码
     code = pg_fields.JSONField()
+
+    def __str__(self):
+        return "<Submission Code %s>" % (self.submission_id,)

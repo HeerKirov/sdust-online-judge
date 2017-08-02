@@ -4,6 +4,9 @@ from requests.auth import HTTPBasicAuth
 from sqlalchemy.orm import sessionmaker
 from data_updater.models import server as server_models
 
+from datetime import datetime
+from time import mktime
+
 from .cache import update_cache
 from config import CLIENT_SETTINGS
 
@@ -73,10 +76,84 @@ def write_submission_code(local_id, submission_json):
         code.code = submission_json['code']
 
 
+def write_rank(local_submission, submission_json):
+    """
+    根据提交，将提交的信息更新到Rank上去。
+    :param local_submission: 
+    :param submission_json: 
+    :return: 
+    """
+    if local_submission.finished is False:  # 仅当提交已完成，才会做累计。
+        return
+    rank = session.query(server_models.Rank).filter_by(mission_id=local_submission.mission_id).first()
+    mission = session.query(server_models.Mission).filter_by(id=local_submission.mission_id).first()
+
+    if rank is None:
+        # 创建新的model
+        rank = server_models.Rank(
+            mission_id=local_submission.mission_id,
+            user_id=local_submission.user_id,
+            organization_id=local_submission.organization_id,
+            sub_count=0,
+            solved=0,
+            penalty=0,
+            sum_score=0,
+            result={}
+        )
+        session.add(rank)
+    problem_id = local_submission.problem_id  # 获得了题目的ID。
+    rank.sub_count += 1
+    if str(problem_id) not in rank.result:  # 这个题目还没有被提交过的痕迹，那么就创建。
+        rank.result[str(problem_id)] = {
+            'sub_count': 0,
+            'ac_time': None,
+            'wrong_count': 0,
+            'status': '',
+            'average_score': 0,
+            'max_score': 0,
+            'latest_score': 0
+        }
+    # 下面对该题目的信息进行更新
+    p_result = rank.result[str(problem_id)]
+
+    if p_result['ac_time'] is None:  # 这表明该题目仍未AC
+        if local_submission.status == 'AC':  # 这次AC了
+            now_time = datetime.now()
+            p_result['ac_time'] = now_time
+            p_result['status'] = 'AC'
+            rank.solved += 1
+            # 这里的罚时计算规则是每一次错误20分钟。
+            this_penalty = mktime(now_time - mission.start_time) + p_result['wrong_time'] * 20 * 60
+            rank.penalty += this_penalty
+        else:  # 这次还是没有AC……
+            p_result['wrong_count'] += 1
+            p_result['status'] = local_submission.status
+        # 而如果该题目AC了，那么后续的提交是不会有影响的。
+    now_score = local_submission.score
+    old_latest_score = p_result['latest_score']
+    old_max_score = p_result['max_score']
+    old_average_score = p_result['average_score']
+    p_result['latest_score'] = now_score
+    if now_score > p_result['max_score']:
+        p_result['max_score'] = now_score
+    p_result['average_score'] = \
+        (p_result['average_score'] * p_result['sub_count'] + now_score) / (p_result['sub_count'] + 1)
+    # 更新提交次数必须放在后面，因为前面有个平均数依赖
+    p_result['sub_count'] += 1
+    # 更新在总集中的sum_score
+    if mission.config['type'] == 'oi':
+        if mission.config['type_config']['valid_submission'] == 'latest':
+            rank.sum_score += p_result['latest_score'] - old_latest_score
+        elif mission.config['type_config']['valid_submission'] == 'highest':
+            rank.sum_score += p_result['max_score'] - old_max_score
+    rank.result = p_result
+
+
 def write_submission(submission_json):
     submission = session.query(server_models.Submission).filter_by(sid=submission_json['id']).first()
     if submission is not None:
         print("Update submission %s" % (submission_json['id'],))
+        have_finished = submission.finished
         submission.time = submission_json['time']
         submission.memory = submission_json['memory']
         submission.length = submission_json['length']
@@ -88,6 +165,9 @@ def write_submission(submission_json):
         write_submission_compile_info(submission.id, submission_json)
         write_submission_test_data_status(submission.id, submission_json)
         write_submission_code(submission.id, submission_json)
+        # rank的信息产生在这里。
+        if not have_finished:  # 必须做这个判定。不然万一出现一个已完成提交被更新第二次那就炸了。
+            write_rank(submission, submission_json)
         session.commit()
 
 
