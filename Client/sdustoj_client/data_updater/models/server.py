@@ -90,6 +90,8 @@ class Mission(_Base):
     start_time = Column(DateTime)
     end_time = Column(DateTime)
 
+    deleted = Column(Boolean)
+
 
 class Submission(_Base):
     __tablename__ = 'rest_api_submission'
@@ -102,6 +104,7 @@ class Submission(_Base):
     status = Column(String(length=4))
     score = Column(Float, nullable=True)
     finished = Column(Boolean)
+    submit_time = Column(DateTime)
     update_time = Column(DateTime)
     mission_id = Column(BigInteger)
     user_id = Column(Integer)
