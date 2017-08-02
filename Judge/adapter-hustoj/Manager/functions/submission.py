@@ -216,6 +216,7 @@ def _handler(sid):  # 处理某个提交。
         submission.status = status_map[max_status]  # 与if中的一样。
         submission.finished = True  # 标记该提交为已完成。
         print('\tFinished, unmarked.')
+    submission.update_time = datetime.now()
     pg_session.commit()
     print('\tSubmission %s updated.' % (sid, ))
 

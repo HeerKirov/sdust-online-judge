@@ -128,6 +128,7 @@ class Submission(_Base):
     finished = Column(Boolean)
 
     submit_time = Column(DateTime)
+    update_time = Column(DateTime)
     judge_id = Column(BigInteger)
 
     ip = Column(INET)
