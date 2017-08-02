@@ -31,7 +31,7 @@ class Utils(object):
             :return: 只要identities中具备id_str中任意一个身份，即返回True；否则返回False。
             """
             for it in id_str:
-                if it in identities and identities[it] is not False:
+                if it in identities:
                     return True
             return False
 
@@ -70,7 +70,7 @@ class Utils(object):
                 return redirect(reverse('web-login'))
             # 如果用户不具备指定的权限，跳转到首页
             if id_expect != '*':
-                identities = user_info['identities']
+                identities = user_info['user'].get_identities()
                 site_identities_expect = []
                 org_identities_expect = []
                 for identity in id_expect:
