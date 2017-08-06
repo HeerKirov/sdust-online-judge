@@ -1,0 +1,198 @@
+{% extends "mission/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}提交记录{% endblock %}
+
+{% block nav_submission %}active{% endblock %}
+
+{% block sub_content2 %}
+
+  <div class="col-lg-8 col-md-10">
+    <form id="submitForm" method="POST" onsubmit="login();return false;">
+      <fieldset>
+        {% csrf_token %}
+        <div class="form-group row">
+          <label class="col-lg-3 col-md-4 control-label">题目</label>
+          <div class="col-lg-9 col-md-8">
+            <select name="problem_id" class="form-control" id ="problem">
+
+            </select>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-lg-3 col-md-4 control-label">语言</label>
+          <div class="col-lg-9 col-md-8">
+            <select name="env_id" class="form-control" id="language">
+
+            </select>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-lg-3 col-md-4 control-label">代码</label>
+          <div class="col-lg-9 col-md-8">
+            <textarea name="code" class="form-control"></textarea>
+          </div>
+        </div>
+        <br/>
+        <div class="input-group-btn">
+          <button type="submit" class="btn btn-primary" title="保存信息">保 存</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+
+<script type="text/javascript">
+    var json = {}
+    var url
+    $(function (e) {
+       url = "{% url 'api-mission-problem-list' mid %}";
+        var data = {}
+        data.limit = 1000
+            $.ajax({
+           type: "GET",
+           url: url,
+           data: data,
+           success:function (ret) {
+               var pid;
+               if(-1 == {{ pid }})
+               {
+                   pid = ret.results[0].id
+               }
+               else
+               {
+                   pid = {{ pid }}
+               }
+               for(var i in ret.results)
+               {
+                   var pro = ret.results[i]
+                   var option = $("<option></option>")
+                   json[pro.problem_id] = pro.id
+                   if(pro.id == pid)
+                   {
+                       option.attr("value", pro.problem_id)
+                       option.attr("selected","selected")
+                       $.ajax({
+                       type: "GET",
+                       url: "{% url 'api-mission-problem-list' mid %}" + pid,
+                       success:function (ret) {
+                           var limit = ret.problem.limit
+                           if(limit.length == 0)
+                           {
+                               $("#language").empty()
+                               var option1 = $("<option></option>")
+                               var option2 = $("<option></option>")
+                               var option3 = $("<option></option>")
+                               var option4 = $("<option></option>")
+                               option1.attr("value", 1)
+                               option1.html("C")
+                               option2.attr("value", 2)
+                               option2.html("C++")
+                               option3.attr("value", 3)
+                               option3.html("Java")
+                               option4.attr("value", 4)
+                               option4.html("Python")
+                               $("#language").append(option1)
+                               $("#language").append(option2)
+                               $("#language").append(option3)
+                               $("#language").append(option4)
+                           }
+                           else
+                           {
+                               $("#language").empty()
+                               for(var i in limit)
+                               {
+                                   var option = $("<option></option>")
+                                   option.attr("value", limit[i].environment)
+                                   option.html(limit[i].env_name)
+                                   $("#language").append(option)
+                               }
+                           }
+                         },
+                      })
+                   }
+                   option.attr("value", pro.problem_id)
+                   option.html(pro.title)
+                   $("#problem").append(option)
+               }
+           },
+             error:function () {
+             }
+
+       });
+
+       $("#problem").change(function () {
+           var problem_id = $("#problem").val()
+           var id = json[problem_id]
+           $.ajax({
+               type: "GET",
+               url: "{% url 'api-mission-problem-list' mid %}" + id,
+               success:function (ret) {
+                   var limit = ret.problem.limit
+                   if(limit.length == 0)
+                   {
+                       $("#language").empty()
+                       var option1 = $("<option></option>")
+                       var option2 = $("<option></option>")
+                       var option3 = $("<option></option>")
+                       var option4 = $("<option></option>")
+                       option1.attr("value", 1)
+                       option1.html("C")
+                       option2.attr("value", 2)
+                       option2.html("C++")
+                       option3.attr("value", 3)
+                       option3.html("Java")
+                       option4.attr("value", 4)
+                       option4.html("Python")
+                       $("#language").append(option1)
+                       $("#language").append(option2)
+                       $("#language").append(option3)
+                       $("#language").append(option4)
+                   }
+                   else
+                   {
+                       $("#language").empty()
+                       for(var i in limit)
+                       {
+                           var option = $("<option></option>")
+                           option.attr("value", limit[i].environment)
+                           option.html(limit[i].env_name)
+                           $("#language").append(option)
+                       }
+                   }
+               },
+           })
+        })
+    });
+</script>
+
+<script>
+function login() {
+  var form = $("#submitForm")
+  var init_data = getFormData(form)
+  var data = {}
+  data["problem"] = init_data.problem_id
+  data["environment"] = init_data.env_id
+  data["code"] = init_data.code
+  $.ajax({
+    type: "POST",
+    async: false,
+    url: "{% url 'api-mission-submission-list' mid %}",
+    data: data,
+    dataType: 'json',
+    success: function(ret) {
+      url = "{% url 'web-mission-submission-list' mid %}"
+      location.href = url
+    },
+    error: function(a, b, c) {
+      test_output(a)
+    }
+  })
+
+  return false
+}
+</script>
+{% endblock %}

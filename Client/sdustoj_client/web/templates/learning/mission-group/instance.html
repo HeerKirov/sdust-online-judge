@@ -1,9 +1,8 @@
-{% extends "mission-group/adminBasic.html" %}
+{% extends "learning/mission-group/adminBasic.html" %}
 {% load staticfiles %}
 
 {% block title %}任务详情{% endblock %}
-
-{% block nav_mission_group %} active {% endblock %}
+{% block subnav_mission_group_info %}active{% endblock %}
 
 
 {% block sub_content2 %}
@@ -21,10 +20,6 @@ SATable.SimpleAjaxInfo({
   getMethod: 'GET',
   removeMethod: 'DELETE',
   getURL: '{% url 'api-mission-group-detail' id %}',
-  {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities %}
-  removeURL: '{% url 'api-mission-group-detail' id %}',
-  removeToURL: document.referrer,
-  {% endif %}
   items: [
      { name: 'courser_meta', caption: '所属课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
     { name: 'meta_caption', caption: '所属课程基类名称', type:'Text',typeInfo: { max_length: 150 } },

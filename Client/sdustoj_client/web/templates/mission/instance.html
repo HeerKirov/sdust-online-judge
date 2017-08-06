@@ -3,15 +3,15 @@
 
 {% block title %}任务详情{% endblock %}
 
-{% block nav_myorganization %} active {% endblock %}
+{% block nav_mission_info %} active {% endblock %}
 
 
-{% block sub_content %}
-<div class="container row justify-content-sm-center">
+{% block sub_content2 %}
+
   <div class="col-lg-8 col-md-10">
     <div id="missioninfo"></div>
   </div>
-</div>
+
 {% endblock %}
 {% block script %}
 <script>
@@ -19,12 +19,16 @@ SATable.SimpleAjaxInfo({
   id: 'missioninfo',
   title: '任务信息',
   getMethod: 'GET',
+  {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities %}
   updateMethod: 'PATCH',
   removeMethod: 'DELETE',
-  getURL: '{% url 'api-mission-detail' id %}',
-  updateURL: '{% url 'api-mission-detail' id %}',
-  removeURL: '{% url 'api-mission-detail' id %}',
+  {% endif %}
+  getURL: '{% url 'api-mission-detail' mid %}',
+{% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities %}
+  updateURL: '{% url 'api-mission-detail' mid %}',
+  removeURL: '{% url 'api-mission-detail' mid %}',
   removeToURL: document.referrer,
+{% endif %}
   items: [
      { name: 'courser_meta', caption: '所属课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
     { name: 'meta_caption', caption: '所属课程基类名称', type:'Text',typeInfo: { max_length: 150 } },

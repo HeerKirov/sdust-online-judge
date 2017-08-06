@@ -149,6 +149,15 @@ class Utils(object):
             )
 
         @staticmethod
+        def student(request, template, context=None):
+            return Utils.Render._identity_render(
+                request=request,
+                template=template,
+                id_expect=(IdentityChoices.student, IdentityChoices.root,),
+                context=context
+            )
+
+        @staticmethod
         def teacher_or_edu_admin(request, template, context=None):
             return Utils.Render._identity_render(
                 request=request,
@@ -323,21 +332,21 @@ class MyOrganizationPages(object):
         @staticmethod
         def list(request, oid):
 
-            return Utils.Render.all_user(request, 'myorganization/teacher/list.html', {
+            return Utils.Render.teacher_or_edu_admin(request, 'myorganization/teacher/list.html', {
                 'oid': oid,
 
             })
 
         @staticmethod
         def instance(request, oid, uid):
-            return Utils.Render.all_user(request, 'myorganization/teacher/instance.html', {
+            return Utils.Render.teacher_or_edu_admin(request, 'myorganization/teacher/instance.html', {
                 'oid': oid,
                 'uid': uid
             })
 
         @staticmethod
         def create(request, oid):
-            return Utils.Render.all_user(request, 'myorganization/teacher/create.html', {
+            return Utils.Render.teacher_or_edu_admin(request, 'myorganization/teacher/create.html', {
                 "oid": oid
             })
 
@@ -605,10 +614,52 @@ class Course(object):
 
 class Mission(object):
     @staticmethod
-    def instance(request, id):
+    def instance(request, mid):
         return Utils.Render.all_user(request, "mission/instance.html", {
-            "id": id,
+            "mid": mid,
         })
+
+    class Problem(object):
+        @staticmethod
+        def list(request, mid):
+            return Utils.Render.all_user(request, "mission/problem/list.html", {
+                "mid": mid,
+            })
+
+        @staticmethod
+        def instance(request, mid, pid):
+            return Utils.Render.all_user(request, "mission/problem/instance.html", {
+                "mid": mid,
+                "pid": pid,
+            })
+
+
+    class Submission(object):
+        @staticmethod
+        def list(request, mid):
+            return Utils.Render.all_user(request, "mission/submission/list.html", {
+                "mid": mid,
+            })
+
+        @staticmethod
+        def instance(request, mid, sid):
+            return Utils.Render.all_user(request, "mission/submission/instance.html", {
+                "mid": mid,
+                "sid": sid,
+            })
+
+        @staticmethod
+        def submit(request, mid):
+            if 'problem' in request.GET:
+                pid = request.GET['problem']
+            else:
+                pid = -1
+            return Utils.Render.all_user(request, "mission/submission/submit.html", {
+                "pid": pid,
+                "mid": mid,
+            })
+
+
 
 class MissionGroup(object):
     @staticmethod
@@ -648,3 +699,36 @@ class TeachingAdminPages(object):
             return Utils.Render.teacher(request,"teaching/teachingcoursegroup/list.html")
 
 
+class LearningAdminPages(object):
+    class LearningCourse(object):
+        @staticmethod
+        def list(request):
+            return Utils.Render.student(request,"learning/learningcourse/list.html")
+
+        @staticmethod
+        def instance(request, cid):
+            return Utils.Render.student(request, "learning/learningcourse/instance.html", {
+                "cid": cid,
+            })
+
+    class MissionGroup(object):
+        @staticmethod
+        def list(request, cid):
+            return Utils.Render.student(request, "learning/mission-group/list.html", {
+                "cid": cid,
+            })
+
+        @staticmethod
+        def instance(request, cid, id):
+            return Utils.Render.student(request, "learning/mission-group/instance.html", {
+                "cid": cid,
+                "id": id,
+            })
+
+    class Mission(object):
+        @staticmethod
+        def list(request, cid, id):
+            return Utils.Render.all_user(request, 'learning/mission/list.html', {
+                "cid": cid,
+                "id": id
+            })

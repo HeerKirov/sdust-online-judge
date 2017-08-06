@@ -17,8 +17,8 @@
 SATable.SimpleAjaxForm({
   id: 'student-create',
   method: 'POST',
-  toSuccess: '{% url 'web-studnet-list' oid %}',
-  url: '{% url 'api-organization-studnet-list' oid %}',
+  toSuccess: '{% url 'web-student-list' oid %}',
+  url: '{% url 'api-organization-student-list' oid %}',
   items: [
     {
       name: 'available',

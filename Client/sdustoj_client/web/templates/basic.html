@@ -36,7 +36,11 @@
           <a class="nav-link" href="{% url 'web-teaching-course-group-list'  %}">教授的课程</a>
         </li>
       {% endif %}
-
+        {% if 'STUDENT' in user_info.user.get_identities %}
+       <li class="nav-item">
+          <a class="nav-link" href="{% url 'web-learning-course-list'  %}">学习的课程</a>
+        </li>
+      {% endif %}
       </ul>
       <ul class="navbar-nav mr-auto mr-sm-2">
         {% if not user.is_authenticated %}
