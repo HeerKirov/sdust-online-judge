@@ -1,5 +1,5 @@
 from django.conf.urls import url, include
-from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages,CourseGroup,Course,Mission,TeachingAdminPages,MissionGroup
+from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages,CourseGroup,Course,Mission,TeachingAdminPages,MissionGroup,LearningAdminPages
 
 
 personal_patterns = [
@@ -103,6 +103,11 @@ course_patterns = [
 
 mission_patterns = [
     url(r'^info/([\w\-.+@]+)/$',Mission.instance,name="web-mission-instance"),
+    url(r'^info/([\w\-.+@]+)/problem/$',Mission.Problem.list,name="web-mission-problem-list"),
+    url(r'^info/([\w\-.+@]+)/problem/info/([\w\-.+@]+)/$',Mission.Problem.instance,name="web-mission-problem-instance"),
+    url(r'^info/([\w\-.+@]+)/submission/$',Mission.Submission.list,name="web-mission-submission-list"),
+    url(r'^info/([\w\-.+@]+)/submission/info/([\w\-.+@]+)/$',Mission.Submission.instance,name="web-mission-submission-instance"),
+    url(r'^info/([\w\-.+@]+)/submission/submit$',Mission.Submission.submit,name="web-mission-submission-submit"),
 ]
 
 teachingcourse_patterns = [
@@ -117,6 +122,14 @@ mission_group_patterns = [
     url(r'^info/([\w\-.+@]+)/mission/$',MissionGroup.Mission.list,name="web-mission-group-mission-list"),
     url(r'^info/([\w\-.+@]+)/mission/info/([\w\-.+@]+)/$',MissionGroup.Mission.instance,name="web-mission-group-mission-detail"),
     url(r'^info/([\w\-.+@]+)/mission/create/$',MissionGroup.Mission.create,name="web-mission-group-mission-create"),
+]
+
+learningcourse_patterns = [
+    url(r'^$',LearningAdminPages.LearningCourse.list,name='web-learning-course-list'),
+    url(r'^info/([\w\-.+@]+)/$',LearningAdminPages.LearningCourse.instance, name="web-learning-course-instance"),
+    url(r'^info/([\w\-.+@]+)/mission-group/$',LearningAdminPages.MissionGroup.list, name="web-learning-course-mission-group-list"),
+    url(r'^info/([\w\-.+@]+)/mission-group/info/([\w\-.+@]+)/$', LearningAdminPages.MissionGroup.instance, name="web-learning-course-mission-group-detail"),
+    url(r'^info/([\w\-.+@]+)/mission-group/info/([\w\-.+@]+)/mission/$', LearningAdminPages.Mission.list, name="web-learning-course-mission-group-mission-list"),
 ]
 
 url_patterns = [
@@ -135,5 +148,5 @@ url_patterns = [
     url(r'^teachingcourse/',include(teachingcourse_patterns)),
     url(r'^teachingcoursegroup/',include(teachingcoursegroup_patterns)),
     url(r'^mission-group/',include(mission_group_patterns)),
-
+    url(r'^learningcourse/',include(learningcourse_patterns)),
 ]

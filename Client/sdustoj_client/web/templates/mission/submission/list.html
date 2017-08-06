@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% extends "mission/adminBasic.html" %}
+{% load staticfiles %}
+{% block nav_submission %}active{% endblock %}
+{% block title %}提交记录{% endblock %}
+
+{% block sub_content2 %}
+   <div class="col-lg-8 col-md-10">
+    <div id="submission"></div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+SATable.DRFTable({
+  id: 'submission',
+  title: '提交记录',
+  url: "{% url 'api-mission-submission-list' mid %}",
+  search: true,
+  columns: [
+    { name: 'id', caption: 'ID', sort: true, ordering: -1, type: 'Link', typeInfo: { base_url: '{% url 'web-mission-submission-list' mid %}info/', key: 'id' } },
+    { name: 'problem_title', caption: '题目', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'web-mission-submission-list' mid %}info/', key: 'id' } },
+    { name: 'env_name', caption: '语言', type: 'Text' },
+    { name: 'status', caption: '状态', type: 'Text' },
+    { name: 'score', caption: '完成度', type: 'Text' },
+    { name: 'time', caption: '时间', type: 'Text' },
+    { name: 'memory', caption: '内存', type: 'Text' },
+    { name: 'length', caption: '长度', type: 'Text' },
+    { name: 'submit_time', caption: '提交时间', sort: true, type: 'Datetime' },
+  ],
+  createURL: '{% url 'web-mission-submission-submit' mid %}'
+})
+
+</script>
+{% endblock %}

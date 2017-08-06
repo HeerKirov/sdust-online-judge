@@ -2,6 +2,9 @@
 {% load staticfiles %}
 
 {% block sub_nav %}
+<li class="nav-item">
+  <a class="nav-link {% block nav_learning_course %}{% endblock %}" href="{% url 'web-learning-course-list' %}">我学习的课程</a>
+</li>
 
 {% endblock %}
 
@@ -11,10 +14,8 @@
     <div class="col-lg-3 col-md-4">
       <div class="container">
         <nav class="nav flex-column nav-pills">
-        <a class="nav-link {% block nav_mission_info %}{% endblock %}" href="{% url 'web-mission-instance' mid %}">任务详细信息</a>
-        <a class="nav-link {% block nav_problem %}{% endblock %}" href="{% url 'web-mission-problem-list' mid %}">题目</a>
-        <a class="nav-link {% block nav_submission %}{% endblock %}" href="{% url 'web-mission-submission-list' mid %}">提交</a>
-        <a class="nav-link {% block nav_mis %}{% endblock %}" href="{% url 'web-learning-course-mission-group-list' mid %}">榜单</a>
+        <a class="nav-link {% block nav_course_info %}{% endblock %}" href="{% url 'web-course-instance' cid %}">课程详细信息</a>
+        <a class="nav-link {% block nav_mission %}{% endblock %}" href="{% url 'web-learning-course-mission-group-list' cid %}">任务组</a>
         {% block sub_nav2 %}{% endblock %}
         </nav>
       </div>

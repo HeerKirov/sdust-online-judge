@@ -1,0 +1,169 @@
+{% extends "mission/adminBasic.html" %}
+{% load staticfiles %}
+
+
+{% block title %}提交记录{% endblock %}
+
+{% block nav_submission %}active{% endblock %}
+
+{% block sub_content2 %}
+  <div class="col-lg-8 col-md-10">
+  <h3 id="id">提交 - {{ submission.id }}</h3>
+  <br>
+  <h4>提交信息</h4>
+  <table class="table">
+    <tr class="col-12 row">
+      <td class="col-4"><b>提交ID</b></td>
+      <td class="col-8" id ="sid"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>题目</b></td>
+      <td class="col-8" id ="problem"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>语言</b></td>
+      <td class="col-8" id="language"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>用户</b></td>
+      <td class="col-8" id="user"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>提交时间</b></td>
+      <td class="col-8" id="submit_time"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>更新时间</b></td>
+      <td class="col-8" id="update_time"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>提交IP</b></td>
+      <td class="col-8" id="ip"></td>
+    </tr>
+  </table>
+  <br>
+  <h4>评测信息</h4>
+  <table class="table">
+    <tr class="col-12 row">
+      <td class="col-4"><b>评测状态</b></td>
+      <td class="col-8" id="status"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>完成度</b></td>
+      <td class="col-8" id="score"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>时间</b></td>
+      <td class="col-8" id="time"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>内存</b></td>
+      <td class="col-8" id="memory"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>长度</b></td>
+      <td class="col-8" id="length"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>编译信息</b></td>
+      <td class="col-8" id="compile_info"></td>
+    </tr>
+    <tr class="col-12 row">
+      <td class="col-4"><b>详细数据</b></td>
+      <td class="col-8">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>测试数据ID</th>
+              <th>时间</th>
+              <th>内存</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody id="test_data">
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <br>
+  <h4>代码</h4>
+  <div class="jumbotron">
+    <pre><code id="code"></code></pre>
+  </div>
+</div>
+{% endblock %}
+
+<script src="{% static 'highlight/highlight.pack.js' %}"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+{% block script %}
+<script>
+$(document).ready(function() {
+  $.ajax({
+    type: "get",
+    url: "{% url 'api-mission-submission-detail' mid sid %}",
+    dataType: "json",
+    success: function(ret) {
+      $("#id").text(("提交 -" + ret.id));
+      $("#sid").text(ret.sid);
+      $("#problem").text(ret.problem_title);
+      $("#language").text(ret.env_name);
+      $("#user").text(ret.user_name);
+      $("#ip").text(ret.ip);
+      var iDate = new Date(ret.submit_time)
+      var info = iDate.toLocaleString()
+      $("#submit_time").text(info);
+      iDate = new Date(ret.update_time)
+      info = iDate.toLocaleString()
+      $("#update_time").text(info);
+
+      $("#status").text(ret.status);
+      $("#score").text(ret.score);
+      $("#time").text(ret.time);
+      $("#memory").text(ret.memory);
+      $("#length").text(ret.length);
+      $("#compile_info").text(ret.compile_info);
+      $("#source").text(ret.problem.source);
+      $("#code").text(ret.code.code);
+      $("#code").addClass(ret.env_name);
+      for(var i in ret.test_data_status)
+      {
+          var datas = ret.test_data_status;
+          var tr = $("<tr></tr>")
+          var td1 = $("<td></td>")
+          var td2 = $("<td></td>")
+          var td3 = $("<td></td>")
+          var td4 = $("<td></td>")
+          $(td1).text(i)
+          $(td2).text(datas[i].time + "毫秒")
+          $(td3).text(datas[i].memory + "KB")
+          $(td4).text(datas[i].status)
+          $(tr).append(td1)
+          $(tr).append(td2)
+          $(tr).append(td3)
+          $(tr).append(td4)
+          $("#test_data").append(tr)
+      }
+      for(var i in ret.problem.limit) {
+        var limits = ret.problem.limit[i]
+        var tr = $("<tr></tr>")
+        var td1 = $("<td></td>")
+        var td2 = $("<td></td>")
+        var td3 = $("<td></td>")
+        var td4 = $("<td></td>")
+        $(td1).text(limits.env_name)
+        $(td2).text(limits.time_limit + "毫秒")
+        $(td3).text(limits.memory_limit + "KB")
+        $(td4).text(limits.length_limit + "字节")
+        $(tr).append(td1)
+        $(tr).append(td2)
+        $(tr).append(td3)
+        $(tr).append(td4)
+        $("#limits").append(tr)
+      }
+    }
+  })
+})
+
+</script>
+{% endblock %}

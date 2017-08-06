@@ -1,0 +1,8 @@
+{% extends 'learning/adminBasic.html' %}
+
+{% block sub_nav2 %}
+    <ul class="nav flex-column nav-pills">
+         <li class="nav-item"><a class="nav-link {% block subnav_mission_group_info %}{% endblock %}" href="{% url 'web-learning-course-mission-group-detail' cid id%}">&nbsp&nbsp&nbsp&nbsp基本信息</a></li>
+         <li class="nav-item"><a class="nav-link {% block subnav_mission %}{% endblock %}" href="{% url 'web-learning-course-mission-group-mission-list' cid id%}">&nbsp&nbsp&nbsp&nbsp任务</a></li>
+    </ul>
+{% endblock %}

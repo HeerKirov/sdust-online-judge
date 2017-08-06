@@ -1,0 +1,33 @@
+{% extends "learning/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}我学习的课程{% endblock %}
+
+{% block nav_learning_course %}active{% endblock %}
+
+{% block sub_content %}
+<div class="container">
+  <div class="col-xs-12">
+    <div id="course"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+SATable.DRFTable({
+  id: 'course',
+  title: '我学习的课程',
+  url: "{% url 'api-learning-course-list' %}",
+  search: true,
+  columns: [
+
+   { name: "caption", caption: "课程名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-learning-course-list' %}info/', key: 'cid' } },
+    { name: "available", caption: "可用", type: 'Boolean' },
+    { name: 'start_time', caption: '开课时间', sort: true, type: 'Date' },
+    { name: 'end_time', caption: '结课登录', sort: true, type: 'Date' },
+  ],
+
+})
+</script>
+{% endblock %}
