@@ -2,6 +2,7 @@ from rest_framework.serializers import ModelSerializer, SlugRelatedField, CharFi
 from rest_framework.serializers import ListField
 from rest_framework.serializers import FileField
 from rest_framework.serializers import ValidationError
+from rest_framework.serializers import BooleanField
 
 from .models import MetaProblem, Description, Sample, TestData
 from .models import Problem, ProblemTestData, Limit, InvalidWord, SpecialJudge, ProblemLimitJudge
@@ -18,6 +19,8 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 
 from config import OJ_SETTINGS
+from .virtual_judge import vj, config as vj_config
+from .virtual_judge.utils import VirtualException
 
 
 _RESOURCE_READONLY = ('creator', 'updater', 'create_time', 'update_time')
@@ -60,7 +63,31 @@ class EnvironmentSerializers:
 
             extra_kwargs = _RESOURCE_KWARGS
 
+        def create(self, validated_data):
+            if validated_data['is_virtual_judge'] is False:
+                validated_data['origin_oj'] = None
+                validated_data['origin_judge'] = None
+            else:
+                origin_oj = validated_data['origin_oj']
+                origin_judge = validated_data['origin_judge']
+                if origin_oj not in vj_config.OJ_LIST:  # OJ可用检查
+                    raise ValidationError('This OJ is not available.')
+                if not vj_config.OJ_LIST[origin_oj].has_env(origin_judge):  # env存在检查
+                    raise ValidationError('This Judge ID is not exists.')
+            ret = super().create(validated_data)
+            return ret
+
         def update(self, instance, validated_data):
+            if validated_data['is_virtual_judge'] is False:
+                validated_data['origin_oj'] = None
+                validated_data['origin_judge'] = None
+            else:
+                origin_oj = validated_data['origin_oj']
+                origin_judge = validated_data['origin_judge']
+                if origin_oj not in vj_config.OJ_LIST:  # OJ可用检查
+                    raise ValidationError('This OJ is not available.')
+                if not vj_config.OJ_LIST[origin_oj].has_env(origin_judge):  # env存在检查
+                    raise ValidationError('This Judge ID is not exists.')
             instance = super().update(instance, validated_data)
             instance.limits.update(env_name=instance.name)
             return instance
@@ -263,7 +290,10 @@ class MetaProblemSerializers:
                                                          'number_limit',
                                                          'number_category',
                                                          'number_node',
-                                                         'number_invalid_word')
+                                                         'number_invalid_word',
+                                                         'is_virtual_judge',
+                                                         'origin_oj',
+                                                         'origin_pid')
 
             def create(self, validated_data):
                 Utils.check_in_meta(obj_name='description', validated_data=validated_data)
@@ -310,7 +340,10 @@ class MetaProblemSerializers:
                                                          'number_limit',
                                                          'number_category',
                                                          'number_node',
-                                                         'number_invalid_word')
+                                                         'number_invalid_word',
+                                                         'is_virtual_judge',
+                                                         'origin_oj',
+                                                         'origin_pid')
 
             def update(self, instance, validated_data):
                 validated_data['description'] = validated_data.get('description_id')
@@ -332,6 +365,7 @@ class MetaProblemSerializers:
                 def create(self, validated_data):
                     environment = validated_data['environment']
                     problem = validated_data['problem']
+                    # todo 为vj题目添加限制，不可以添加不同oj的env。
                     if problem.limits.filter(environment=environment).exists():
                         raise ValidationError('Environment exists.')
                     validated_data['env_name'] = environment.name
@@ -501,14 +535,6 @@ class ProblemSerializers:
             test_data = TestDataField(many=True, write_only=True)
             special_judge = SpecialJudgeField(many=False, write_only=False, required=False)
             invalid_words = InvalidWordField(required=False, write_only=True)
-
-            class Meta:
-                model = Problem
-                exclude = ('environments', 'judge')
-                read_only_fields = _RESOURCE_READONLY + (
-                    'number_test_data', 'number_limit', 'number_category', 'number_node', 'number_invalid_word',
-                    'meta_problem'
-                )
 
             def create(self, validated_data):
                 """
@@ -701,7 +727,151 @@ class ProblemSerializers:
                 ProblemLimitJudge.objects.bulk_create(ptl_bulk_create)
                 return problem
 
+            class Meta:
+                model = Problem
+                exclude = ('environments', 'judge')
+                read_only_fields = _RESOURCE_READONLY + (
+                    'number_test_data', 'number_limit', 'number_category', 'number_node', 'number_invalid_word',
+                    'meta_problem', 'is_virtual_judge', 'origin_oj', 'origin_pid'
+                )
+
+        class VirtualProblemAdminListSerializer(ModelSerializer):
+            environments = PrimaryKeyRelatedField(queryset=Environment.objects.filter(is_virtual_judge=True),
+                                                  many=True, write_only=True)
+
+            def create(self, validated_data):
+                """
+                创建Virtual题目。附带创建题元/描述/样例/编程限制。
+                检验env是否可用，检验oj是否可用。检查pid是否重复。
+                :param validated_data: 
+                :return: 
+                """
+                origin_pid = validated_data['origin_pid']
+                origin_oj = validated_data['origin_oj']
+                creator = validated_data.pop('creator')
+                updater = validated_data.pop('updater')
+                available = validated_data.pop('available', True)
+                deleted = validated_data.pop('deleted', False)
+                environments = validated_data['environments']
+                if origin_oj not in vj_config.OJ_LIST:  # OJ可用检查
+                    raise ValidationError('This OJ is not available.')
+                for env in environments:  # 编程环境可用检查
+                    if env.origin_oj != origin_oj:
+                        raise ValidationError('Environment %s cannot be used by current OJ.' % (env.name,))
+                exists_problem = Problem.objects.filter(origin_oj=origin_oj).filter(origin_pid=origin_pid).first()
+                if exists_problem is not None:  # 重复检查
+                    raise ValidationError('Problem is already exists.Its id is %s.' % (exists_problem.id,))
+                # 请求数据
+                try:
+                    virtual_problem = vj.request_problem_detail(origin_oj, origin_pid)
+                except VirtualException:
+                    raise ValidationError('Some Errors happened while searching for problem.'
+                                          'Please check your config, or contract to admin.')
+                # 创建题元/描述/样例
+                meta_problem = MetaProblem(
+                    creator=creator, updater=updater,
+                    available=available, deleted=deleted,
+                    title=virtual_problem.title + ' Meta',
+                    introduction=virtual_problem.introduction,
+                    source=virtual_problem.source, author=virtual_problem.author,
+                    number_description=1, number_sample=1, number_problem=1,
+                    number_test_data=0
+                )
+                meta_problem.save()
+                if virtual_problem.description is not None:
+                    description = Description(
+                        creator=creator, updater=updater,
+                        available=available, deleted=deleted,
+                        title=virtual_problem.title + ' Description',
+                        introduction='Auto-generated description.',
+                        meta_problem=meta_problem,
+                        content=virtual_problem.description
+                    )
+                    description.save()
+                else:
+                    description = None
+                if virtual_problem.sample is not None:
+                    sample = Sample(
+                        creator=creator, updater=updater,
+                        available=available, deleted=deleted,
+                        title=virtual_problem.title + ' Sample',
+                        introduction='Auto-generated sample.',
+                        meta_problem=meta_problem,
+                        content=virtual_problem.sample
+                    )
+                    sample.save()
+                else:
+                    sample = None
+                # 创建题目
+                problem = Problem(
+                    creator=creator, updater=updater,
+                    available=available, deleted=deleted,
+                    title=virtual_problem.title,
+                    introduction=virtual_problem.introduction,
+                    source=virtual_problem.source, author=virtual_problem.author,
+                    description=description, sample=sample,
+                    is_special_judge=False,
+                    meta_problem=meta_problem,
+                    number_limit=len(virtual_problem.limits),
+                    number_test_data=0,
+                    is_virtual_judge=True, origin_oj=virtual_problem.oj, origin_pid=virtual_problem.pid
+                )
+                problem.save()
+                # 创建限制
+                limit_bulk_create = []
+                available_limits = virtual_problem.limits
+                for environment in environments:
+                    now_limit = available_limits[environment.origin_judge]
+                    limit = Limit(
+                        creator=creator,
+                        updater=updater,
+                        available=available,
+                        deleted=deleted,
+                        problem=problem,
+                        environment=environment,
+                        env_name=environment.name,
+                        time_limit=now_limit['time'],
+                        memory_limit=now_limit['memory']
+                    )
+                    limit_bulk_create.append(limit)
+                Limit.objects.bulk_create(limit_bulk_create)
+                # 建立题目/限制/评测机之间的关系
+                ptl_bulk_create = []
+                for limit in limit_bulk_create:
+                    judges = limit.environment.judge.all()
+                    for judge in judges:
+                        ptl_bulk_create.append(ProblemLimitJudge(
+                            problem=problem,
+                            limit=limit,
+                            judge=judge
+                        ))
+                ProblemLimitJudge.objects.bulk_create(ptl_bulk_create)
+                return problem
+
+            class Meta:
+                model = Problem
+                exclude = ('judge', 'test_data')
+                read_only_fields = _RESOURCE_READONLY + (
+                    'title', 'introduction', 'source', 'author',
+                    'number_test_data', 'number_limit', 'number_category', 'number_node', 'number_invalid_word',
+                    'meta_problem', 'is_virtual_judge', 'description', 'sample', 'test_data', 'is_special_judge'
+                )
+
         class ProblemAdminInstanceSerializer(ModelSerializer):
+            class LimitField(ModelSerializer):
+                class Meta:
+                    model = Limit
+                    fields = ('environment', 'env_name', 'time_limit', 'memory_limit', 'length_limit')
+
+            limits = LimitField(many=True, read_only=True)
+            description = SlugRelatedField(many=False, read_only=True, slug_field='content')
+            sample = SlugRelatedField(many=False, read_only=True, slug_field='content')
+
+            class Meta:
+                model = Problem
+                exclude = ('test_data', 'environments', 'judge')
+
+        class VirtualProblemAdminInstanceSerializer(ModelSerializer):
             class LimitField(ModelSerializer):
                 class Meta:
                     model = Limit
@@ -808,11 +978,13 @@ class SubmissionSerializers:
             # 创建测试数据评测信息
             instance.test_data_status = TestDataStatus()
             status = {}
-            for test_data in instance.problem.test_data.all():
-                status[test_data.id] = {
+            for relation in instance.problem.test_data_rel.all():
+                status[relation.test_data_id] = {
                     'time': -1,
                     'memory': -1,
-                    'status': ''
+                    'status': '',
+                    'score': 0,
+                    'weight': relation.weight
                 }
             instance.test_data_status.status = status
             instance.test_data_status.save()

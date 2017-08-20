@@ -513,10 +513,43 @@ class ProblemViewSets:
                 permission_classes = (IsCategoryAdmin, )
                 search_fields = ('title', 'introduction')
                 ordering_fields = ('id', 'create_time', 'update_time',
-                                   'number_test_data', 'number_limit', 'number_category', 'number_node')
+                                   'number_test_data', 'number_limit', 'number_category', 'number_node',
+                                   'origin_oj')
 
                 def create(self, request, *args, **kwargs):
-                    print(request.data)
+                    if 'dataStr' in request.data:
+                        get_username = getattr(self, 'get_username')
+                        get_username(request)
+                        extra_data = getattr(self, 'extra_data')
+                        username = getattr(self, 'username')
+                        extra_data['creator'] = username
+                        extra_data['updater'] = username
+                        data = loads(request.data['dataStr'])
+                        serializer = self.get_serializer(data=data)
+                        serializer.is_valid(raise_exception=True)
+                        self.perform_create(serializer)
+                        headers = self.get_success_headers(serializer.data)
+                        return Response(serializer.data, status=HTTP_201_CREATED, headers=headers)
+                    else:
+                        return super().create(request, *args, **kwargs)
+
+                def perform_create(self, serializer):
+                    instance = super().perform_create(serializer)
+                    update_meta(instance.meta_problem)
+                    update_problem(instance)
+                    return instance
+
+            class VirtualProblemAdminViewSet(UserModelListViewSet):
+                queryset = Problem.objects.filter(deleted=False).filter(is_virtual_judge=True).order_by('id')
+                serializer_class = ProblemSerializers.Admin.VirtualProblemAdminListSerializer
+                lookup_field = 'id'
+                permission_classes = (IsCategoryAdmin,)
+                search_fields = ('title', 'introduction')
+                ordering_fields = ('id', 'create_time', 'update_time',
+                                   'number_test_data', 'number_limit', 'number_category', 'number_node',
+                                   'origin_oj')
+
+                def create(self, request, *args, **kwargs):
                     if 'dataStr' in request.data:
                         get_username = getattr(self, 'get_username')
                         get_username(request)
@@ -543,6 +576,12 @@ class ProblemViewSets:
             class ProblemAdminViewSet(ReadOnlyDetailViewSet):
                 queryset = Problem.objects.filter(deleted=False)
                 serializer_class = ProblemSerializers.Admin.ProblemAdminInstanceSerializer
+                lookup_field = 'id'
+                permission_classes = (IsCategoryAdmin,)
+
+            class VirtualProblemAdminViewSet(ReadOnlyDetailViewSet):
+                queryset = Problem.objects.filter(deleted=False).filter(is_virtual_judge=True)
+                serializer_class = ProblemSerializers.Admin.VirtualProblemAdminInstanceSerializer
                 lookup_field = 'id'
                 permission_classes = (IsCategoryAdmin,)
 
