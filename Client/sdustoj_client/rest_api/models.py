@@ -671,11 +671,10 @@ class Organization(Resource):
         self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(organization=self).count()
         self.number_courses = getattr(Course, 'objects').filter(organization=self).count()
         self.number_course_groups = getattr(CourseGroup, 'objects').filter(organization=self).count()
-        self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(orgaization=self).count()
-        self.number_problems = sum(v['category'].number_problem
-                                   for v in getattr(OrganizationCategoryRelation, 'objects').
-                                   filter(organization=self).value('category'))
-
+        self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(organization=self).count()
+        self.number_problems = 0
+        for v in getattr(OrganizationCategoryRelation, 'objects').filter(organization=self).all():
+            self.number_problems += v.category.number_problem
         self.save()
 
     def available_categories(self):
