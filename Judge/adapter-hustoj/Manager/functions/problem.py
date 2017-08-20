@@ -6,6 +6,7 @@ from models import pg_models
 from models import redis_models
 from sqlalchemy import desc
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
 
 from models import mysql_models
 
@@ -24,6 +25,7 @@ def get_problem_title(problem_id, test_data_id):  # 规范地按照问题ID和�
 
 
 def update(**kwargs):
+    global mysql_session, MysqlSession
     # 函数的作用是向hustoj数据库更新指定pid问题编号的测试数据和特殊评测信息。
     # 只是用来维护数据的。
     pid = kwargs['pid']
@@ -57,8 +59,17 @@ def update(**kwargs):
     problems = []  # 置入格式:(问题本体，测试数据，特殊评测)
     for data in test_data:  # 遍历一下测试数据集。
         p_title = get_problem_title(pid, data.id)  # 按照规范获得有关这组测试数据的title。
-        p = mysql_session.query(mysql_models.Problem).filter_by(title=p_title).first()  # 查询该题目是否已经在hustoj数据库中
-        if p is not None: # 已存在状态，更新时间限制/空间限制/特殊评测，
+        while True:
+            try:
+                p = mysql_session.query(mysql_models.Problem).filter_by(title=p_title).first()
+                # 查询该题目是否已经在hustoj数据库中
+            except OperationalError:
+                # MySQL数据库因为长连接断开。重连一次。
+                mysql_session = MysqlSession()
+                p = None
+            if p is not None:
+                break
+        if p is not None:  # 已存在状态，更新时间限制/空间限制/特殊评测，
             p.time_limit = ceil(time_limit / 1000)
             p.memory_limit = ceil(memory_limit / 1000)
             p.spj = '0' if special_judge is None else '1'
@@ -73,8 +84,15 @@ def update(**kwargs):
             )
             mysql_session.add(problem)  # 看起来……这句是置入数据库。
             problems.append((problem, data, special_judge))  # 置入problems记录表。
-
-    mysql_session.commit()  # 提交对hustoj数据库的修改
+    while True:
+        try:
+            flag = True
+            mysql_session.commit()  # 提交对hustoj数据库的修改
+        except OperationalError:
+            mysql_session = MysqlSession()
+            flag = False
+        if flag is True:
+            break
 
     judge = pg_session.query(pg_models.Judge).filter_by(id=judger_id).first()
     judge.last_update = datetime.now()
