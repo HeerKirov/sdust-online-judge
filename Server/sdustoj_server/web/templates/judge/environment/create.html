@@ -54,6 +54,25 @@ SATable.SimpleAjaxForm({
       typeInfo: {
         max_length: 16
       }
+    }, {
+      name: 'is_virtual_judge',
+      caption: '虚拟编程环境',
+      type: 'Boolean',
+      defaultTrue: false
+    }, {
+      name: 'origin_oj',
+      caption: '原OJ',
+      type: 'Text',
+      typeInfo: {
+        max_length: 16
+      }
+    }, {
+      name: 'origin_judge',
+      caption: '原编程环境',
+      type: 'Text',
+      typeInfo: {
+        max_length: 16
+      }
     }
   ]
 })

@@ -630,7 +630,7 @@ def problem(request):
     if not is_category_admin(info):
         return redirect(reverse('homepage'))
 
-    return render(request, 'problem/problem/list.html', {
+    return render(request, 'problem/problem/all_problem/list.html', {
         'user': info
     })
 
@@ -646,7 +646,7 @@ def problem_create(request):
 
     envs = Environment.objects.filter(available=True, deleted=False)
 
-    return render(request, 'problem/problem/create.html', {
+    return render(request, 'problem/problem/all_problem/create.html', {
         'user': info,
         'envs': envs
     })
@@ -663,7 +663,55 @@ def problem_instance(request, pid):
 
     prob = get_object_or_404(Problem.objects, id=int(pid))
 
-    return render(request, 'problem/problem/instance.html', {
+    return render(request, 'problem/problem/all_problem/instance.html', {
+        'user': info,
+        'pid': pid,
+        'problem': prob
+    })
+
+
+def problem_virtual(request):
+    info = user_info(request)
+
+    if not info['is_authenticated']:
+        return redirect(reverse('login_page'))
+
+    if not is_category_admin(info):
+        return redirect(reverse('homepage'))
+
+    return render(request, 'problem/problem/virtual_problem/list.html', {
+        'user': info
+    })
+
+
+def problem_virtual_create(request):
+    info = user_info(request)
+
+    if not info['is_authenticated']:
+        return redirect(reverse('login_page'))
+
+    if not is_problem_admin(info):
+        return redirect(reverse('homepage'))
+
+    envs = Environment.objects.filter(available=True).filter(deleted=False).filter(is_virtual_judge=True).all()
+
+    return render(request, 'problem/problem/virtual_problem/create.html', {
+        'user': info, 'envs': envs
+    })
+
+
+def problem_virtual_instance(request, pid):
+    info = user_info(request)
+
+    if not info['is_authenticated']:
+        return redirect(reverse('login_page'))
+
+    if not is_category_admin(info):
+        return redirect(reverse('homepage'))
+
+    prob = get_object_or_404(Problem.objects, id=int(pid))
+
+    return render(request, 'problem/problem/virtual_problem/instance.html', {
         'user': info,
         'pid': pid,
         'problem': prob
