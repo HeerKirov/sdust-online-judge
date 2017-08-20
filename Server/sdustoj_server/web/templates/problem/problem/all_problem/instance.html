@@ -1,0 +1,151 @@
+{% extends "problem/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}题目详情{% endblock %}
+
+{% block nav_problem %}active{% endblock %}
+
+{% block sub_content %}
+<div class="container">
+  <div class="row justify-content-between">
+    <div class="col-6">
+      <h3>题目详情</h3>
+    </div>
+    <div class="col-2">
+      <a class="btn btn-primary" href="{% url 'submit_problem' problem.id %}">提交代码</a>
+    </div>
+  </div>
+  <br>
+  <table class="table">
+    {% if 'ProblemAdmin' in user.group or 'Root' in user.group %}
+    <tr>
+      <td><b>题元</b></td>
+      <td>{{ problem.meta_problem.id }}: {{ problem.meta_problem.title }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td><b>可用</b></td>
+      <td id="available"></td>
+    </tr>
+    <tr>
+      <td><b>ID</b></td>
+      <td id="pid"></td>
+    </tr>
+    <tr>
+      <td><b>标题</b></td>
+      <td id="title"></td>
+    </tr>
+    <tr>
+      <td><b>简介</b></td>
+      <td id="introduction"></td>
+    </tr>
+    <tr>
+      <td><b>描述</b></td>
+      <td>
+        <div class="jumbotron" style="padding-top: 15px; padding-bottom: 15px;" id="description"></div>
+      </td>
+    </tr>
+    <tr>
+      <td><b>样例</b></td>
+      <td>
+        <div class="jumbotron" style="padding-top: 15px; padding-bottom: 15px;" id="sample"></div>
+      </td>
+    </tr>
+    <tr>
+      <td><b>特殊评测</b></td>
+      <td id="is_special_judge"></td>
+    </tr>
+    <tr>
+      <td><b>编程限制</b></td>
+      <td>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>编程环境</th>
+              <th>时间限制</th>
+              <th>内存限制</th>
+              <th>长度限制</th>
+            </tr>
+          </thead>
+          <tbody id="limits">
+
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td><b>创建时间</b></td>
+      <td id="create_time"></td>
+    </tr>
+    <tr>
+      <td><b>创建者</b></td>
+      <td id="creator"></td>
+    </tr>
+    <tr>
+      <td><b>更新时间</b></td>
+      <td id="update_time"></td>
+    </tr>
+    <tr>
+      <td><b>更新者</b></td>
+      <td id="updater"></td>
+    </tr>
+    <tr>
+      <td><b>来源</b></td>
+      <td id="source"></td>
+    </tr>
+    <tr>
+      <td><b>作者</b></td>
+      <td id="author"></td>
+    </tr>
+  </table>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(function() {
+  $.ajax({
+    type: "get",
+    url: "{% url 'admin-problems-detail' pid %}",
+    dataType: "json",
+    success: function(ret) {
+      $("#available").text(ret.available ? "可用": "不可用");
+      $("#pid").text(ret.id)
+      $("#title").text(ret.title);
+      $("#introduction").text(ret.introduction);
+      $("#description").append(ret.description ? markdown.toHTML(ret.description): "没有描述");
+      $("#sample").append(ret.sample ? markdown.toHTML(ret.sample): "没有样例");
+      $("#is_special_judge").text(ret.is_special_judge ? "是": "否");
+      var iDate = new Date(ret.create_time)
+      var info = iDate.toLocaleString()
+      $("#create_time").text(info);
+      $("#creator").text(ret.creator);
+      iDate = new Date(ret.update_time)
+      info = iDate.toLocaleString()
+      $("#update_time").text(info);
+      $("#updater").text(ret.updater);
+      $("#source").text(ret.source);
+      $("#author").text(ret.author);
+      for(var i in ret.limits) {
+        var limit = ret.limits[i]
+        var tr = $("<tr></tr>")
+        var td1 = $("<td></td>")
+        var td2 = $("<td></td>")
+        var td3 = $("<td></td>")
+        var td4 = $("<td></td>")
+        $(td1).text(limit.env_name)
+        $(td2).text(limit.time_limit + "毫秒")
+        $(td3).text(limit.memory_limit + "KB")
+        $(td4).text(limit.length_limit + "字节")
+        $(tr).append(td1)
+        $(tr).append(td2)
+        $(tr).append(td3)
+        $(tr).append(td4)
+        $("#limits").append(tr)
+      }
+    }
+  })
+})
+
+</script>
+{% endblock %}

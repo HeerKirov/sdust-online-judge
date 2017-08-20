@@ -1,0 +1,40 @@
+{% extends "problem/problem/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}题目{% endblock %}
+
+{% block nav_problem %}active{% endblock %}
+{% block nav_virtual_problem %}active{% endblock %}
+
+{% block sub_content2 %}
+<div class="col-lg-8 col-md-7">
+  <div class="container">
+    <div id="problem"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+SATable.DRFTable({
+  id: 'problem',
+  title: '题目',
+  url: "{% url 'admin-virtual-problems-list' %}",
+  search: true,
+  filters: [
+    { name: 'creator', type: 'text', placeholder: '请输入创建者用户名', caption: '创建者' },
+    { name: 'updater', type: 'text', placeholder: '请输入更新者用户名', caption: '更新者' }
+  ],
+  columns: [
+    { name: 'id', caption: 'ID', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'problem_virtual_problem' %}', key: 'id' } },
+    { name: 'title', caption: '标题', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'problem_virtual_problem' %}', key: 'id' } },
+    { name: "introduction", caption: "简介", type: 'Text' },
+    { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
+    { name: 'update_time', caption: '更新时间', sort: true, type: 'Datetime' },
+    { name: "available", caption: "可用", type: 'Boolean' },
+  ],
+  createURL: '{% url 'problem_virtual_problem_create' %}'
+})
+
+</script>
+{% endblock %}
