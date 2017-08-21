@@ -1480,19 +1480,23 @@ class MissionSerializers(object):
             config = serializers.JSONField(required=False, allow_null=True)
 
             def validate(self, attrs):
-                if attrs['start_time'] >= attrs['end_time']:
+                obj = self.instance
+                start_time = attrs['start_time'] if 'start_time' in attrs else obj.start_time
+                end_time = attrs['end_time'] if 'end_time' in attrs else obj.end_time
+                if start_time >= end_time:
                     raise ValidationError('Start time must be early than End time.')
-                mode = attrs['mode']
-                if mode == 'CUSTOM':  # 要求自定义的情况下必须提供config信息
-                    if 'config' in attrs:
-                        config = attrs['config']  # 这个东西需要做严格的验证。
-                        message = Mission.validate_config(config)
-                        if message is not None:
-                            raise ValidationError(message)
-                    else:
-                        raise ValidationError('You must give the config if you want custom.')
-                else:  # 采用自定义模式下，config的信息不管用，直接从默认配置里拉取
-                    attrs['config'] = Mission.default_mode_config(mode)
+                if 'mode' in attrs:
+                    mode = attrs['mode']
+                    if mode == 'CUSTOM':  # 要求自定义的情况下必须提供config信息
+                        if 'config' in attrs:
+                            config = attrs['config']  # 这个东西需要做严格的验证。
+                            message = Mission.validate_config(config)
+                            if message is not None:
+                                raise ValidationError(message)
+                        else:
+                            raise ValidationError('You must give the config if you want custom.')
+                    else:  # 采用自定义模式下，config的信息不管用，直接从默认配置里拉取
+                        attrs['config'] = Mission.default_mode_config(mode)
                 return attrs
 
             class Meta:
