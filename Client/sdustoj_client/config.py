@@ -2,17 +2,17 @@
 
 # 数据库的设定
 PG_SETTINGS = {
-    'host': 'localhost',
+    'host': '120.25.229.109',
     'port': '5432',
     'db': 'sdustoj_client',
-    'user': 'oj',
-    'password': '1234'
+    'user': 'ojuser',
+    'password': '262144'
 }
 
 REDIS_SETTINGS = {
-    'host': 'localhost',
+    'host': '120.25.229.109',
     'port': '6379',
-    'password': '1234',
+    'password': '262144',
     'db': 1
 }
 
@@ -27,7 +27,7 @@ INIT_USER_SETTINGS = {
 
 # 用户端信息
 CLIENT_SETTINGS = {
-    'root_url': 'http://localhost/',
+    'root_url': 'http://120.25.229.109/',
     'submission_url': '/JudgeAdmin/api/submissions/',
     'problem_url': '/JudgeAdmin/api/problems/',
     'environment_url': '/JudgeAdmin/api/environments/',
