@@ -28,8 +28,9 @@ SATable.DRFTable({
     { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
     { name: 'last_login', caption: '最后登录', sort: true, type: 'Datetime' },
     { name: "available", caption: "可用", type: 'Boolean' },
+    { name: "deleted", caption: "废弃", type: 'Boolean' },
   ],
-  {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+  {% if 'EDU_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
   createURL: "{% url 'web-course-student-create' cid%}"
   {% endif %}
 })

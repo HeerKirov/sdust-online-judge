@@ -26,11 +26,13 @@ SATable.SimpleAjaxInfo({
   items: [
     { name: 'category_id', caption: '题库ID', type:'Number', readOnly: true },
     { name: 'title', caption: '题库名称', type: 'Text', readOnly: true, typeInfo: { max_length: 150 } },
-      'Divide',
+    'Divide',
     { name: 'introduction', caption: '介绍', type: 'Text', readOnly: true, typeInfo: { article: true, max_length: 1024 } },
     { name: 'source', caption: '题库来源', type: 'Text', readOnly: true, typeInfo: { max_length: 150 } },
     { name: 'author', caption: '题库作者', type: 'Text', readOnly: true, typeInfo: { max_length: 150 } },
     { name: 'number_problem', caption: '题目数量', type:'Number', readOnly: true },
+    { name: 'available', caption: '可用', type: 'Boolean' },
+    { name: 'deleted', caption: '废弃', type: 'Boolean' },
   ]
 })
 </script>

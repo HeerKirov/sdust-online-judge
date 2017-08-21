@@ -72,6 +72,10 @@ function login() {
     data: data,
     success: function(ret) {
       location.href = document.referrer
+    },
+    error: function (ret) {
+        alert("发射失败")
+
     }
   })
 

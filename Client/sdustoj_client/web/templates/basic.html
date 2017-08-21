@@ -28,9 +28,11 @@
           <a class="nav-link" href="{% url 'web-organization' %}">管理机构</a>
         </li>
         {% endif %}
+      {% if user_info.is_authenticated %}
         <li class="nav-item">
           <a class="nav-link" href="{% url 'web-myorganization'  %}">我的机构</a>
         </li>
+      {% endif %}
       {% if 'TEACHER_ADMIN' in user_info.user.get_identities %}
        <li class="nav-item">
           <a class="nav-link" href="{% url 'web-teaching-course-group-list'  %}">教授的课程</a>

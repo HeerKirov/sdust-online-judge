@@ -135,7 +135,7 @@ class Utils(object):
             return Utils.Render._identity_render(
                 request=request,
                 template=template,
-                id_expect=(IdentityChoices.edu_admin, IdentityChoices.root,),
+                id_expect=(IdentityChoices.edu_admin, IdentityChoices.root,IdentityChoices.org_admin),
                 context=context
             )
 
@@ -144,7 +144,7 @@ class Utils(object):
             return Utils.Render._identity_render(
                 request=request,
                 template=template,
-                id_expect=(IdentityChoices.teacher, IdentityChoices.root,),
+                id_expect=(IdentityChoices.teacher,IdentityChoices.root),
                 context=context
             )
 
@@ -346,7 +346,7 @@ class MyOrganizationPages(object):
 
         @staticmethod
         def create(request, oid):
-            return Utils.Render.teacher_or_edu_admin(request, 'myorganization/teacher/create.html', {
+            return Utils.Render.edu_admin(request, 'myorganization/teacher/create.html', {
                 "oid": oid
             })
 
@@ -368,7 +368,7 @@ class MyOrganizationPages(object):
 
         @staticmethod
         def create(request, oid):
-            return Utils.Render.all_user(request, 'myorganization/student/create.html', {
+            return Utils.Render.edu_admin(request, 'myorganization/student/create.html', {
                 "oid": oid
             })
 

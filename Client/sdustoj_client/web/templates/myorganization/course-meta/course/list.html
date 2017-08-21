@@ -26,9 +26,10 @@ SATable.DRFTable({
     { name: "available", caption: "可用", type: 'Boolean' },
     { name: 'start_time', caption: '开课时间', sort: true, type: 'Date' },
     { name: 'end_time', caption: '结课登录', sort: true, type: 'Date' },
-
+    { name: "available", caption: "可用", type: 'Boolean' },
+    { name: "deleted", caption: "废弃", type: 'Boolean' },
   ],
-  {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+  {% if 'EDU_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
   createURL: "{% url 'web-myorg-coursemeta-course-create' oid uid%}"
   {% endif %}
 })
