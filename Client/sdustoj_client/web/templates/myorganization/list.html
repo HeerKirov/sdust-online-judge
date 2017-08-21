@@ -3,7 +3,7 @@
 
 {% block title %}机构列表{% endblock %}
 
-{% block nav_organization %}active{% endblock %}
+{% block nav_myorganization %} active {% endblock %}
 
 {% block sub_content %}
 <div class="container">
@@ -26,6 +26,7 @@ SATable.DRFTable({
     { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
     { name: 'update_time', caption: '最后更新', sort: true, type: 'Datetime' },
     { name: "available", caption: "可用", type: 'Boolean' },
+    { name: "deleted", caption: "废弃", type: 'Boolean' },
   ],
 })
 </script>

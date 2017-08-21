@@ -31,6 +31,9 @@ SATable.SimpleAjaxInfo({
     { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },
     { name: 'updater', caption: '最后更新者', type: 'Text', readOnly: true },
     { name: 'update_time', caption: '最后更新时间', type: 'Datetime', readOnly: true },
+      { name: 'last_login', caption: '最后登录', type: 'Datetime', readOnly: true },
+      { name: 'ip', caption: 'IP地址', type: 'text', readOnly: true },
+
     'Divide',
     { name: 'available', caption: '对外可用', type: 'Boolean', readOnly: true },
     { name: 'deleted', caption: '是否废弃', type: 'Boolean', readOnly: true },
@@ -44,8 +47,15 @@ SATable.SimpleAjaxInfo({
         { text: '保密', value: 'SECRET' }
       ]
     } },
-    { name: 'phone', caption: '电话', type: 'Text', typeInfo: { max_length: 16 } },
+
+     { name: 'phone', caption: '电话', type: 'Text', typeInfo: { max_length: 32 } },
+    { name: 'github', caption: 'Github', type: 'Text', typeInfo: { max_length: 128 } },
+    { name: 'qq', caption: 'QQ', type: 'Text', typeInfo: { max_length: 128 } },
+    { name: 'wechat', caption: '微信', type: 'Text', typeInfo: { max_length: 128 } },
+    { name: 'blog', caption: '博客', type: 'Text', typeInfo: { max_length: 128 } },
     { name: 'email', caption: '邮箱', type: 'Text', typeInfo: { email: true, max_length: 128 } },
+  { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { max_length: 128 } },
+
   ]
 })
 </script>

@@ -29,22 +29,23 @@ SATable.SimpleAjaxInfo({
     {% comment %}'Divide',
     { name: 'is_staff', caption: '管理员', type: 'Boolean' },
     { name: 'identities', caption: '权限', type: 'Select', typeInfo: {
-      many: true,
-      choices: [
-          { text: '无', value: 'None' },
-          { text: '超级管理员', value: 'ROOT' },
-          { text: '用户管理员', value: 'USER_ADMIN' },
-          { text: '机构管理员', value: 'ORG_ADMIN' },
-      ]
+    many: true,
+    choices: [
+    { text: '无', value: 'None' },
+    { text: '超级管理员', value: 'ROOT' },
+    { text: '用户管理员', value: 'USER_ADMIN' },
+    { text: '机构管理员', value: 'ORG_ADMIN' },
+    ]
     } },{% endcomment %}
 
     { name: 'title', caption: '题库名称', type: 'Text', typeInfo: { max_length: 150 } },
-      'Divide',
+    'Divide',
     { name: 'instroduction', caption: '介绍', type: 'Text'},
-      { name: 'source', caption: '来源', type: 'Text'},
-      { name: 'author', caption: '作者', type: 'Text'},
-      { name: 'number_problem', caption: '题目数量', type: 'Text'},
-
+    { name: 'source', caption: '来源', type: 'Text'},
+    { name: 'author', caption: '作者', type: 'Text'},
+    { name: 'number_problem', caption: '题目数量', type: 'Text'},
+    { name: 'available', caption: '可用', type: 'Boolean' },
+    { name: 'deleted', caption: '废弃', type: 'Boolean' },
 
     {% comment %}{ name: 'email', caption: '邮箱', type: 'Text', typeInfo: { max_length: 128, email: true } },
     { name: 'phone', caption: '电话', type: 'Text', typeInfo: { max_length: 32 } },
@@ -63,19 +64,19 @@ SATable.SimpleAjaxInfo({
     { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },
     { name: 'updater', caption: '最后更新者', type: 'Text', readOnly: true },
     { name: 'update_time', caption: '最后更新时间', type: 'Datetime', readOnly: true },{% endcomment %}
-  ]
-})
+    ]
+    })
 
-{% comment %}SATable.SimpleAjaxInfo({
-  id: 'eduadmin Password',
-  title: '修改密码',
-  getMethod: 'GET',
-  updateMethod: 'PATCH',
-  getURL: '{% url 'admin-organization-edu-admins-detail' oid uid %}',
-  updateURL: '{% url 'admin-organization-edu-admins-detail' oid uid %}',
-  items: [
+    {% comment %}SATable.SimpleAjaxInfo({
+    id: 'eduadmin Password',
+    title: '修改密码',
+    getMethod: 'GET',
+    updateMethod: 'PATCH',
+    getURL: '{% url 'admin-organization-edu-admins-detail' oid uid %}',
+    updateURL: '{% url 'admin-organization-edu-admins-detail' oid uid %}',
+    items: [
     { name: 'password', caption: '新密码', type: 'Text', typeInfo: { writeOnly: true, password: true, max_length: 128 } },
-  ]
-}){% endcomment %}
+    ]
+    }){% endcomment %}
 </script>
 {% endblock %}

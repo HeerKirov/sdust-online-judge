@@ -21,11 +21,11 @@ SATable.DRFTable({
   url: "{% url 'api-learning-course-list' %}",
   search: true,
   columns: [
-
-   { name: "caption", caption: "课程名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-learning-course-list' %}info/', key: 'cid' } },
-    { name: "available", caption: "可用", type: 'Boolean' },
+    { name: "caption", caption: "课程名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-learning-course-list' %}info/', key: 'cid' } },
     { name: 'start_time', caption: '开课时间', sort: true, type: 'Date' },
     { name: 'end_time', caption: '结课登录', sort: true, type: 'Date' },
+    { name: "available", caption: "可用", type: 'Boolean' },
+    { name: "deleted", caption: "废弃", type: 'Boolean' },
   ],
 
 })
