@@ -13,17 +13,21 @@
     <div class="col-lg-3 col-md-4">
       <div class="container">
         <nav class="nav flex-column nav-pills">
-        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities %}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
           <a class="nav-link {% block nav_course_info %}{% endblock %}" href="{% url 'web-course-instance' cid %}">课程详细信息</a>
         {% endif %}
-        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities%}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
           <a class="nav-link {% block nav_groupin %}{% endblock %}" href="{% url 'web-course-groupin-list' cid %}">所在课程组</a>
         {% endif %}
-        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities%}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
           <a class="nav-link {% block nav_teacher %}{% endblock %}" href="{% url 'web-course-teacher-list' cid %}">教师</a>
         {% endif %}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
           <a class="nav-link {% block nav_student %}{% endblock %}" href="{% url 'web-course-student-list' cid %}">学生</a>
+        {% endif %}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
           <a class="nav-link {% block nav_mission %}{% endblock %}" href="{% url 'web-course-mission-group-list' cid %}">任务组</a>
+        {% endif %}
 
         </nav>
       </div>

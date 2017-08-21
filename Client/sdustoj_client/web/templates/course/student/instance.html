@@ -22,42 +22,29 @@ SATable.SimpleAjaxInfo({
   updateMethod: 'PATCH',
   removeMethod: 'DELETE',
   getURL: '{% url 'api-course-student-detail' cid  id %}',
-  {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+  {% if 'EDU_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities  %}
   removeURL: '{% url 'api-course-student-detail' cid  id %}',
   removeToURL: '{% url 'web-course-student-list' cid  %}',
   {% endif %}
   items: [
+    { name:'student_id', caption:'ID',type:'Text',readOnly: true},
     { name: 'username', caption: '用户名', type: 'Text', readOnly: true },
-    'Divide',
-    { name: 'identities', caption: '权限', type: 'Select', typeInfo: {
-      many: true,
-      choices: [
-          { text: '无', value: 'None' },
-          { text: '教师', value: 'Teacher' },
-      ]
-    } },
-    'Divide',
     { name: 'name', caption: '姓名', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'sex', caption: '性别', type: 'Select', typeInfo: {
-      many: false,
-      choices: [
-          { text: '保密', value: 'SECRET' },
-          { text: '男', value: 'MALE' },
-          { text: '女', value: 'FEMALE' },
-      ]
+    many: false,
+    choices: [
+    { text: '保密', value: 'SECRET' },
+    { text: '男', value: 'MALE' },
+    { text: '女', value: 'FEMALE' },
+    ]
     } },
-    'Divide',
-    { name: 'email', caption: '邮箱', type: 'Text', typeInfo: { max_length: 128, email: true } },
-    { name: 'phone', caption: '电话', type: 'Text', typeInfo: { max_length: 32 } },
-    { name: 'github', caption: 'Github', type: 'Text', typeInfo: { max_length: 128 } },
-    { name: 'qq', caption: 'QQ', type: 'Text', typeInfo: { max_length: 128 } },
-    { name: 'wechat', caption: '微信', type: 'Text', typeInfo: { max_length: 128 } },
-    { name: 'blog', caption: '博客', type: 'Text', typeInfo: { max_length: 128 } },
+    { name:'major', caption:'专业',type:'Text',typeInfo: { max_length: 150 }},
+    { name:'grade', caption:'年级',type:'Text',typeInfo: { max_length: 150 }},
+    { name:'class_in', caption:'班级',type:'Text',typeInfo: { max_length: 150 }},
+    { name: 'introduction', caption: '介绍', type: 'Text' ,typeInfo: { max_length: 150 }},
     'Divide',
     { name: 'available', caption: '可用', type: 'Boolean' },
-    'Divide',
-    { name: 'last_login', caption: '最后登录', type: 'Datetime', readOnly: true },
-    { name: 'ip', caption: '最后登录IP', type: 'Text', readOnly: true },
+    { name: 'deleted', caption: '废弃', type: 'Boolean' },
     'Divide',
     { name: 'creator', caption: '创建者', type: 'Text', readOnly: true },
     { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },
