@@ -851,7 +851,7 @@ class CourseViewSets(object):
                 profile = self.request.user.profile
                 if not profile.is_org_manager():
                     return profile.get_courses().exclude(deleted=True)
-                return profile.get_courses()
+                return profile.get_courses(admin=True)
 
             def perform_create(self, serializer):
                 instance = super().perform_create(serializer)

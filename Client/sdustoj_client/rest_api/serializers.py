@@ -597,6 +597,7 @@ class OrgUserSerializers(object):
         introduction = serializers.CharField(required=False)
         last_login = serializers.DateTimeField(read_only=True)
         ip = serializers.IPAddressField(read_only=True)
+        teacher_id = serializers.CharField(required=True)
 
         @staticmethod
         def validate_username(value):
@@ -697,6 +698,10 @@ class OrgUserSerializers(object):
         introduction = serializers.CharField(required=False)
         last_login = serializers.DateTimeField(read_only=True)
         ip = serializers.IPAddressField(read_only=True)
+        student_id = serializers.CharField(required=True)
+        major = serializers.CharField(allow_null=True, allow_blank=True)
+        grade = serializers.CharField(allow_blank=True, allow_null=True)
+        class_in = serializers.CharField(allow_null=True, allow_blank=True)
 
         @staticmethod
         def validate_username(value):
@@ -727,9 +732,9 @@ class OrgUserSerializers(object):
                 update_time=profile.update_time,
                 # 私有项
                 student_id=validated_data['student_id'],
-                major=validated_data['major'],
-                grade=validated_data['grade'],
-                class_in=validated_data['class_in']
+                major=validated_data['major'] if 'major' in validated_data else None,
+                grade=validated_data['grade'] if 'grade' in validated_data else None,
+                class_in=validated_data['class_in'] if 'class_in' in validated_data else None
             )
             student.save()
             profile.update_identities()
