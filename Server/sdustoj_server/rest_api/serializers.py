@@ -365,7 +365,8 @@ class MetaProblemSerializers:
                 def create(self, validated_data):
                     environment = validated_data['environment']
                     problem = validated_data['problem']
-                    # todo 为vj题目添加限制，不可以添加不同oj的env。
+                    if problem.is_virtual_judge and environment.origin_oj != problem.origin_oj:
+                        raise ValidationError('Environment is not available for this virtual problem.')
                     if problem.limits.filter(environment=environment).exists():
                         raise ValidationError('Environment exists.')
                     validated_data['env_name'] = environment.name
