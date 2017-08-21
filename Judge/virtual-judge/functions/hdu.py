@@ -64,7 +64,7 @@ def do_login():
     }
     res = session.post(get_url('login'), data=data)
     print("HDU Login: %s" % (res.status_code,))
-    return res.status_code == 302
+    return res.status_code == 302 or res.status_code == 200
 
 
 def do_submit(pid, lang, code):
@@ -129,46 +129,51 @@ def request_submit(sid, pid, lang, code):
             'score': 0,
             'finished': True
         }
-    do_result = do_submit(pid, lang, code)
-    if do_result:
-        # 提交成功。由于hdu没有runid的返回机制，因此只能选择使用数据库全时刻轮询，并且在提交时立刻查询。
-        psql = lpsql.session()
+    # 长时间不用之后，登录状态可能会掉。需要注意修复。
+    retry_count = 1
+    while retry_count >= 0:
+        do_result = do_submit(pid, lang, code)
+        if do_result:
+            # 提交成功。由于hdu没有runid的返回机制，因此只能选择使用数据库全时刻轮询，并且在提交时立刻查询。
+            psql = lpsql.session()
 
-        submission_messages = get_submissions(0)  # 直接抓取一次status表的第一页的数据
-        if submission_messages is None or len(submission_messages) <= 0:  # 这意味着出错了
-            return None, {
-                'status': 'SF',
-                'score': 0,
-                'finished': True
-            }
-        new_submission = submission_messages[0]  # 获得第一条数据
+            submission_messages = get_submissions(0)  # 直接抓取一次status表的第一页的数据
+            if submission_messages is None or len(submission_messages) <= 0:  # 这意味着出错了
+                return None, {
+                    'status': 'SF',
+                    'score': 0,
+                    'finished': True
+                }
+            new_submission = submission_messages[0]  # 获得第一条数据
 
-        # 构造新的提交缓存到中间数据库
-        submission = HduSubmission(
-            run_id=new_submission['run_id'],
-            pid=new_submission['pid'],
-            time=new_submission['time'],
-            memory=new_submission['memory'],
-            length=new_submission['length'],
-            language=new_submission['language'],
-            status=new_submission['status'],
-            submission_id=sid,
-            submit_time=datetime.datetime.now(),
-            update_time=datetime.datetime.now(),
-            finished=False
-        )
-        psql.add(submission)
-        psql.commit()
-        print("-- Hdu Update: run_id=%s" % (new_submission['run_id'],))
-        return {
-            'run_id': new_submission['run_id']
-        }, None
-    else:
-        return None, {
-            'status': 'SF',
-            'score': 0,
-            'finished': True
-        }
+            # 构造新的提交缓存到中间数据库
+            submission = HduSubmission(
+                run_id=new_submission['run_id'],
+                pid=new_submission['pid'],
+                time=new_submission['time'],
+                memory=new_submission['memory'],
+                length=new_submission['length'],
+                language=new_submission['language'],
+                status=new_submission['status'],
+                submission_id=sid,
+                submit_time=datetime.datetime.now(),
+                update_time=datetime.datetime.now(),
+                finished=False
+            )
+            psql.add(submission)
+            psql.commit()
+            print("-- Hdu Update: run_id=%s" % (new_submission['run_id'],))
+            return {
+                'run_id': new_submission['run_id']
+            }, None
+        else:
+            retry_count -= 1
+            do_login()  # 针对可能的错误，试图进行一次重新登陆。
+    return None, {
+        'status': 'SF',
+        'score': 0,
+        'finished': True
+    }
 
 
 def update_submit(sid, status):
