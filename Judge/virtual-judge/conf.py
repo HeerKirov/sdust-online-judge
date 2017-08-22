@@ -18,13 +18,13 @@ redis_db = {
 }
 
 # 接受SDUSTOJ命令的队列
-queue = 'virtualjudge1'
+queue = 'virtualjudge'
 
 # 订阅SDUSTOJ哪些编程环境的提交消息
 subscribe = [
-    'hdu-c',
-    'hdu-cpp',
-    'hdu-java'
+    'hdu-c', 'hdu-cpp', 'hdu-java', 'hdu-gcc', 'hdu-g++', 'hdu-cs',
+    'poj-g++', 'poj-gcc', 'poj-java', 'poj-cpp', 'poj-c',
+
 ]
 
 # 该评测机在SDUSTOJ中的ID
@@ -57,11 +57,21 @@ local_queue = {
 
 # 保存所有可用oj的登陆账户信息
 oj_user_info = {
-    'hdu': ('HeerKirov', 'furandouru')
+    'hdu': ('HeerKirov', 'furandouru'),
+    'poj': ('HeerKirov', 'furandouru'),
 }
 
 oj_env_message = {
     'hdu-c': ('hdu', '3'),
     'hdu-cpp': ('hdu', '2'),
-    'hdu-java': ('hdu', '5')
+    'hdu-java': ('hdu', '5'),
+    'hdu-gcc': ('hdu', '1'),
+    'hdu-g++': ('hdu', '0'),
+    'hdu-cs': ('hdu', '6'),
+
+    'poj-g++': ('poj', '0'),
+    'poj-gcc': ('poj', '1'),
+    'poj-java': ('poj', '2'),
+    'poj-cpp': ('poj', '4'),
+    'poj-c': ('poj', '5')
 }

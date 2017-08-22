@@ -2,7 +2,7 @@ from models.redis_models import Submission
 from models.utils import AlchemyUtils
 from models import pg_models
 from sqlalchemy.orm import sessionmaker
-from functions import hdu
+from functions import hdu, poj
 from datetime import datetime
 import conf
 
@@ -11,7 +11,8 @@ PgSession = sessionmaker(bind=pg_models.engine)
 pg_session = PgSession()
 
 reporter_functions = {
-    'hdu': hdu.update_submit
+    'hdu': hdu.update_submit,
+    'poj': poj.update_submit
 }
 
 

@@ -4,13 +4,14 @@ from models import pg_models
 from sqlalchemy.orm import sessionmaker
 from conf import oj_env_message
 
-from functions import hdu
+from functions import hdu, poj
 # 竞争提交并向原oj提交
 PgSession = sessionmaker(bind=pg_models.engine)
 pg_session = PgSession()
 
 updater_functions = {
-    'hdu': hdu.request_submit
+    'hdu': hdu.request_submit,
+    'poj': poj.request_submit
 }
 
 
