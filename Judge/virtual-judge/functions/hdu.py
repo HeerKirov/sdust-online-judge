@@ -3,7 +3,7 @@ import datetime
 import re
 from conf import oj_user_info
 from models.local_pg_models import engine as local_engine, HduSubmission
-from models.utils import SessionBuilder, RemainList
+from models.utils import SessionBuilder, RemainList, local_psql as lpsql
 
 SETTING = {
     'host': 'http://acm.hdu.edu.cn/',
@@ -49,8 +49,6 @@ auth_user, auth_pass = oj_user_info['hdu']
 
 session = requests.session()
 
-lpsql = SessionBuilder(bind=local_engine)
-
 
 def get_url(url, *args):
     return SETTING['host'] + SETTING[url] % args
@@ -75,7 +73,7 @@ def do_submit(pid, lang, code):
         'usercode': code,
     }
     res = session.post(get_url('submit'), data=data)
-    return res.status_code == 200
+    return res.url == get_url('submissions')
 
 
 def get_submissions(page=0):
@@ -233,8 +231,8 @@ def reptile_submit():
                     submission.memory = record['memory']
                     submission.status = record['status']
                     submission.finished = record['status'] in FINISHED_STATUS
-                    print("Reptile Submission: run_id=%s" % (run_id,))
-            if len(submissions) < CONFIG['max_record_count'] or remain.is_empty():  # 满足了退出条件
+                    print("Hdu Reptile Submission: run_id=%s" % (run_id,))
+            if len(records) < CONFIG['max_record_count'] or remain.is_empty():  # 满足了退出条件
                 break
             page += 1
         psql.commit()
