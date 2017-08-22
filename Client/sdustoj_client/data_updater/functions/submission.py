@@ -123,7 +123,7 @@ def write_rank(local_submission, submission_json):
             p_result['status'] = 'AC'
             rank.solved += 1
             # 这里的罚时计算规则是每一次错误20分钟。
-            this_penalty = mktime(now_time - mission.start_time) + p_result['wrong_time'] * 20 * 60
+            this_penalty = mktime(now_time - mission.start_time) + p_result['wrong_count'] * 20 * 60
             rank.penalty += this_penalty
         else:  # 这次还是没有AC……
             p_result['wrong_count'] += 1

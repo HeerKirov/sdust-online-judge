@@ -1328,6 +1328,21 @@ class MissionViewSets(object):
 
                 return result
 
+            def create(self, request, *args, **kwargs):
+                # 对学生而言，不能在任务开始之前做提交
+                profile = self.request.user.profile
+                if profile.has_identities(IdentityChoices.student):
+                    # 学生权限下需要做时间验证.
+                    parent_id = kwargs[self.parent_lookup]
+                    parent_mission = get_object_or_404(Mission.objects.all(), id=parent_id)
+                    if parent_mission.get_state() == MissionState.not_started:
+                        data = {
+                            'message': 'The mission is not started.'
+                        }
+                        return Response(data, 406)
+                result = super().create(request, *args, **kwargs)
+                return result
+
         # 任务可以使用的全部题目 - deep2 - relation
         class ProblemAvailableViewSet(ListReadonlyNestedResourceViewSet):
             queryset = CategoryProblemRelation.objects.all()
