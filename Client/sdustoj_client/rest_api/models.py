@@ -10,10 +10,10 @@ from datetime import datetime, timedelta
 
 def now_dt():
     """
-    返回一个当地时间。
+    返回一个时间。
     :return: 
     """
-    now = datetime.now() + timedelta(hours=8)  # 这坑爹的时区处理……
+    now = datetime.now() + timedelta(hours=0)  # 遗留的代码。未来可以考虑清除掉。
     return now
 
 
@@ -994,7 +994,7 @@ class Mission(Resource):
                         if sub_config is not None:  # 表示匹配到了当前选项存在参数。
                             if "%s_config" % (config_name,) not in json:
                                 return 'Sub config of "%s" is not exist.' % (config_name,)
-                            ret = validate_level("%s_config" % (config_name,), sub_config)
+                            ret = validate_level(json["%s_config" % (config_name,)], sub_config)
                             if ret is not None:
                                 return ret
                         break

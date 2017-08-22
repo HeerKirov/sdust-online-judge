@@ -15,7 +15,7 @@ def now_dt():
     返回一个当地时间。
     :return: 
     """
-    now = datetime.now() + timedelta(hours=8)  # 这坑爹的时区处理……
+    now = datetime.now() + timedelta(hours=0)  # 这坑爹的时区处理……
     return now
 
 _RESOURCE_READONLY = ('creator', 'updater', 'create_time', 'update_time')
