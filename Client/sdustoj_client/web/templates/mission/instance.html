@@ -1,55 +1,400 @@
 {% extends "mission/adminBasic.html" %}
 {% load staticfiles %}
-
+{% block css %}
+    <style type="text/css" rel="stylesheet">
+        .update
+        {
+            display: none;
+        }
+        .config
+        {
+            display: none;
+        }
+        .oi
+        {
+            display: none;
+        }
+    </style>
+{% endblock %}
 {% block title %}任务详情{% endblock %}
 
 {% block nav_mission_info %} active {% endblock %}
 
 
 {% block sub_content2 %}
-
-  <div class="col-lg-8 col-md-10">
-    <div id="missioninfo"></div>
+    <div class="col-lg-8 col-md-10">
+  <div class="row justify-content-between">
+    <div class="col-6">
+      <h3>任务详情</h3>
+    </div>
+    <div class="col-2">
+      <button class="btn btn-primary" id = "update">修改信息</button>
+      <button class="btn btn-primary" id = "submit" style="display: none">保存</button>
+    </div>
   </div>
-
+  <br>
+   <div class="row">
+        <div class="col-8">
+             <h4>基本信息</h4>
+        </div>
+    </div>
+    <hr/>
+  <form id = "form">
+  <div class="row">
+      <div class="col-4"><b>&emsp;任务ID</b></div>
+      <div class="col-4" id="mid"></div>
+  </div>
+  <br>
+  <div class="row">
+      <div class="col-4"><b>&emsp;任务名称</b></div>
+      <div class="col-4">
+          <p id="caption" class="orig_info"></p>
+          <input type="text" id="i_caption" class="form-control update" name="i_caption">
+      </div>
+  </div>
+  <br>
+  <div class="row">
+    <div class="col-4">
+      <b>&emsp;可用</b>
+    </div>
+    <div class="col-4">
+      <p id="available" class="orig_info"></p>
+      <select class="form-control  update" id="i_available" name="i_available"></select>
+    </div>
+  </div>
+  <br>
+    <div class="row">
+      <div class="col-4">
+          <b>&emsp;废弃</b>
+      </div>
+      <div class="col-4">
+          <p id="deleted" class="orig_info"></p>
+          <select class="form-control  update" id="i_deleted" name="i_deleted"></select>
+      </div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-4"><b>&emsp;开始时间</b></div>
+      <div class="col-4">
+          <p id="start_time" class="orig_info"></p>
+          <input id="i_start_time" name="i_start_time" class="form-control update" type="text" readonly="readonly">
+      </div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-4"><b>&emsp;结束时间</b></div>
+      <div class="col-4">
+          <p id="end_time" class="orig_info"></p>
+          <input id="i_end_time" name="i_end_time" class="form-control update" type="text" readonly="readonly">
+      </div>
+    </div>
+    <br>
+  <div class="row">
+      <div class="col-4"><b>&emsp;课程基类ID</b></div>
+      <div class="col-4" id="course_meta"></div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-4"><b>&emsp;课程基类名称</b></div>
+      <div class="col-4" id="meta_caption"></div>
+    </div>
+  <hr/>
+  <div class="row">
+      <div class="col-4"><b>&emsp;创建时间</b></div>
+      <div class="col-4" id="create_time"></div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-4"><b>&emsp;创建者</b></div>
+      <div class="col-4" id="creator"></div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-4"><b>&emsp;更新时间</b></div>
+      <div class="col-4" id="update_time"></div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-4"><b>&emsp;更新者</b></div>
+      <div class="col-4" id="updater"></div>
+    </div>
+    <hr/>
+    <div class="row">
+        <div class="col-8">
+             <h4>模式信息</h4>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-4"><b>&emsp;模式</b></div>
+      <div class="col-4">
+          <p id="mode" class="orig_info"></p>
+          <select class="form-control  update" id="i_mode" name="i_mode"></select>
+      </div>
+    </div>
+    <br>
+    <div class="config">
+        <div class="row">
+          <div class="col-4">&emsp;&emsp;提交显示范围</div>
+          <div class="col-4">
+              <p id="submission_display" class="orig_info"></p>
+              <select class="form-control  update" id="i_submission_display" name="i_submission_display"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-4">&emsp;&emsp;成绩显示</div>
+          <div class="col-4">
+              <p id="score_display" class="orig_info"></p>
+              <select class="form-control  update" id="i_score_display" name="i_score_display"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-4">&emsp;&emsp;成绩评判模式</div>
+          <div class="col-4">
+              <p id="type" class="orig_info"></p>
+              <select class="form-control  update" id="i_type" name="i_type"></select>
+          </div>
+        </div>
+        <div class="oi">
+            <div class="row">
+              <div class="col-4">&emsp;&emsp;&emsp;<font size="2px">有效提交</font></div>
+              <div class="col-4">
+                  <p id="valid_submission" class="orig_info"></p>
+                  <select class="form-control  update" id="i_valid_submission" name="i_valid_submission"></select>
+              </div>
+            </div>
+        </div>
+        <br>
+    </div>
+  </form>
+</div>
 {% endblock %}
+
 {% block script %}
 <script>
-SATable.SimpleAjaxInfo({
-  id: 'missioninfo',
-  title: '任务信息',
-  getMethod: 'GET',
-  {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities %}
-  updateMethod: 'PATCH',
-  removeMethod: 'DELETE',
-  {% endif %}
-  getURL: '{% url 'api-mission-detail' mid %}',
-{% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities %}
-  updateURL: '{% url 'api-mission-detail' mid %}',
-  removeURL: '{% url 'api-mission-detail' mid %}',
-  removeToURL: document.referrer,
-{% endif %}
-  items: [
-     { name: 'courser_meta', caption: '所属课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
-    { name: 'meta_caption', caption: '所属课程基类名称', type:'Text',typeInfo: { max_length: 150 } },
 
+Date.prototype.Format = function (fmt) {
+    var o = {
+        "M+": this.getMonth() + 1,
+        "d+": this.getDate(),
+        "h+": this.getHours(),
+        "m+": this.getMinutes(),
+        "s+": this.getSeconds(),
+        "q+": Math.floor((this.getMonth() + 3) / 3),
+        "S": this.getMilliseconds()
+    };
+    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
+}
 
-    { name: 'id', caption: '任务ID', type:'Number' },
-    { name: 'caption', caption: '任务名称', type: 'Text', typeInfo: { max_length: 150 } },
-    { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
-    { name: 'start_time', caption: '开始时间',  type: 'Date'},
-    { name: 'end_time', caption: '结束时间',  type: 'Date' },
-      'Divide',
+$(document).ready(function() {
+  $.ajax({
+    type: "get",
+    url: "{% url 'api-mission-detail' mid %}",
+    dataType: "json",
+    success: function(ret) {
+      $("#available").text(ret.available ? "可用": "不可用");
+      var optionNone = $('<option></option>')
+      var optionTrue = $('<option></option>')
+      var optionFalse = $('<option></option>')
+      $(optionNone).val(null).text('--')
+      $(optionTrue).val(true).text('可用')
+      $(optionFalse).val(false).text('不可用')
+      $("#i_available").append(optionNone).append(optionTrue).append(optionFalse)
+      if (ret.available == true) {
+        $(optionTrue).attr('selected', 'selected')
+      } else if (ret.available == false) {
+        $(optionFalse).attr('selected', 'selected')
+      } else {
+        $(optionNone).attr('selected', 'selected')
+      }
+      $("#deleted").text(ret.deleted ? "是": "否");
+      var optionNone_d = $('<option></option>')
+      var optionTrue_d = $('<option></option>')
+      var optionFalse_d = $('<option></option>')
+      $(optionNone_d).val(null).text('--')
+      $(optionTrue_d).val(true).text('是')
+      $(optionFalse_d).val(false).text('否')
+      $("#i_deleted").append(optionNone_d).append(optionTrue_d).append(optionFalse_d)
+      if (ret.deleted == true) {
+        $(optionTrue_d).attr('selected', 'selected')
+      } else if (ret.deleted == false) {
+        $(optionFalse_d).attr('selected', 'selected')
+      } else {
+        $(optionNone_d).attr('selected', 'selected')
+      }
+      $("#mid").text(ret.id)
+      $("#caption").text(ret.caption);
+      $("#i_caption").val(ret.caption);
+      $("#mode").text(ret.mode + "模式");
+      var arr_mode = ['CUSTOM', 'ACM', 'C4', 'CCF'];
+      for(var i in arr_mode)
+      {
+          var option = $("<option></option>")
+          option.val(arr_mode[i]).text(arr_mode[i] + "模式")
+          if(arr_mode[i] == ret.mode)
+          {
+                option.attr('selected', 'selected')
+          }
+          $("#i_mode").append(option)
+      }
+      $("#type").text(ret.config.type);
+      var arr_type = ['acm', 'oi']
+      for(var i in arr_type)
+      {
+          var option = $("<option></option>")
+          option.val(arr_type[i]).text(arr_type[i])
+          if(arr_type[i] == ret.config.type)
+          {
+                option.attr('selected', 'selected')
+          }
+          $("#i_type").append(option)
+      }
+      $("#submission_display").text(ret.config.submission_display);
+      var arr_submission = ['self', 'all', 'no']
+      for(var i in arr_submission)
+      {
+          var option = $("<option></option>")
+          option.val(arr_submission[i]).text(arr_submission[i])
+          if(arr_submission[i] == ret.config.submission_display)
+          {
+                option.attr('selected', 'selected')
+          }
+          $("#i_submission_display").append(option)
+      }
+      $("#score_display").text(ret.config.score_display);
+      var arr_score = ['yes', 'close', 'no']
+      for(var i in arr_score)
+      {
+          var option = $("<option></option>")
+          option.val(arr_score[i]).text(arr_score[i])
+          if(arr_score[i] == ret.config.score_display)
+          {
+                option.attr('selected', 'selected')
+          }
+          $("#i_score_display").append(option)
+      }
+      $("#valid_submission").text(ret.config.type_config.valid_submission);
+      var arr_valid = ['highest', 'latest']
+      for(var i in arr_valid)
+      {
+          var option = $("<option></option>")
+          option.val(arr_valid[i]).text(arr_valid[i])
+          if(arr_valid[i] == ret.config.type_config.valid_submission)
+          {
+                option.attr('selected', 'selected')
+          }
+          $("#i_valid_submission").append(option)
+      }
+      if(ret.mode == "CUSTOM") {
+          $(".config").show()
+          if(ret.config.type == "oi") {
+          $(".oi").show()
+          } else {
+              $(".oi").hide()
+          }
+      } else {
+          $(".config").hide()
+      }
 
-    { name: 'available', caption: '可用', type: 'Boolean' },
-      { name: 'deleted', caption: '删除', type: 'Boolean' },
-    'Divide',
-    { name: 'creator', caption: '创建者', type: 'Text', readOnly: true },
-    { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },
-    { name: 'updater', caption: '最后更新者', type: 'Text', readOnly: true },
-    { name: 'update_time', caption: '最后更新时间', type: 'Datetime', readOnly: true },
+      var iDate = new Date(ret.create_time)
+      var info = iDate.toLocaleString()
+      $("#create_time").text(info);
+      $("#creator").text(ret.creator);
+      iDate = new Date(ret.update_time)
+      info = iDate.toLocaleString()
+      $("#update_time").text(info);
+      $("#updater").text(ret.updater);
+      iDate = new Date(ret.start_time)
+      info = iDate.toLocaleString()
+      $("#start_time").text(info);
+      $("#i_start_time").val(iDate.Format("yyyy-MM-dd hh:mm:ss")).datetimepicker({
+          autoclose: true,
+          todayBtn: true,
+          forceParse: 0,
+      });
+      iDate = new Date(ret.end_time)
+      info = iDate.toLocaleString()
+      $("#end_time").text(info);
+      $("#i_end_time").val(iDate.Format("yyyy-MM-dd hh:mm:ss")).datetimepicker({
+          autoclose: true,
+          todayBtn: true,
+          forceParse: 0,
+      });
+    }
+  })
+  $("#update").click(function () {
+        $(".update").show()
+        $(".orig_info").hide()
+        $("#update").hide()
+        $("#submit").show()
+  })
+  $("#submit").click(function () {
+      var form = $("#form")
+      var init_data = getFormData(form)
+      var data = {}
+      data.caption = init_data.i_caption
+      data.mode = init_data.i_mode
+      data.availabe = init_data.i_available
+      data.deleted = init_data.i_deleted
+      date = new Date(init_data.i_start_time)
+      len = date.getTime()
+      len = len - 1000 * 60 * 60 * 8
+      date0 = new Date(len)
+      data.start_time = date0.Format("yyyy-MM-dd hh:mm:ss")
+      date = new Date(init_data.i_end_time)
+      len = date.getTime()
+      len = len - 1000 * 60 * 60 * 8
+      date0 = new Date(len)
+      data.end_time = date0.Format("yyyy-MM-dd hh:mm:ss")
+      if(init_data.i_mode != "CUSTOM"){
+          data.config = {}
+      }else{
+          data.config = {}
+          data.config.type = init_data.i_type
+          data.config.score_display = init_data.i_score_display
+          data.config.submission_display = init_data.i_submission_display
+          if(init_data.i_type == "acm"){
+              data.config.type_config = {}
+          }else{
+              data.config.type_config = {}
+              data.config.type_config.valid_submission = init_data.i_valid_submission
+          }
+      }
+      $.ajax({
+        type: "PATCH",
+        url: "{% url 'api-mission-detail' mid%}",
+        data: data,
+        dataType: 'json',
+        success: function(ret) {
+          alert("成功")
+          location.reload()
+        },
+        error: function(info, message, errorObj) {
+          alert("error")
+            self.setError(self, info, message, errorObj)
+        }
+      })
 
-  ]
+  })
+  $("#i_mode").change(function () {
+      var mode = $("#i_mode").val()
+      if(mode != "CUSTOM"){
+          $(".config").hide()
+      } else{
+          $(".config").show()
+      }
+  })
+  $("#i_type").change(function () {
+      var type = $("#i_type").val()
+      if(type != "oi"){
+          $(".oi").hide()
+      } else{
+          $(".oi").show()
+      }
+  })
 })
 </script>
 {% endblock %}
