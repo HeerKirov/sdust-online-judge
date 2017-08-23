@@ -93,7 +93,7 @@ class Submission(object):  # 看起来跟提交代码有关。
         lr.rpush(sub_analyse_key, key)  # 向本地消息队列的提交解析队列push当前sdustoj提交的ID。
 
     @staticmethod
-    def unmark(submission_id):
+    def unmark(submission_id):  # ...我去，这个没用过啊？！
         """
         删除提交的标记，之后分析器将不再追踪此提交。
         :param submission_id: SDUSTOJ提交的ID。

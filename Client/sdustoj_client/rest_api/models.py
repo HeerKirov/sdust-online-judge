@@ -10,10 +10,10 @@ from datetime import datetime, timedelta
 
 def now_dt():
     """
-    返回一个当地时间。
+    返回一个时间。
     :return: 
     """
-    now = datetime.now() + timedelta(hours=8)  # 这坑爹的时区处理……
+    now = datetime.now() + timedelta(hours=0)  # 遗留的代码。未来可以考虑清除掉。
     return now
 
 
@@ -361,8 +361,6 @@ class UserProfile(Resource):
                 identities[IdentityChoices.user_admin] = True
             if IdentityChoices.org_admin in self.identities:
                 identities[IdentityChoices.org_admin] = True
-
-
         student_org = []
         student_identities = getattr(
             Student, 'objects').filter(profile=self).values('organization_id').distinct()
@@ -457,6 +455,7 @@ class UserProfile(Resource):
         """
         快速获得该用户关联的课程。
         当存在参数时，按照参数筛选“teaching”和“learning”的课程。如果参数有“admin”且用户是教务管理员，则列出全部机构内课程。
+        如果参数有admin且用户是site管理员，列出全部课程。
         1.通过course.objects->student.objects->id匹配，二重积
         2.通过relation.objects->student.id匹配，一重积，不过要并集
         3.通过cache缓存，course.objects->id匹配，一重积，可以直接用in语法
@@ -483,6 +482,8 @@ class UserProfile(Resource):
             for identity, value in self.identities.items():
                 if identity == IdentityChoices.edu_admin and len(value) > 0:
                     organizations_id += value
+                elif (identity == IdentityChoices.root or identity == IdentityChoices.org_admin) and value is True:
+                    return Course.objects.all()
             courses_admin = Course.objects.filter(organization__id__in=organizations_id).all()
         else:
             courses_admin = Course.objects.none()
@@ -491,6 +492,7 @@ class UserProfile(Resource):
     def get_course_groups(self, **kwargs):
         """
         获取所有管理的课程组。对于教师，会返回管理的课程组;对于教务管理员，会返回管理机构下的所有课程组。
+        对于site管理员，返回全部课程组。
         该函数不通过缓存，直接查询。
         :return: 
         """
@@ -501,6 +503,8 @@ class UserProfile(Resource):
             teaching = True
             admin = True
         course_groups = CourseGroup.objects.none()
+        if admin and self.has_identities(IdentityChoices.root, IdentityChoices.org_admin):
+            return CourseGroup.objects.all()
         if admin and self.has_identities(IdentityChoices.edu_admin):
             organizations = self.get_organizations()
             for org in organizations:
@@ -671,11 +675,10 @@ class Organization(Resource):
         self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(organization=self).count()
         self.number_courses = getattr(Course, 'objects').filter(organization=self).count()
         self.number_course_groups = getattr(CourseGroup, 'objects').filter(organization=self).count()
-        self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(orgaization=self).count()
-        self.number_problems = sum(v['category'].number_problem
-                                   for v in getattr(OrganizationCategoryRelation, 'objects').
-                                   filter(organization=self).value('category'))
-
+        self.number_categories = getattr(OrganizationCategoryRelation, 'objects').filter(organization=self).count()
+        self.number_problems = 0
+        for v in getattr(OrganizationCategoryRelation, 'objects').filter(organization=self).all():
+            self.number_problems += v.category.number_problem
         self.save()
 
     def available_categories(self):
@@ -759,7 +762,7 @@ class CourseGroup(Resource):
                                       through_fields=('course_group', 'teacher'))
 
     def __str__(self):
-        return "<Course Group %s: %s>" % (self.id, self.caption)
+        return "<Course Group %s: %s>" % (self.gid, self.caption)
 
     @property
     def meta_caption(self):
@@ -822,7 +825,7 @@ class Course(Resource):
                                       through_fields=('course', 'student'))
 
     def __str__(self):
-        return "<Course %s: %s>" % (self.id, self.caption)
+        return "<Course %s: %s>" % (self.cid, self.caption)
 
     @property
     def meta_caption(self):
@@ -991,7 +994,7 @@ class Mission(Resource):
                         if sub_config is not None:  # 表示匹配到了当前选项存在参数。
                             if "%s_config" % (config_name,) not in json:
                                 return 'Sub config of "%s" is not exist.' % (config_name,)
-                            ret = validate_level("%s_config" % (config_name,), sub_config)
+                            ret = validate_level(json["%s_config" % (config_name,)], sub_config)
                             if ret is not None:
                                 return ret
                         break
@@ -1311,7 +1314,7 @@ class Submission(models.Model):
                                      to_field='id', on_delete=models.SET_NULL)
 
     def __str__(self):
-        return "<Submission %s of by %s>" % (self.id, self.problem_id, self.environment_id)
+        return "<Submission %s of by %s in %s>" % (self.id, self.problem_id, self.environment_id)
 
 
 class CompileInfo(models.Model):

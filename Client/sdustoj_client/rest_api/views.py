@@ -281,7 +281,7 @@ class UserViewSets(object):
             parent_related_name = 'organization'  # 在当前models中，上级model的关联名
             parent_pk = 'name'  # 上级model的主键名
 
-            def get_queryset(self):
+            def set_queryset(self):
                 profile = self.request.user.profile
                 if not profile.is_org_manager():  # 这段代码确保筛选掉deleted的内容，使它们只能被机构的一般管理者看见。
                     return self.queryset.exclude(deleted=True)
@@ -306,7 +306,7 @@ class UserViewSets(object):
             parent_related_name = 'organization'  # 在当前models中，上级model的关联名
             parent_pk = 'name'  # 上级model的主键名
 
-            def get_queryset(self):
+            def set_queryset(self):
                 profile = self.request.user.profile
                 if not profile.is_org_manager():
                     return self.queryset.exclude(deleted=True)
@@ -343,7 +343,7 @@ class UserViewSets(object):
             parent_related_name = 'organization'  # 在当前models中，上级model的关联名
             parent_pk = 'name'  # 上级model的主键名
 
-            def get_queryset(self):
+            def set_queryset(self):
                 profile = self.request.user.profile
                 if not profile.is_org_manager():
                     return self.queryset.exclude(deleted=True)
@@ -373,7 +373,7 @@ class UserViewSets(object):
             parent_related_name = 'organization'  # 在当前models中，上级model的关联名
             parent_pk = 'name'  # 上级model的主键名
 
-            def get_queryset(self):
+            def set_queryset(self):
                 profile = self.request.user.profile
                 if not profile.is_org_manager():
                     return self.queryset.exclude(deleted=True)
@@ -787,7 +787,7 @@ class CourseViewSets(object):
             parent_pk = 'name'
             parent_related_name = 'organization'
 
-            def get_queryset(self):
+            def set_queryset(self):
                 profile = self.request.user.profile
                 if not profile.is_org_manager():
                     return self.queryset.exclude(deleted=True)
@@ -812,7 +812,7 @@ class CourseViewSets(object):
                 super().destroy(instance)
                 organization.update_numbers()
 
-            def get_queryset(self):
+            def set_queryset(self):
                 # 该api虽然不是二级api 但是仍然限制访问范围在[ORG]关联范围[SITE]全部范围
                 user = self.request.user
                 profile = user.profile
@@ -847,11 +847,24 @@ class CourseViewSets(object):
             parent_related_name = 'meta'  # 在当前models中，上级model的关联名
             parent_pk = 'id'  # 上级model的主键名
 
-            def get_queryset(self):
+            # def _set_queryset(self, **kwargs):
+            #     lookup = kwargs[self.parent_lookup]  # parent的id名
+            #     parent = get_object_or_404(self.parent_queryset, **{self.parent_pk: lookup})
+            #     org_id = parent.id
+            #     profile = self.request.user.profile
+            #     if not profile.is_org_manager():
+            #         self.queryset = profile.get_courses().filter(**{self.parent_related_name: org_id}).\
+            #             exclude(deleted=True).all()
+            #     else:
+            #         self.queryset = profile.get_courses().filter(**{self.parent_related_name: org_id}).all()
+            #
+            #     return self.parent_related_name, parent
+            def set_queryset(self):
                 profile = self.request.user.profile
                 if not profile.is_org_manager():
-                    return profile.get_courses().exclude(deleted=True)
-                return profile.get_courses()
+                    return profile.get_courses().exlcude(deleted=True)
+                else:
+                    return profile.get_courses()
 
             def perform_create(self, serializer):
                 instance = super().perform_create(serializer)
@@ -977,7 +990,7 @@ class CourseViewSets(object):
                 instance.organization.update_numbers()
                 return instance
 
-            def get_queryset(self):
+            def set_queryset(self):
                 profile = self.request.user.profile
                 if not profile.is_org_manager():
                     return profile.get_course_groups().exclude(deleted=True)
@@ -1096,7 +1109,7 @@ class MissionViewSets(object):
             parent_related_name = 'course_meta'  # 在当前models中，上级model的关联名
             parent_pk = 'id'  # 上级model的主键名
 
-            def get_queryset(self):
+            def set_queryset(self):
                 profile = self.request.user.profile
                 if not profile.is_mission_manager():
                     return self.queryset.exclude(deleted=True)

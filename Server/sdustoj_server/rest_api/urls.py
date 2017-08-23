@@ -85,6 +85,12 @@ admin_router.register(
 admin_router.register(
     r'problems-admin', ProblemViewSets.Admin.Instance.ProblemAdminViewSet, base_name='admin-problems-admin'
 )
+admin_router.register(
+    r'virtual-problems', ProblemViewSets.Admin.List.VirtualProblemAdminViewSet, base_name='admin-virtual-problems'
+)
+admin_router.register(
+    r'virtual-problems', ProblemViewSets.Admin.Instance.VirtualProblemAdminViewSet, base_name='admin-virtual-problems'
+)
 # == Environment =======================================================================================================
 admin_router.register(
     r'environments', EnvironmentViewSets.EnvironmentAdminViewSet, base_name='admin-environments'

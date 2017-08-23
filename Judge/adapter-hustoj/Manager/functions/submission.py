@@ -164,6 +164,8 @@ def _handler(sid):  # 处理某个提交。
     max_time = -1
     max_memory = -1
     max_status = 4
+    sum_score = 0
+    sum_weight = 0
     for test_data_id, solution_id in status.items():  # 遍历查询所有测试数据的提交的测试数据ID和hustoj提交的ID。
         while True:
             try:
@@ -177,7 +179,10 @@ def _handler(sid):  # 处理某个提交。
 
         # 从hustoj查询这个提交。
         result = solution.result  # 获得提交的结果状态
-        info[str(test_data_id)]['status'] = status_map[result]  # 这个map将hustoj的结果编号映射到sdustoj的缩写上去。
+        map_status, map_score = status_map[result]  # 这个map将hustoj的结果编号映射到sdustoj的缩写上去。
+        weight = info[str(test_data_id)]['weight'] if 'weight' in info[str(test_data_id)] else 1
+        info[str(test_data_id)]['status'] = map_status
+        info[str(test_data_id)]['score'] = map_score
         info[str(test_data_id)]['time'] = solution.time
         info[str(test_data_id)]['memory'] = solution.memory
         # 上三行是将正在查看的测试数据的评测结果写到结果信息表中。
@@ -189,6 +194,9 @@ def _handler(sid):  # 处理某个提交。
         if priority[result] > priority[max_status]:
             max_status = result
         # 上三行获得更高优先级的结果数据。 priority用来规定结果状态的优先级。
+        # 下面计算权重数值。
+        sum_score += map_score
+        sum_weight += weight
 
         print('\tGot solution %s, result is %s' % (solution_id, result))
 
@@ -208,12 +216,16 @@ def _handler(sid):  # 处理某个提交。
     submission.judge_id = judger_id  # 更新评测机的ID为本机ID。
     if not finished:  # 还没有完成全部测试数据评测。
         Submission.push(sid)  # 将该提交放回分析队列等待下一次分析
-        submission.status = status_map[max_status]  # 将sdustoj中的该题目的状态更新。
+        map_status, _ = status_map[max_status]
+        submission.status = map_status
+        submission.score_info = sum_score / sum_weight if sum_weight > 0 else 0
         print('\tNot finished, pushed.')
     else:
         submission.time = max_time
         submission.memory = max_memory  # 现在可以更新最大用时和最大空间占用了。
-        submission.status = status_map[max_status]  # 与if中的一样。
+        map_status, _ = status_map[max_status]
+        submission.status = map_status
+        submission.score_info = sum_score / sum_weight if sum_weight > 0 else 0
         submission.finished = True  # 标记该提交为已完成。
         print('\tFinished, unmarked.')
     submission.update_time = datetime.now()

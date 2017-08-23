@@ -153,7 +153,6 @@ def write_submission(submission_json):
     submission = session.query(server_models.Submission).filter_by(sid=submission_json['id']).first()
     if submission is not None:
         print("Update submission %s" % (submission_json['id'],))
-        have_finished = submission.finished
         submission.time = submission_json['time']
         submission.memory = submission_json['memory']
         submission.length = submission_json['length']
@@ -165,9 +164,6 @@ def write_submission(submission_json):
         write_submission_compile_info(submission.id, submission_json)
         write_submission_test_data_status(submission.id, submission_json)
         write_submission_code(submission.id, submission_json)
-        # rank的信息产生在这里。
-        if not have_finished:  # 必须做这个判定。不然万一出现一个已完成提交被更新第二次那就炸了。
-            write_rank(submission, submission_json)
         session.commit()
 
 

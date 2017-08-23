@@ -1,13 +1,14 @@
-{% extends "problem/adminBasic.html" %}
+{% extends "problem/problem/adminBasic.html" %}
 {% load staticfiles %}
 
 {% block title %}题目{% endblock %}
 
 {% block nav_problem %}active{% endblock %}
+{% block nav_all_problem %}active{% endblock %}
 
-{% block sub_content %}
-<div class="container">
-  <div class="col-xs-12">
+{% block sub_content2 %}
+<div class="col-lg-8 col-md-7">
+  <div class="container">
     <div id="problem"></div>
   </div>
 </div>

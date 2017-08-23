@@ -22,15 +22,14 @@ SATable.DRFTable({
   url: "{% url 'api-course-group-course-list' gid %}",
   search: true,
   columns: [
-      { name: "cid", caption: "课程ID", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-course-group-coursebelong-list' gid %}info/', key: 'id' } },
-
+    { name: "cid", caption: "课程ID", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-course-group-coursebelong-list' gid %}info/', key: 'id' } },
     { name: "caption", caption: "课程名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-course-group-coursebelong-list' gid %}info/', key: 'id' } },
+    { name: "create_time", caption: "创建时间", type: 'Datetime' },
+    { name: "update_time", caption: "更新时间", type: 'Datetime' },
     { name: "available", caption: "可用", type: 'Boolean' },
-      { name: "deleted", caption: "deleted", type: 'Boolean' },
-      { name: "create_time", caption: "创建时间", type: 'Datetime' },
-      { name: "update_time", caption: "更新时间", type: 'Datetime' },
+    { name: "deleted", caption: "废弃", type: 'Boolean' },
   ],
-    {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+    {% if 'EDU_ADMIN' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities %}
   createURL: "{% url 'web-course-group-coursebelong-create' gid%}"
   {% endif %}
 })

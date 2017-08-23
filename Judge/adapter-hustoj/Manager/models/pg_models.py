@@ -125,6 +125,7 @@ class Submission(_Base):
     length = Column(Integer)
 
     status = Column(String)
+    score_info = Column(String)
     finished = Column(Boolean)
 
     submit_time = Column(DateTime)

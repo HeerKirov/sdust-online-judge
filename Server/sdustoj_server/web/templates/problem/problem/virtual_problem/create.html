@@ -1,0 +1,83 @@
+{% extends "problem/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}创建虚拟题目{% endblock %}
+
+{% block nav_problem %}active{% endblock %}
+
+{% block sub_content %}
+<div class="container row justify-content-sm-center">
+  <div class="col-lg-8 col-md-10">
+    <form id="problemCreateForm" method="POST" onsubmit="return false;">
+      <fieldset>
+        {% csrf_token %}
+        <div class="form-group row">
+          <label class="col-lg-3 col-md-4 control-label">对外可用</label>
+          <div class="col-lg-9 col-md-8">
+            <input name="available" class="form-control" type="checkbox">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-lg-3 col-md-4 control-label">原OJ</label>
+          <div class="col-lg-9 col-md-8">
+            <input maxlength="128" name="origin_oj" class="form-control" type="text">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-lg-3 col-md-4 control-label">原题号</label>
+          <div class="col-lg-9 col-md-8">
+            <input maxlength="128" name="origin_pid" class="form-control">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-lg-3 col-md-4 control-label">编程限制</label>
+          <div class="col-lg-9 col-md-8">
+                  <select id="environment" name="environment" class="form-control env" multiple="multiple">
+                  {% for i in envs %}
+                    <option value="{{ i.id }}">{{ i.id }}: {{ i.name }}</option>
+                  {% endfor %}
+                  </select>
+                </div>
+        </div>
+        <br/>
+        <div class="input-group-btn">
+          <button id="btn-submit" type="button" class="btn btn-primary" title="添加虚拟题目">添 加</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+$('#btn-submit').click(function() {
+  var form = $("#problemCreateForm")
+  var formData = getFormData(form)
+  var environments = $("#environment")
+
+  var data = {
+    available: formData.available,
+    origin_oj: formData.origin_oj,
+    origin_pid: formData.origin_pid,
+    environments: environments.val()
+  }
+
+  $.ajax({
+    type: 'POST',
+    url: '{% url 'admin-virtual-problems-list' %}',
+    data: {dataStr: JSON.stringify(data)},
+    traditional: true,
+    dataType: 'json',
+    success: function(ret) {
+      location.href = "{% url 'problem_virtual_problem' %}" + ret.id
+    },
+    error: function (info, message, xx) {
+      test_output(info)
+    }
+  })
+
+  return false
+})
+</script>
+{% endblock %}

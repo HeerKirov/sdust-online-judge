@@ -213,7 +213,7 @@ SAInfo.Text = function(self, item, value) {
     $(ret).append(code)
   } else if (typeInfo && typeInfo.markdown) {
     ret = $(markdown.toHTML(value))
-  } else if(typeInfo && typeInfo.link ){
+  } else if(typeInfo && typeInfo.link && value !== null ){
     var a = $("<a></a>")
     var url = value
     var n=url.indexOf("https://")
@@ -291,7 +291,7 @@ SAInfo.Date = function(self, item, value) {
   var ret = $('<p></p>')
   var date = new Date(value)
   var dateStr = date.toLocaleDateString()
-  $(ret).append(dateStr)
+  $(ret).append(dateStr);
 
   var inputGroup = getDom.Div('input-group')
   var inputGroup2 = getDom.Div('input-group')

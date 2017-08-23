@@ -190,6 +190,13 @@ class Problem(Resource, TitleMixin, SourceMixin):
     # 所属的题元
     meta_problem = ForeignKey(MetaProblem, related_name='problems', to_field='id')
 
+    # 是否是VJ类题目
+    is_virtual_judge = BooleanField(default=False)
+    # 源oj名称
+    origin_oj = CharField(max_length=12, default=None, null=True)
+    # 该题目在原oj中的代号
+    origin_pid = CharField(max_length=18, default=None, null=True)
+
     # 所选的描述，可为空
     description = ForeignKey(Description, related_name='problems', to_field='id', null=True, on_delete=SET_NULL)
     # 所选的样例，可为空
@@ -336,6 +343,7 @@ class Submission(Model):
     """
     # 提交记录状态码和对应的状态的映射
     STATUS_CHOICES = (
+        ('SF', 'Submit Failed'),
         ('PD', 'Pending'),
         ('PDR', 'Pending Rejudge'),
         ('CP', 'Compiling'),
@@ -400,39 +408,40 @@ class Submission(Model):
     # 提交完成度
     @property
     def score(self):
-        if self.score_info is None:
-            return self.refresh_score()
-        else:
-            return self.score_info
+        # if self.score_info is None:
+        #     return self.refresh_score()
+        # else:
+        #     return self.score_info
+        return self.score_info
 
     # 刷新提交完成度。数值会自动刷新到数据库并保存。如果刷新失败则不会保存且返回0。
-    def refresh_score(self):
-        if hasattr(self, 'test_data_status'):
-            test_data_weight = {}  # 记录每一条关联测试数据的权重信息([t_id] = weight)
-            problem_test_data_relation = self.problem.test_data_rel  # 全部的题目-测试数据关系
-            test_data_count = problem_test_data_relation.count()  # 测试数据数目
-            for relation in problem_test_data_relation.all():  # 惰性查询：性能损耗点
-                test_data_weight[int(relation.test_data.id)] = relation.weight  # 添加新记录
-
-            weight_sum = 0
-            score_sum = 0
-            final_sum = 0
-            for s_id, status in self.test_data_status.status.items():  # 遍历：性能损耗点
-                status_name = status['status']
-                if status_name in OJ_FINAL_STATUS:
-                    final_sum += 1
-                score = OJ_STATUS_SCORE[status_name]  # 获取完成度(0~100)
-                weight = abs(test_data_weight[int(s_id)])  # 获取权重值(Number)的绝对值
-                score_sum += score * weight
-                weight_sum += weight
-            if test_data_count != final_sum:  # 在测试数据的实际数目不等的状态下，判定该题目还没有判完，退出判定。
-                return 0
-            final_score = floor(score_sum / weight_sum) if weight_sum != 0 else 0
-            self.score_info = final_score if final_score >= OJ_SCORE_SETTING['threshold_score'] else 0
-            self.save()
-            return self.score_info
-        else:
-            return 0
+    # def refresh_score(self):
+    #     if hasattr(self, 'test_data_status'):
+    #         test_data_weight = {}  # 记录每一条关联测试数据的权重信息([t_id] = weight)
+    #         problem_test_data_relation = self.problem.test_data_rel  # 全部的题目-测试数据关系
+    #         test_data_count = problem_test_data_relation.count()  # 测试数据数目
+    #         for relation in problem_test_data_relation.all():  # 惰性查询：性能损耗点
+    #             test_data_weight[int(relation.test_data.id)] = relation.weight  # 添加新记录
+    #
+    #         weight_sum = 0
+    #         score_sum = 0
+    #         final_sum = 0
+    #         for s_id, status in self.test_data_status.status.items():  # 遍历：性能损耗点
+    #             status_name = status['status']
+    #             if status_name in OJ_FINAL_STATUS:
+    #                 final_sum += 1
+    #             score = OJ_STATUS_SCORE[status_name]  # 获取完成度(0~100)
+    #             weight = abs(test_data_weight[int(s_id)])  # 获取权重值(Number)的绝对值
+    #             score_sum += score * weight
+    #             weight_sum += weight
+    #         if test_data_count != final_sum:  # 在测试数据的实际数目不等的状态下，判定该题目还没有判完，退出判定。
+    #             return 0
+    #         final_score = floor(score_sum / weight_sum) if weight_sum != 0 else 0
+    #         self.score_info = final_score if final_score >= OJ_SCORE_SETTING['threshold_score'] else 0
+    #         self.save()
+    #         return self.score_info
+    #     else:
+    #         return 0
 
 
 # -- Components --------------------------------------------------------------------------------------------------------
@@ -511,6 +520,13 @@ class Environment(Resource):
     judge_id = CharField(max_length=16, unique=True)
     # 对外显示的名称
     name = CharField(max_length=128)
+
+    # 是否是VJ的评测环境
+    is_virtual_judge = BooleanField(default=False)
+    # 源oj名称
+    origin_oj = CharField(max_length=12, null=True, default=None)
+    # 在源oj的标识符
+    origin_judge = CharField(max_length=16, null=True, default=None)
 
     # 有多少题目支持此编程环境的评测
     number_problem = IntegerField(default=0)
