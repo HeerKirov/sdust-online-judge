@@ -762,7 +762,7 @@ class CourseGroup(Resource):
                                       through_fields=('course_group', 'teacher'))
 
     def __str__(self):
-        return "<Course Group %s: %s>" % (self.id, self.caption)
+        return "<Course Group %s: %s>" % (self.gid, self.caption)
 
     @property
     def meta_caption(self):
@@ -825,7 +825,7 @@ class Course(Resource):
                                       through_fields=('course', 'student'))
 
     def __str__(self):
-        return "<Course %s: %s>" % (self.id, self.caption)
+        return "<Course %s: %s>" % (self.cid, self.caption)
 
     @property
     def meta_caption(self):
