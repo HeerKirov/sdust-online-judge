@@ -26,9 +26,9 @@ SATable.SimpleAjaxInfo({
   removeURL: '{% url 'api-course-group-detail' gid %}',
   removeToURL: document.referrer,
   items: [
-    { name: 'meta', caption: '课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
-      { name: 'meta_caption', caption: '课程基类名称', type:'Text',typeInfo: { max_length: 150 } },
-     { name: 'gid', caption: '课程组ID', type: 'Number'},
+    { name: 'meta', caption: '课程基类ID', type:'Text',typeInfo: { max_length: 150 }, readOnly: true },
+      { name: 'meta_caption', caption: '课程基类名称', type:'Text',typeInfo: { max_length: 150 }, readOnly: true },
+     { name: 'gid', caption: '课程组ID', type: 'Number', readOnly: true},
       { name: 'caption', caption: '课程组名称', type: 'Text', typeInfo: { max_length: 150 } },
 
 
