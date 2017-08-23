@@ -1,6 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 import conf
 from datetime import datetime
+from models.local_pg_models import engine as local_engine
 
 
 class SessionBuilder(object):
@@ -47,3 +48,6 @@ class AlchemyUtils(object):
         submission.score_info = update['score'] if 'score' in update else submission.score_info
         submission.judge_id = conf.judger_id
         submission.update_time = datetime.now()
+
+
+local_psql = SessionBuilder(bind=local_engine)

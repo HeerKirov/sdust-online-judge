@@ -181,8 +181,11 @@ class NestedMixin(object):
 
         parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})
 
-        setattr(self, 'queryset',
-                getattr(self, 'queryset').filter(**{parent_related_name: parent}))
+        if hasattr(self, 'set_queryset'):
+            set_queryset = getattr(self, 'set_queryset')
+            setattr(self, 'queryset', set_queryset().filter(**{parent_related_name: parent}))
+        else:
+            setattr(self, 'queryset', getattr(self, 'queryset').filter(**{parent_related_name: parent}))
 
         return parent_related_name, parent
 

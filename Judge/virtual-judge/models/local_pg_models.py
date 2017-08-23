@@ -18,9 +18,6 @@ engine = create_engine('postgresql+psycopg2://%s:%s@%s/%s' % (  # psql的engine
 _Base = declarative_base()
 
 
-
-
-
 class HduSubmission(_Base):
     __tablename__ = 'hdusubmission'
 
@@ -41,3 +38,21 @@ class HduSubmission(_Base):
     finished = Column(Boolean)
 
 
+class PojSubmission(_Base):
+    __tablename__ = 'pojsubmission'
+
+    id = Column(BigInteger, primary_key=True)
+    run_id = Column(BigInteger, unique=True)
+    pid = Column(String)
+    time = Column(Integer)
+    memory = Column(Integer)
+    length = Column(Integer)
+    language = Column(String)
+    status = Column(String)
+
+    submission_id = Column(BigInteger, unique=True)
+
+    submit_time = Column(DateTime)
+    update_time = Column(DateTime)
+
+    finished = Column(Boolean)

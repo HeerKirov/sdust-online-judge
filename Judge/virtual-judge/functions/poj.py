@@ -2,34 +2,35 @@ import requests
 import datetime
 import re
 from conf import oj_user_info
-from models.local_pg_models import engine as local_engine, HduSubmission
+from models.local_pg_models import engine as local_engine, PojSubmission
 from models.utils import SessionBuilder, RemainList, local_psql as lpsql
+import base64
 
 SETTING = {
-    'host': 'http://acm.hdu.edu.cn/',
-    'login': 'userloginex.php?action=login',
-    'submit': 'submit.php?action=submit',
-    'submissions': 'status.php'
+    'host': 'http://poj.org/',
+    'login': 'login',
+    'submit': 'submit',
+    'submissions': 'status',
 }
 
 CONFIG = {
-    'max_record_count': 15,  # 每一页的记录条数上限
-    'code_min_bytes': 50,
+    'max_record_count': 20,  # 每一页的记录条数上限
+    'code_min_bytes': 10,
     'code_max_bytes': 65536
 }
 
-STATUS = {  # hdu -> sdustoj 的(状态, 得分)代换
+STATUS = {  # poj -> sdustoj 的(状态, 得分)代换
     'Accepted': ('AC', 100),
     'Wrong Answer': ('WA', 0),
     'Presentation Error': ('PE', 50),
     'Compilation Error': ('CE', 0),
-    'Runtime Error': ('RE', 0),  # 这个状态比较特别，他会有一串附加信息
+    'Runtime Error': ('RE', 0),
     'Time Limit Exceeded': ('TLE', 0),
     'Memory Limit Exceeded': ('MLE', 0),
     'Output Limit Exceeded': ('OLE', 0),
-    'Queuing': ('PD', 0),
+    'Waiting': ('PD', 0),
     'Compiling': ('CP', 0),
-    'Running': ('RJ', 0),
+    'Running & Judging': ('RJ', 0),
     '': ('PD', 0)  # 防出错
 }
 
@@ -44,9 +45,7 @@ FINISHED_STATUS = [  # 表示已完成的状态
     'Output Limit Exceeded'
 ]
 
-
-auth_user, auth_pass = oj_user_info['hdu']
-
+auth_user, auth_pass = oj_user_info['poj']
 session = requests.session()
 
 
@@ -56,71 +55,84 @@ def get_url(url, *args):
 
 def do_login():
     data = {
-        'username': auth_user,
-        'userpass': auth_pass,
-        'login': 'Sign In'
+        'user_id1': auth_user,
+        'password1': auth_pass,
+        'B1': 'login',
+        'url': '/'
     }
     res = session.post(get_url('login'), data=data)
-    print("HDU Login: %s" % (res.status_code,))
+    print("POJ Login: %s" % (res.status_code,))
     return res.status_code == 302 or res.status_code == 200
 
 
 def do_submit(pid, lang, code):
     data = {
-        'check': 0,
-        'problemid': pid,
+        'encoded': 1,
+        'submit': 'Submit',
+        'problem_id': pid,
         'language': lang,
-        'usercode': code,
+        'source': base64.b64encode(code.encode('utf-8')).decode('utf-8'),
     }
     res = session.post(get_url('submit'), data=data)
+    if re.search("""Error Occurred""", res.text) is not None:  # poj的这个状态很万能。
+        return False
+    if res.status_code != 200:
+        return False
     return res.url == get_url('submissions')
 
 
-def get_submissions(page=0):
-    data = {
-        'first': page,
-        'user': auth_user,
-    }
+def get_submissions(top=None, bottom=None):
+    def get_language(lang_html):
+        regs = re.search('<a[^>]*>([\\s\\S]*?)</a>', lang_html)
+        if regs.groups() is not None and len(regs.groups()) > 0:
+            return regs.group(1)
+        else:
+            return lang_html
+
+    data = {'user_id': auth_user}
+    if top is not None:
+        data['top'] = top
+    elif bottom is not None:
+        data['bottom'] = bottom
     res = session.get(get_url('submissions'), params=data)
-    regex = """<tr[#\\S\\d= ]*?align=center >""" + \
-        """<td height=22px>(\\d+)</td>""" + \
-        """<td>([-\\d: ]+)</td>""" + \
-        """<td>(<font color=[#\\S\\d]*?>([\\w ]+)</font>|""" + \
-        """<a href="/vi\\s*ewerror.php\\?rid=\\d+" target=_blank><font color=[#\\S\\d]*?>([\\w ]+)</font></a>)</td>""" + \
-        """<td><a href="/showproblem.php\\?pid=\\d+">(\\d+)</a></td>""" + \
-        """<td>(\\d*)MS</td>""" + \
-        """<td>(\\d*)K</td>""" + \
-        """<td>(<a href="/viewcode.php\\?rid=\\d*"  target=_blank>)?(\\d+) ?B</td>""" + \
-        """<td>([\\S]*?)</td>""" + \
-        """<td class=fixedsize><a href="/userstatus.php\\?user=[\\S\\s]*?">([\\S\\s]*?)</a></td>""" + \
-        """</tr>"""
-    rex = re.findall(regex, res.text)
+    f = open('show.html', 'w')
+    f.write(res.text)
+    f.close()
+    regex = """<tr align=center>""" + \
+            """<td>(\\d*)</td>""" + \
+            """<td><a href=userstatus\\?user_id=[\\s\\S]*?>([\\s\\S]*?)</a></td>""" + \
+            """<td><a href=problem\\?id=\\d*>(\\d*)</a></td>""" + \
+            """<td><font color=\\w*>([\\s\\S]*?)</font></td>""" + \
+            """<td>(\\d*)K?</td>""" + \
+            """<td>(\\d*)M?S?</td>""" + \
+            """<td>([\\s\\S]*?)</td>""" + \
+            """<td>(\\d*)B?</td>""" + \
+            """<td>([-:\\d ]*)</td></tr>"""
+    reg = re.findall(regex, res.text)
     li = [{
         'run_id': it[0],
-        'submit_time': it[1],
-        'status': it[3] if len(it[3]) > 0 else it[4],
-        'pid': it[5],
-        'time': it[6],
-        'memory': it[7],
-        'length': it[9],
-        'language': it[10],
-        'author': it[11]
-    } for it in rex]
-    # runID, submitDate, status, pid, time, memory, codeLength, language, author
+        'pid': it[2],
+        'status': it[3],
+        'memory': it[4],
+        'time': it[5],
+        'language': get_language(it[6]),
+        'length': it[7],
+        'submit_time': it[8]
+    } for it in reg]
     return li
 
 
 def request_submit(sid, pid, lang, code):
     """
-    向HDU提交。
-    :param sid: sdustoj的提交id
-    :param pid: hdu的题目id
-    :param lang: hdu的语言代号
+    向POJ提交。
+    :param sid:sdustoj的提交id 
+    :param pid: poj的题目id
+    :param lang: poj的语言代号
     :param code: 代码
     :return: 
     """
     # 首先检查代码长度限制。
-    byte_length = len(code.encode('gb2312'))  # 经过确认，hdu的代码大概是采用gb2312确认代码长度的
+    byte_length = len(code.encode('gb2312'))
     if not CONFIG['code_min_bytes'] <= byte_length <= CONFIG['code_max_bytes']:
         return None, {
             'status': 'LLE',
@@ -132,10 +144,10 @@ def request_submit(sid, pid, lang, code):
     while retry_count >= 0:
         do_result = do_submit(pid, lang, code)
         if do_result:
-            # 提交成功。由于hdu没有runid的返回机制，因此只能选择使用数据库全时刻轮询，并且在提交时立刻查询。
+            # 提交成功。由于poj没有runid的返回机制，因此只能选择使用数据库全时刻轮询，并且在提交时立刻查询。
             psql = lpsql.session()
 
-            submission_messages = get_submissions(0)  # 直接抓取一次status表的第一页的数据
+            submission_messages = get_submissions()  # 直接抓取一次status表的第一页的数据
             if submission_messages is None or len(submission_messages) <= 0:  # 这意味着出错了
                 return None, {
                     'status': 'SF',
@@ -145,7 +157,7 @@ def request_submit(sid, pid, lang, code):
             new_submission = submission_messages[0]  # 获得第一条数据
 
             # 构造新的提交缓存到中间数据库
-            submission = HduSubmission(
+            submission = PojSubmission(
                 run_id=new_submission['run_id'],
                 pid=new_submission['pid'],
                 time=new_submission['time'],
@@ -160,7 +172,7 @@ def request_submit(sid, pid, lang, code):
             )
             psql.add(submission)
             psql.commit()
-            print("-- Hdu Update: run_id=%s" % (new_submission['run_id'],))
+            print("-- Poj Update: run_id=%s" % (new_submission['run_id'],))
             return {
                 'run_id': new_submission['run_id']
             }, None
@@ -184,14 +196,11 @@ def update_submit(sid, status):
     # 根据协定，status的内容包括run_id
     run_id = status['run_id']
     psql = lpsql.session()
-    submission = psql.query(HduSubmission).filter_by(run_id=run_id).first()
+    submission = psql.query(PojSubmission).filter_by(run_id=run_id).first()
     if submission is not None:
         finished = submission.finished
         ret_status = None if finished else status
-        if re.match('Runtime Error', submission.status) is not None:  # 这里需要特别处理一下RE状态。
-            status, score = STATUS['Runtime Error']
-        else:
-            status, score = STATUS[submission.status]
+        status, score = STATUS[submission.status]
         ret_update = {
             'status': status,
             'score': score,
@@ -216,12 +225,12 @@ def reptile_submit():
     :return: 
     """
     psql = lpsql.session()
-    submissions = psql.query(HduSubmission).filter_by(finished=False).order_by(HduSubmission.id).all()
+    submissions = psql.query(PojSubmission).filter_by(finished=False).order_by(PojSubmission.id).all()
     if len(submissions) > 0:  # 有未完成的内容，确认进行查询。
         remain = RemainList(submissions)  # 构成一个剩余列表，以便排查
-        page = 0
+        top = None
         while True:
-            records = get_submissions(page)  # 获取该页的所有记录
+            records = get_submissions(top=top)  # 获取该页的所有记录
             for record in records:
                 run_id = int(record['run_id'])
                 submission = remain.pop(lambda s: s.run_id == run_id)
@@ -231,10 +240,10 @@ def reptile_submit():
                     submission.memory = record['memory']
                     submission.status = record['status']
                     submission.finished = record['status'] in FINISHED_STATUS
-                    print("Hdu Reptile Submission: run_id=%s" % (run_id,))
+                    print("Poj Reptile Submission: run_id=%s" % (run_id,))
             if len(records) < CONFIG['max_record_count'] or remain.is_empty():  # 满足了退出条件
                 break
-            page += 1
+            top = records[-1]['id']
         psql.commit()
 
 

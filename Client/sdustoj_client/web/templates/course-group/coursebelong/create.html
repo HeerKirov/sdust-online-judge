@@ -21,7 +21,7 @@ function getOptions(ret) {
   for (var i in results) {
     var obj = results[i]
     var text = obj.cid + ': ' + obj.caption
-    var value = obj.username
+    var value = obj.cid
     data.push({ text: text, value: value })
   }
   return data
@@ -32,7 +32,7 @@ SATable.SimpleAjaxForm({
   toSuccess: '{% url 'web-course-group-coursebelong-list' gid %}',
   url: '{% url 'api-course-group-course-list' gid %}',
   items: [
-      { name: 'username', caption: '可选课程', type: 'Select', typeInfo: {
+      { name: 'cid', caption: '可选课程', type: 'Select', typeInfo: {
         many: false,
         ajax: true,
         ajaxInfo: {
@@ -43,6 +43,9 @@ SATable.SimpleAjaxForm({
         responseHandler: SATable.DRF.keepRequest,
         dataGenerator: getOptions
     } },
+      {
+          name: 'weight', caption: '权重', type: 'Number'
+      }
   ]
 
 })

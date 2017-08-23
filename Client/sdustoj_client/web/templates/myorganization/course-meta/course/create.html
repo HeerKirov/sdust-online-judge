@@ -23,7 +23,7 @@ SATable.SimpleAjaxForm({
   url: '{% url 'api-course-meta-course-list' uid %}',
   items: [
 
-    { name: 'caption', caption: '课程组名称', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'caption', caption: '课程名称', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
     { name: 'deleted', caption: 'deleted', type: 'Boolean', defaultTrue: false },
 

@@ -22,4 +22,13 @@ OJ_LIST = {
         'Java': '5',
         'C#': '6'
     }),
+    'poj': OjMessage(name='poj', environments={
+        'G++': '0',
+        'GCC': '1',
+        'Java': '2',
+        'Pascal': '3',
+        'C++': '4',
+        'C': '5',
+        'Fortran': '6'
+    })
 }
