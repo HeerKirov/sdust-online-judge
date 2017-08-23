@@ -213,7 +213,20 @@ SAInfo.Text = function(self, item, value) {
     $(ret).append(code)
   } else if (typeInfo && typeInfo.markdown) {
     ret = $(markdown.toHTML(value))
-  } else {
+  } else if(typeInfo && typeInfo.link ){
+    var a = $("<a></a>")
+    var url = value
+    var n=url.indexOf("https://")
+    if(n == -1)
+    {
+      url = "https://" + url
+    }
+    a.attr("href", url)
+    a.attr("target","_blank")
+    a.append(value)
+    $(ret).append(a)
+  }
+  else {
     $(ret).append(value)
   }
 
