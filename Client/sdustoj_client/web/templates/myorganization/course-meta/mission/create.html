@@ -1,6 +1,21 @@
 {% extends "myorganization/course-meta/adminBasic.html" %}
 {% load staticfiles %}
-
+{% block css %}
+    <style type="text/css" rel="stylesheet">
+        .update
+        {
+            display: none;
+        }
+        .config
+        {
+            display: none;
+        }
+        .oi
+        {
+            display: none;
+        }
+    </style>
+{% endblock %}
 {% block title %}任务{% endblock %}
 
 {% block nav_myorganization %} active {% endblock %}
@@ -10,27 +25,201 @@
 
 <div class="col-lg-8 col-md-10">
     <div id="mission"></div>
+    <div>
+        <form id="form">
+            <div class="row">
+                <div class="col-4">任务名称</div>
+                <div class="col-6"><input class="form-control" type="text" name="caption"></div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-4">可用</div>
+                <div class="col-6">
+                  <select class="form-control" id="available" name="available">
+                      <option value="true" selected="selected">可用</option>
+                      <option value="false">不可用</option>
+                  </select>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-4">废弃</div>
+                <div class="col-6">
+                  <select class="form-control" name="deleted">
+                      <option value="false" selected="selected">否</option>
+                      <option value="true">是</option>
+                  </select>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+              <div class="col-4">开始时间</div>
+              <div class="col-6">
+                  <input id="start_time" name="start_time" class="form-control" type="text" readonly="readonly">
+              </div>
+            </div>
+            <br>
+            <div class="row">
+              <div class="col-4">结束时间</div>
+              <div class="col-6">
+                  <input id="end_time" name="end_time" class="form-control" type="text" readonly="readonly">
+              </div>
+            </div>
+            <br>
+            <div class="row">
+              <div class="col-4">模式</div>
+                  <div class="col-6">
+                      <select class="form-control" id="mode" name="mode">
+                          <option value="ACM" selected="selected">ACM</option>
+                          <option value="CUSTOM">CUSTOM</option>
+                          <option value="C4">C4</option>
+                          <option value="CCF">CCF</option>
+                      </select>
+                  </div>
+            </div>
+            <br>
+            <div class="config">
+                <div class="row">
+                  <div class="col-4">&emsp;&emsp;提交显示范围</div>
+                  <div class="col-6">
+                      <select class="form-control" id="submission_display" name="submission_display">
+                          <option value="all">all</option>
+                          <option value="self">self</option>
+                          <option value="no">no</option>
+                      </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-4">&emsp;&emsp;成绩显示</div>
+                  <div class="col-6">
+                      <select class="form-control" id="score_display" name="score_display">
+                          <option value="yes">yes</option>
+                          <option value="close">close</option>
+                          <option value="no">no</option>
+                      </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-4">&emsp;&emsp;成绩评判模式</div>
+                  <div class="col-6">
+                      <select class="form-control" id="type" name="type">
+                          <option value="acm" selected="selected">acm</option>
+                          <option value="oi">oi</option>
+                      </select>
+                  </div>
+                </div>
+                <div class="oi">
+                    <div class="row">
+                      <div class="col-4">&emsp;&emsp;&emsp;<font size="2px">有效提交</font></div>
+                      <div class="col-6">
+                          <select class="form-control" id="valid_submission" name="valid_submission">
+                              <option value="highest">highest</option>
+                              <option value="latest">latest</option>
+                          </select>
+                      </div>
+                    </div>
+                </div>
+             </div>
+            <br>
+            <div>
+                <input type="button" class="form-control btn btn-primary" id = "submit" value="创建">
+            </div>
+        </form>
+    </div>
 </div>
 
 {% endblock %}
 {% block script %}
 <script>
-SATable.SimpleAjaxForm({
-  id: 'mission',
-  method: 'POST',
-  toSuccess: '{% url 'web-myorg-coursemeta-mission-list' oid uid  %}',
-  url: '{% url 'api-course-meta-mission-list' uid %}',
-  items: [
+Date.prototype.Format = function (fmt) {
+    var o = {
+        "M+": this.getMonth() + 1,
+        "d+": this.getDate(),
+        "h+": this.getHours(),
+        "m+": this.getMinutes(),
+        "s+": this.getSeconds(),
+        "q+": Math.floor((this.getMonth() + 3) / 3),
+        "S": this.getMilliseconds()
+    };
+    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
+}
 
-    { name: 'caption', caption: '任务名称', type: 'Text', typeInfo: { max_length: 150 } },
-    { name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
-    { name: 'deleted', caption: 'deleted', type: 'Boolean', defaultTrue: false },
-
-    { name: 'introduction', caption: '简介', type: 'Text', typeInfo: { article:true, max_length: 150 } },
-    { name: 'start_time', caption: '任务开始时间',  type: 'Date'},
-    { name: 'end_time', caption: '任务结束时间',  type: 'Date' },
-  ]
-})
+    $("#start_time").datetimepicker({
+          autoclose: true,
+          todayBtn: true,
+          forceParse: 0,
+      });
+    $("#end_time").datetimepicker({
+          autoclose: true,
+          todayBtn: true,
+          forceParse: 0,
+      });
+    $("#mode").change(function () {
+          var mode = $("#mode").val()
+          if(mode != "CUSTOM"){
+              $(".config").hide()
+          } else{
+              $(".config").show()
+          }
+    })
+    $("#type").change(function () {
+          var type = $("#type").val()
+          if(type != "oi"){
+              $(".oi").hide()
+          } else{
+              $(".oi").show()
+          }
+    })
+    $("#submit").click(function () {
+      var form = $("#form")
+      var init_data = getFormData(form)
+      var data = {}
+      data.caption = init_data.caption
+      data.mode = init_data.mode
+      data.availabe = init_data.available
+      data.deleted = init_data.deleted
+      date = new Date(init_data.start_time)
+      len = date.getTime()
+      len = len - 1000 * 60 * 60 * 8
+      date0 = new Date(len)
+      data.start_time = date0.Format("yyyy-MM-dd hh:mm:ss")
+      date = new Date(init_data.end_time)
+      len = date.getTime()
+      len = len - 1000 * 60 * 60 * 8
+      date0 = new Date(len)
+      data.end_time = date0.Format("yyyy-MM-dd hh:mm:ss")
+      if(init_data.mode != "CUSTOM"){
+          data.config = {}
+      }else{
+          data.config = {}
+          data.config.type = init_data.type
+          data.config.score_display = init_data.score_display
+          data.config.submission_display = init_data.submission_display
+          if(init_data.type == "acm"){
+              data.config.type_config = {}
+          }else{
+              data.config.type_config = {}
+              data.config.type_config.valid_submission = init_data.valid_submission
+          }
+      }
+      $.ajax({
+        type: "POST",
+        url: "{% url 'api-course-meta-mission-list' uid %}",
+        data: {dataStr: JSON.stringify(data)},
+        dataType: 'json',
+        success: function(ret) {
+          alert("成功")
+          location.href = "{% url 'web-myorg-coursemeta-mission-list' oid uid %}"
+        },
+        error: function(info, message, errorObj) {
+          alert("error")
+            self.setError(self, info, message, errorObj)
+        }
+      })
+    })
 </script>
 
 

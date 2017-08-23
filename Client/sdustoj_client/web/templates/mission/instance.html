@@ -27,10 +27,15 @@
     <div class="col-6">
       <h3>任务详情</h3>
     </div>
+    {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
     <div class="col-2">
       <button class="btn btn-primary" id = "update">修改信息</button>
       <button class="btn btn-primary" id = "submit" style="display: none">保存</button>
     </div>
+    <div class="col-2">
+      <button class="btn btn-primary" id = "delete">删除</button>
+    </div>
+    {% endif %}
   </div>
   <br>
    <div class="row">
@@ -129,7 +134,8 @@
       <div class="col-4"><b>&emsp;模式</b></div>
       <div class="col-4">
           <p id="mode" class="orig_info"></p>
-          <select class="form-control  update" id="i_mode" name="i_mode"></select>
+          <select class="form-control  update" id="i_mode" name="i_mode">
+          </select>
       </div>
     </div>
     <br>
@@ -138,21 +144,32 @@
           <div class="col-4">&emsp;&emsp;提交显示范围</div>
           <div class="col-4">
               <p id="submission_display" class="orig_info"></p>
-              <select class="form-control  update" id="i_submission_display" name="i_submission_display"></select>
+              <select class="form-control  update" id="i_submission_display" name="i_submission_display">
+                  <option value="all">all</option>
+                  <option value="self">self</option>
+                  <option value="no">no</option>
+              </select>
           </div>
         </div>
         <div class="row">
           <div class="col-4">&emsp;&emsp;成绩显示</div>
           <div class="col-4">
               <p id="score_display" class="orig_info"></p>
-              <select class="form-control  update" id="i_score_display" name="i_score_display"></select>
+              <select class="form-control  update" id="i_score_display" name="i_score_display">
+                  <option value="yes">yes</option>
+                  <option value="close">close</option>
+                  <option value="no">no</option>
+              </select>
           </div>
         </div>
         <div class="row">
           <div class="col-4">&emsp;&emsp;成绩评判模式</div>
           <div class="col-4">
               <p id="type" class="orig_info"></p>
-              <select class="form-control  update" id="i_type" name="i_type"></select>
+              <select class="form-control  update" id="i_type" name="i_type">
+                  <option value="acm">acm</option>
+                  <option value="oi">oi</option>
+              </select>
           </div>
         </div>
         <div class="oi">
@@ -160,7 +177,10 @@
               <div class="col-4">&emsp;&emsp;&emsp;<font size="2px">有效提交</font></div>
               <div class="col-4">
                   <p id="valid_submission" class="orig_info"></p>
-                  <select class="form-control  update" id="i_valid_submission" name="i_valid_submission"></select>
+                  <select class="form-control  update" id="i_valid_submission" name="i_valid_submission">
+                      <option value="highest">highest</option>
+                      <option value="latest">latest</option>
+                  </select>
               </div>
             </div>
         </div>
@@ -226,6 +246,8 @@ $(document).ready(function() {
       }
       $("#mid").text(ret.id)
       $("#caption").text(ret.caption);
+      $("#course_meta").text(ret.course_meta);
+      $("#meta_caption").text(ret.meta_caption);
       $("#i_caption").val(ret.caption);
       $("#mode").text(ret.mode + "模式");
       var arr_mode = ['CUSTOM', 'ACM', 'C4', 'CCF'];
@@ -239,53 +261,59 @@ $(document).ready(function() {
           }
           $("#i_mode").append(option)
       }
-      $("#type").text(ret.config.type);
-      var arr_type = ['acm', 'oi']
-      for(var i in arr_type)
+      if(ret.mode == 'CUSTOM')
       {
-          var option = $("<option></option>")
-          option.val(arr_type[i]).text(arr_type[i])
-          if(arr_type[i] == ret.config.type)
+          $("#type").empty().text(ret.config.type);
+          var arr_type = ['acm', 'oi']
+          for(var i in arr_type)
           {
-                option.attr('selected', 'selected')
+              var option = $("<option></option>")
+              option.val(arr_type[i]).text(arr_type[i])
+              if(arr_type[i] == ret.config.type)
+              {
+                    option.attr('selected', 'selected')
+              }
+              $("#i_type").append(option)
           }
-          $("#i_type").append(option)
-      }
-      $("#submission_display").text(ret.config.submission_display);
-      var arr_submission = ['self', 'all', 'no']
-      for(var i in arr_submission)
-      {
-          var option = $("<option></option>")
-          option.val(arr_submission[i]).text(arr_submission[i])
-          if(arr_submission[i] == ret.config.submission_display)
+          $("#submission_display").text(ret.config.submission_display);
+          var arr_submission = ['self', 'all', 'no']
+          for(var i in arr_submission)
           {
-                option.attr('selected', 'selected')
+              var option = $("<option></option>")
+              option.val(arr_submission[i]).text(arr_submission[i])
+              if(arr_submission[i] == ret.config.submission_display)
+              {
+                    option.attr('selected', 'selected')
+              }
+              $("#i_submission_display").append(option)
           }
-          $("#i_submission_display").append(option)
-      }
-      $("#score_display").text(ret.config.score_display);
-      var arr_score = ['yes', 'close', 'no']
-      for(var i in arr_score)
-      {
-          var option = $("<option></option>")
-          option.val(arr_score[i]).text(arr_score[i])
-          if(arr_score[i] == ret.config.score_display)
+          $("#score_display").text(ret.config.score_display);
+          var arr_score = ['yes', 'close', 'no']
+          for(var i in arr_score)
           {
-                option.attr('selected', 'selected')
+              var option = $("<option></option>")
+              option.val(arr_score[i]).text(arr_score[i])
+              if(arr_score[i] == ret.config.score_display)
+              {
+                    option.attr('selected', 'selected')
+              }
+              $("#i_score_display").append(option)
           }
-          $("#i_score_display").append(option)
-      }
-      $("#valid_submission").text(ret.config.type_config.valid_submission);
-      var arr_valid = ['highest', 'latest']
-      for(var i in arr_valid)
-      {
-          var option = $("<option></option>")
-          option.val(arr_valid[i]).text(arr_valid[i])
-          if(arr_valid[i] == ret.config.type_config.valid_submission)
+          if(ret.config.type=='oi')
           {
-                option.attr('selected', 'selected')
+              $("#valid_submission").text(ret.config.type_config.valid_submission);
+              var arr_valid = ['highest', 'latest']
+              for(var i in arr_valid)
+              {
+                  var option = $("<option></option>")
+                  option.val(arr_valid[i]).text(arr_valid[i])
+                  if(arr_valid[i] == ret.config.type_config.valid_submission)
+                  {
+                        option.attr('selected', 'selected')
+                  }
+                  $("#i_valid_submission").append(option)
+              }
           }
-          $("#i_valid_submission").append(option)
       }
       if(ret.mode == "CUSTOM") {
           $(".config").show()
@@ -365,7 +393,7 @@ $(document).ready(function() {
       $.ajax({
         type: "PATCH",
         url: "{% url 'api-mission-detail' mid%}",
-        data: data,
+        data: {dataStr: JSON.stringify(data)},
         dataType: 'json',
         success: function(ret) {
           alert("成功")
@@ -378,12 +406,33 @@ $(document).ready(function() {
       })
 
   })
+  $("#delete").click(function () {
+      alert("确定要删除这个任务吗？")
+      $.ajax({
+          type: "DELETE",
+          url:"{% url 'api-mission-detail' mid%}",
+          success: function () {
+              alert("成功")
+              location.href = document.referrer
+          },
+          error: function (info, message, errorObj) {
+              alert("error")
+              self.setError(self, info, message, errorObj)
+          }
+      })
+  })
   $("#i_mode").change(function () {
       var mode = $("#i_mode").val()
       if(mode != "CUSTOM"){
           $(".config").hide()
       } else{
           $(".config").show()
+          var type = $("#i_type").val()
+          if(type != "oi"){
+              $(".oi").hide()
+          } else{
+              $(".oi").show()
+          }
       }
   })
   $("#i_type").change(function () {

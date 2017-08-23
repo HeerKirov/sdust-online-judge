@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.http.response import HttpResponse
-
+from json import loads
 from .models import *
 from . import permissions
 from .serializers import PersonalSerializers, UserSerializers, OrgUserSerializers
@@ -18,6 +18,7 @@ from .utils import ListNestedResourceViewSet, InstanceNestedResourceViewSet, Ins
 from .utils import ListNestedViewSet, ListReadonlyNestedViewSet, InstanceDeleteNestedViewSet
 from .utils import InstanceReadonlyNestedViewSet, CreateNestedViewSet
 from .permissions import *
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
 
 # 个人api
@@ -1115,6 +1116,23 @@ class MissionViewSets(object):
                     return self.queryset.exclude(deleted=True)
                 return self.queryset
 
+            def create(self, request, *args, **kwargs):
+                if 'dataStr' in self.request.data:
+                    username = self.request.user.username
+                    related_name, parent = getattr(self, '_set_queryset')(**kwargs)
+                    extra_data = getattr(self, 'extra_data')
+                    extra_data[related_name] = parent
+                    extra_data['creator'] = username
+                    extra_data['updater'] = username
+                    data = loads(request.data['dataStr'])
+                    serializer = self.get_serializer(data=data)
+                    serializer.is_valid(raise_exception=True)
+                    self.perform_create(serializer)
+                    headers = self.get_success_headers(serializer.data)
+                    return Response(serializer.data, status=HTTP_201_CREATED, headers=headers)
+                else:
+                    return super().create(request, *args, **kwargs)
+
             def perform_create(self, serializer):
                 instance = super().perform_create(serializer)
                 instance.organization.update_numbers()
@@ -1168,6 +1186,22 @@ class MissionViewSets(object):
                 organization = instance.organization
                 super().perform_destroy(instance)
                 organization.update_numbers()
+
+            def update(self, request, *args, **kwargs):
+                if 'dataStr' in request.data:
+                    username = self.request.user.username
+                    extra_data = getattr(self, 'extra_data')
+                    extra_data['creator'] = username
+                    extra_data['updater'] = username
+                    data = loads(request.data['dataStr'])
+                    partial = kwargs.pop('partial', False)
+                    instance = self.get_object()
+                    serializer = self.get_serializer(instance, data=data, partial=partial)
+                    serializer.is_valid(raise_exception=True)
+                    self.perform_update(serializer)
+                    return Response(serializer.data, status=HTTP_200_OK)
+                else:
+                    return super().update(request, *args, **kwargs)
 
             def get_queryset(self):
                 # 限定访问列表。对于T/edu_admin/site，公开机构内全部/全部公开;对于S，仅包含关联部分
