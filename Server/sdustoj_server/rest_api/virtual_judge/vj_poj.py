@@ -5,13 +5,16 @@ from . import utils
 
 
 SETTING = {
-    'host': 'http://acm.hdu.edu.cn/',
-    'login': 'userloginex.php?action=login',
-    'submit': 'submit.php?action=submit',
-    'status': 'status.php'
+    'host': 'http://poj.org/',
+    'login': 'login',
+    'submit': 'submit',
+    'submissions': 'status',
+    'problem': 'problem'
 }
 
+# POJ中，double的语言的限制翻倍。
 LANG_STANDARD = ['C', 'C++', 'GCC', 'G++', 'Pascal', 'Fortran']
+LANG_DOUBLE = ['Java']
 
 
 def get_url(url, *args):
@@ -99,7 +102,12 @@ def get_problem_instance(pid):
         return "## Sample Input\n%s\n## Sample Output\n%s" % (s_input, s_output)
 
     def build_limit(standard):
-        pass
+        limits = {}
+        for it in LANG_DOUBLE:
+            limits[it] = str(int(standard) * 2)
+        for it in LANG_STANDARD:
+            limits[it] = standard
+        return limits
     data = {'id': pid}
     res = requests.get(get_url('problem'), params=data)
     if res.status_code != 200:

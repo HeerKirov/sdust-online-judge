@@ -90,7 +90,7 @@ def get_submissions(page=0):
         """<td><a href="/showproblem.php\\?pid=\\d+">(\\d+)</a></td>""" + \
         """<td>(\\d*)MS</td>""" + \
         """<td>(\\d*)K</td>""" + \
-        """<td><a href="/viewcode.php\\?rid=\\d*"  target=_blank>(\\d+) B</td>""" + \
+        """<td>(<a href="/viewcode.php\\?rid=\\d*"  target=_blank>)?(\\d+) ?B</td>""" + \
         """<td>([\\S]*?)</td>""" + \
         """<td class=fixedsize><a href="/userstatus.php\\?user=[\\S\\s]*?">([\\S\\s]*?)</a></td>""" + \
         """</tr>"""
@@ -102,9 +102,9 @@ def get_submissions(page=0):
         'pid': it[5],
         'time': it[6],
         'memory': it[7],
-        'length': it[8],
-        'language': it[9],
-        'author': it[10]
+        'length': it[9],
+        'language': it[10],
+        'author': it[11]
     } for it in rex]
     # runID, submitDate, status, pid, time, memory, codeLength, language, author
     return li

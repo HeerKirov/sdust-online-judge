@@ -7,15 +7,15 @@ from models.utils import SessionBuilder, RemainList, local_psql as lpsql
 import base64
 
 SETTING = {
-    'host': 'http://acm.hdu.edu.cn/',
-    'login': 'userloginex.php?action=login',
-    'submit': 'submit.php?action=submit',
-    'status': 'status.php'
+    'host': 'http://poj.org/',
+    'login': 'login',
+    'submit': 'submit',
+    'submissions': 'status',
 }
 
 CONFIG = {
     'max_record_count': 20,  # 每一页的记录条数上限
-    'code_min_bytes': 50,
+    'code_min_bytes': 10,
     'code_max_bytes': 65536
 }
 
@@ -24,13 +24,13 @@ STATUS = {  # poj -> sdustoj 的(状态, 得分)代换
     'Wrong Answer': ('WA', 0),
     'Presentation Error': ('PE', 50),
     'Compilation Error': ('CE', 0),
-    'Runtime Error': ('RE', 0),  # 这个状态比较特别，他会有一串附加信息
+    'Runtime Error': ('RE', 0),
     'Time Limit Exceeded': ('TLE', 0),
     'Memory Limit Exceeded': ('MLE', 0),
     'Output Limit Exceeded': ('OLE', 0),
-    'Queuing': ('PD', 0),
+    'Waiting': ('PD', 0),
     'Compiling': ('CP', 0),
-    'Running': ('RJ', 0),
+    'Running & Judging': ('RJ', 0),
     '': ('PD', 0)  # 防出错
 }
 
@@ -82,6 +82,13 @@ def do_submit(pid, lang, code):
 
 
 def get_submissions(top=None, bottom=None):
+    def get_language(lang_html):
+        regs = re.search('<a[^>]*>([\\s\\S]*?)</a>', lang_html)
+        if regs.groups() is not None and len(regs.groups()) > 0:
+            return regs.group(1)
+        else:
+            return lang_html
+
     data = {'user_id': auth_user}
     if top is not None:
         data['top'] = top
@@ -108,7 +115,7 @@ def get_submissions(top=None, bottom=None):
         'status': it[3],
         'memory': it[4],
         'time': it[5],
-        'language': it[6],
+        'language': get_language(it[6]),
         'length': it[7],
         'submit_time': it[8]
     } for it in reg]
