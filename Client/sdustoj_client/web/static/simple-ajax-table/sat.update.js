@@ -285,6 +285,61 @@ SAInfo.Text = function(self, item, value) {
   return div
 }
 SAInfo.Date = function(self, item, value) {
+  /*var getDom = SATable.getDom
+  var div = getDom.Div('col-xs-12')
+  var typeInfo = item.typeInfo
+  var ret = $('<p></p>')
+  var date = new Date(value)
+  var dateStr = date.toLocaleDateString()
+  $(ret).append(dateStr)
+
+  var inputGroup = getDom.Div('input-group')
+  var inputGroup2 = getDom.Div('input-group')
+  var spanBtn = getDom.Span('input-group-btn')
+  var input = getDom.Input(item.name, item.caption)
+  $(input).attr('readonly', 'readonly').datetimepicker({
+      format: 'yyyy-mm-dd',
+      minview: 2,
+      maxview: 2,
+     // weekStart: 1,
+     //    todayBtn:  1,
+		// autoclose: 1,
+		// todayHighlight: 1,
+		// startView: 2,
+		// forceParse: 0,
+     //    showMeridian: 1
+  })
+
+  var btn = getDom.Button('保存')
+  $(btn).attr('type', 'submit')
+  $(inputGroup).append(input).append(spanBtn)
+  $(spanBtn).append(btn)
+  $(input).val(value)
+
+  var aEdit = $(item.dom.divEdit).find('a')
+  if (item.typeInfo && item.typeInfo.writeOnly) {
+    $(ret).hide()
+    $(aEdit).hide()
+  } else {
+    $(inputGroup).hide()
+    $(aEdit).click(function() {
+      if ($(inputGroup).is(':hidden')) {
+        $(inputGroup).show()
+        $(ret).hide()
+      } else {
+        $(inputGroup).hide()
+        $(ret).show()
+      }
+    })
+  }
+
+  $(div).append(ret).append(inputGroup)
+
+  if (typeInfo && typeInfo.password && typeInfo.confirm) {
+    $(div).append(inputGroup2)
+  }
+
+  return div*/
   var getDom = SATable.getDom
   var div = getDom.Div('col-xs-12')
   var typeInfo = item.typeInfo
@@ -298,13 +353,9 @@ SAInfo.Date = function(self, item, value) {
   var spanBtn = getDom.Span('input-group-btn')
   var input = getDom.Input(item.name, item.caption)
   $(input).attr('readonly', 'readonly').datetimepicker({
-     weekStart: 1,
-        todayBtn:  1,
-		autoclose: 1,
-		todayHighlight: 1,
-		startView: 2,
-		forceParse: 0,
-        showMeridian: 1
+     format: 'yyyy-mm-dd',
+    minView: 2,
+    maxView: 4
   })
 
   var btn = getDom.Button('保存')
