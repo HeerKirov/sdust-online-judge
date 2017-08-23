@@ -46,22 +46,27 @@ SAForm.Date = function(self, item) {
   var divInput = SATable.getDom.Div('col-md-9 input-append date form_datetime')
   var input = getDom.Input(item.name, '')
   $(input).attr('readonly', 'readonly').datetimepicker({
-     weekStart: 1,
-        todayBtn:  1,
-		autoclose: 1,
-		todayHighlight: 1,
-		startView: 2,
-		forceParse: 0,
-        showMeridian: 1
+       format: 'yyyy-mm-dd',
+    minView: 2,
+    maxView: 4
   })
-
 
   $(div).append(label).append(divInput)
   $(divInput).append(input)
 
   return div
 }
+/*
+SAForm.Datetime = function (self,item) {
+    var getDom = SATable.getDom
+    var typeInfo = item.typeInfo
 
+    var div = getDom.Div('form-group row')
+    var lable = $('<label class="col-md-3 col-form-label">' + item.caption + '</label>')
+
+
+}
+*/
 SAForm.Select = function(self, item) {
   var typeInfo = item.typeInfo
   var options = typeInfo.options ? typeInfo.options : []

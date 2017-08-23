@@ -13,17 +13,17 @@
           </li>
         {% if 'EDU_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
           <li class="nav-item">
-             <a class="nav-link {% block nav_eduadmin %}{% endblock %}" href="">教务管理员</a>
+             <a class="nav-link {% block nav_eduadmin %}{% endblock %}" href="{% url 'web-edu-admin-list' oid %}">教务管理员</a>
          </li>
         {% endif %}
         {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities%}
           <li class="nav-item">
-            <a class="nav-link {% block nav_teacher %}{% endblock %}" href="">教师</a>
+            <a class="nav-link {% block nav_teacher %}{% endblock %}" href="{% url 'web-teacher-list' oid %}">教师</a>
           </li>
         {% endif %}
         {% if 'EDU_ADMIN' in user_info.user.get_identities or 'STUDENT' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
           <li class="nav-item">
-            <a class="nav-link {% block nav_student %}{% endblock %}" href="">学生</a>
+            <a class="nav-link {% block nav_student %}{% endblock %}" href="{% url 'web-student-list' oid %}">学生</a>
           </li>
         {% endif %}
         {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
