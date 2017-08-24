@@ -260,6 +260,7 @@ class UserProfile(Resource):
 
     identities = pg_fields.JSONField(default={})
     courses = pg_fields.JSONField(default={})
+    missions = pg_fields.JSONField(default={})
 
     def __str__(self):
         return "<Profile %s: %s>" % (self.username, self.name)
@@ -406,6 +407,48 @@ class UserProfile(Resource):
         self.courses = courses
         self.save()
 
+    def update_missions_cache(self):
+        """
+        刷新缓存的任务与任务组的mid。
+        刷新策略：仅对T/S用户有效。查询关联的课程/课程组 - 课程单元 - 任务组 - 任务
+        需要执行刷新的时机：为用户添加/删除课程/课程组，为课程组/课程添加/删除任务组，为任务组添加/删除任务。
+        :return: 
+        """
+        missions = {
+            'groups': [],
+            'missions': []
+        }
+        course_units = []
+        teachers = getattr(self, 'teacher_identities', None)
+        if teachers is not None:
+            for teacher in teachers.all():
+                courses = getattr(teacher, 'courses', None)
+                if courses is not None:
+                    for c in courses.all():
+                        unit = c.course_unit
+                        course_units.append(unit)
+                course_groups = getattr(teacher, 'course_groups', None)
+                if course_groups is not None:
+                    for g in course_groups.all():
+                        unit = g.course_unit
+                        course_units.append(unit)
+        # 刷新learning courses
+        students = getattr(self, 'student_identities', None)
+        if students is not None:
+            for student in students.all():
+                courses = getattr(student, 'courses', None)
+                if courses is not None:
+                    for c in courses.all():
+                        unit = c.course_unit
+                        course_units.append(unit)
+        for unit in course_units:
+            for group in unit.mission_groups.all():
+                missions['groups'].append(group.id)
+                for mission in group.missions.all():
+                    missions['missions'].append(mission.id)
+        self.missions = missions
+        self.save()
+
     @staticmethod
     def create_profile(**kwargs):
         username = kwargs['username']
@@ -516,6 +559,28 @@ class UserProfile(Resource):
                 if hasattr(teacher, 'course_groups'):
                     course_groups = course_groups | teacher.course_groups.all()
         return course_groups.distinct()
+
+    def get_missions(self, **kwargs):
+        """
+        获得该用户可以访问的全部任务。通过缓存进行查询。
+        :param kwargs: 
+        :return: 
+        """
+        ret = Mission.objects.none()
+        for m in self.missions['missions']:
+            ret = ret | Mission.objects.filter(id=m)
+        return ret.distinct()
+
+    def get_mission_groups(self, **kwargs):
+        """
+        获得该用户可以访问的全部任务组。通过缓存进行查询。
+        :param kwargs: 
+        :return: 
+        """
+        ret = MissionGroup.objects.none()
+        for g in self.missions['groups']:
+            ret = ret | MissionGroup.objects.filter(id=g)
+        return ret.distinct()
 
 
 class Student(Resource, PublicFieldMixin):
@@ -739,6 +804,25 @@ class CourseUnit(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     type = models.CharField(choices=TYPE_CHOICE, max_length=8)
+
+    def get_relation_profiles(self):
+        """
+        获得所有与本课程单元有所关联的课程/课程组的学生/教师。
+        :return: 
+        """
+        ret = UserProfile.objects.none()
+        if self.type == 'GROUP':
+            course_group = getattr(self, 'course_group')
+            if course_group is not None:
+                ret = ret | UserProfile.objects.filter(teacher_identities__in=course_group.teachers.all())
+                # for teacher in course_group.teachers.all():
+                #     ret = ret | teacher.profile
+        else:
+            course = getattr(self, 'course')
+            if course is not None:
+                ret = ret | UserProfile.objects.filter(teacher_identities__in=course.teachers.all())
+                ret = ret | UserProfile.objects.filter(student_identities__in=course.students.all())
+        return ret.distinct()
 
 
 class CourseGroup(Resource):

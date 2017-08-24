@@ -813,7 +813,6 @@ class CourseUserSerializers(object):
             elif course.teachers.filter(id=teacher.id).exists():
                 raise ValidationError('teacher exists.')
             instance = super().create(validated_data)
-            instance.teacher.profile.update_courses_cache()
             return instance
 
         class Meta:
@@ -884,7 +883,6 @@ class CourseUserSerializers(object):
                 raise ValidationError('student exists.')
             validated_data['score_detail'] = {}
             instance = super().create(validated_data)
-            instance.student.profile.update_courses_cache()
             return instance
 
         class Meta:
@@ -957,7 +955,6 @@ class CourseGroupUserSerializer(object):
             elif course_group.teachers.filter(id=teacher.id).exists():
                 raise ValidationError('teacher exists.')
             instance = super().create(validated_data)
-            # instance.teacher.profile.update_courses_cache()
             # 与course不同，目前没有缓存group。
             return instance
 

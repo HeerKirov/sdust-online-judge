@@ -410,6 +410,12 @@ class UserViewSets(object):
             parent_related_name = 'course'  # 在当前models中，上级model的关联名
             parent_pk = 'cid'  # 上级model的主键名
 
+            def perform_create(self, serializer):
+                ret = super().perform_create(serializer)
+                ret.teacher.profile.update_courses_cache()
+                ret.teacher.profile.update_missions_cache()
+                return ret
+
         # 课程拥有的学生 - deep2 - relation
         class StudentViewSet(ListNestedResourceViewSet):
             queryset = CourseStudentRelation.objects.all()
@@ -421,6 +427,12 @@ class UserViewSets(object):
             parent_lookup = 'course_cid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
             parent_related_name = 'course'  # 在当前models中，上级model的关联名
             parent_pk = 'cid'  # 上级model的主键名
+
+            def perform_create(self, serializer):
+                ret = super().perform_create(serializer)
+                ret.student.profile.update_courses_cache()
+                ret.student.profile.update_missions_cache()
+                return ret
 
         # 课程可以添加的教师 - deep2
         class TeacherAvailableViewSet(ListReadonlyNestedResourceViewSet):
@@ -490,6 +502,13 @@ class UserViewSets(object):
             parent_related_name = 'course'  # 在当前models中，上级model的关联名
             parent_pk = 'cid'  # 上级model的主键名
 
+            def perform_destroy(self, instance):
+                profile = instance.teacher.profile
+                super().perform_destroy(instance)
+                if profile is not None:
+                    profile.update_courses_cache()
+                    profile.update_missions_cache()
+
         # 课程拥有的学生 - deep2 - relation
         class StudentViewSet(InstanceNestedResourceViewSet):
             queryset = CourseStudentRelation.objects.all()
@@ -501,6 +520,13 @@ class UserViewSets(object):
             parent_lookup = 'course_cid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
             parent_related_name = 'course'  # 在当前models中，上级model的关联名
             parent_pk = 'cid'  # 上级model的主键名
+
+            def perform_destroy(self, instance):
+                profile = instance.student.profile
+                super().perform_destroy(instance)
+                if profile is not None:
+                    profile.update_courses_cache()
+                    profile.update_missions_cache()
 
     # course group下属的用户
     class CourseGroupUserList(object):
@@ -515,6 +541,11 @@ class UserViewSets(object):
             parent_lookup = 'course_group_gid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
             parent_related_name = 'course_group'  # 在当前models中，上级model的关联名
             parent_pk = 'gid'  # 上级model的主键名
+
+            def perform_create(self, serializer):
+                instance = super().perform_create(serializer)
+                instance.teacher.profile.update_missions_cache()
+                return instance
 
         # 课程组可以添加的教师 - deep2
         class TeacherAvailableViewSet(ListReadonlyNestedResourceViewSet):
@@ -556,6 +587,12 @@ class UserViewSets(object):
             parent_lookup = 'course_group_gid'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
             parent_related_name = 'course_group'  # 在当前models中，上级model的关联名
             parent_pk = 'gid'  # 上级model的主键名
+
+            def perform_destroy(self, instance):
+                profile = instance.teacher.profile
+                super().perform_destroy(instance)
+                if profile is not None:
+                    profile.update_missions_cache()
 
 
 # 机构api
@@ -1154,6 +1191,13 @@ class MissionViewSets(object):
             parent_related_name = 'mission_group'  # 在当前models中，上级model的关联名
             parent_pk = 'id'  # 上级model的主键名
 
+            def perform_create(self, serializer):
+                instance = super().perform_create(serializer)
+                profiles = instance.mission_group.course_unit.get_relation_profiles()
+                for profile in profiles:
+                    profile.update_missions_cache()
+                return instance
+
         # 任务组下可以添加的任务 - deep2
         class MissionAvailableMissionGroupViewSet(ListReadonlyNestedResourceViewSet):
             queryset = Mission.objects.all()
@@ -1209,28 +1253,16 @@ class MissionViewSets(object):
 
             def get_queryset(self):
                 # 限定访问列表。对于T/edu_admin/site，公开机构内全部/全部公开;对于S，仅包含关联部分
-                # 关联判定：mission隶属于mission_group.而mission_group又属于course_unit.
                 profile = self.request.user.profile
-                queryset = self.queryset.none()
-                course_units = CourseUnit.objects.none()
-                for identity, value in profile.identities.items():
-                    if identity in SITE_IDENTITY_CHOICES and value is True:
-                        return self.queryset
-                    elif identity == IdentityChoices.edu_admin \
-                            or identity == IdentityChoices.teacher and len(value) > 0:
-                        for oid in value:
-                            queryset = queryset | self.queryset.filter(organization_id=oid)
-                units = (v['course_unit'] for v in profile.get_courses().values('course_unit'))
-                course_units = course_units | CourseUnit.objects.filter(id__in=units)
-                # 从课程单元查任务组，再查任务
-                mission_groups = MissionGroup.objects.none()
-                for course_unit in course_units:
-                    if hasattr(course_unit, 'mission_groups'):
-                        mission_groups = mission_groups | course_unit.mission_groups.all()
-                for mission_group in mission_groups:
-                    queryset = queryset | mission_group.missions.all()
-                if not profile.is_mission_manager():
-                    return queryset.exclude(deleted=True).distinct()
+
+                if profile.has_identities(IdentityChoices.root, IdentityChoices.org_admin):
+                    return Mission.objects.all()
+
+                queryset = Mission.objects.none()
+                if profile.has_identities(IdentityChoices.edu_admin):
+                    for org in profile.get_organizations():
+                        queryset = queryset | Mission.objects.filter(organization=org)
+                queryset = queryset | profile.get_missions()
                 return queryset.distinct()
 
         # 任务组下的任务 - deep2 - relation
@@ -1244,6 +1276,12 @@ class MissionViewSets(object):
             parent_lookup = 'mission_group_id'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
             parent_related_name = 'mission_group'  # 在当前models中，上级model的关联名
             parent_pk = 'id'  # 上级model的主键名
+
+            def perform_destroy(self, instance):
+                profiles = instance.mission_group.course_unit.get_relation_profiles()
+                super().perform_destroy(instance)
+                for profile in profiles:
+                    profile.update_missions_cache()
 
     class MissionGroupList(object):
         # 课程下的任务组
@@ -1290,6 +1328,9 @@ class MissionViewSets(object):
             def perform_create(self, serializer):
                 instance = super().perform_create(serializer)
                 instance.organization.update_numbers()
+                profiles = instance.course_unit.get_relation_profiles()
+                for profile in profiles:
+                    profile.update_missions_cache()
                 return instance
 
         # 课程组下的任务组
@@ -1308,6 +1349,9 @@ class MissionViewSets(object):
             def perform_create(self, serializer):
                 instance = super().perform_create(serializer)
                 instance.organization.update_numbers()
+                profiles = instance.course_unit.get_relation_profiles()
+                for profile in profiles:
+                    profile.update_missions_cache()
                 return instance
 
     class MissionGroupInstance(object):
@@ -1320,33 +1364,25 @@ class MissionViewSets(object):
 
             def perform_destroy(self, instance):
                 organization = instance.organization
+                profiles = instance.course_unit.get_relation_profiles()
                 super().perform_destroy(instance)
                 organization.update_numbers()
+                for profile in profiles:
+                    profile.update_missions_cache()
 
             def get_queryset(self):
                 # 限定访问列表。对于edu_admin/site,公开全部
                 # 对于T,包含关联部分。
                 profile = self.request.user.profile
+
+                if profile.has_identities(IdentityChoices.root, IdentityChoices.org_admin):
+                    return MissionGroup.objects.all()
                 queryset = self.queryset.none()
-                course_units = CourseUnit.objects.none()
-                for identity, value in profile.identities.items():
-                    if identity in SITE_IDENTITY_CHOICES and value is True:
-                        return self.queryset
-                    elif identity == IdentityChoices.edu_admin and len(value) > 0:
-                        for oid in value:
-                            queryset = queryset | self.queryset.filter(organization_id=oid)
-                units = (v['course_unit'] for v in profile.get_courses().values('course_unit'))
-                g_units = (v['course_unit'] for v in profile.get_course_groups().values('course_unit'))
-                course_units = course_units | CourseUnit.objects.filter(id__in=units)
-                course_units = course_units | CourseUnit.objects.filter(id__in=g_units)
-                # 从课程单元查任务组，再查任务
-                mission_groups = MissionGroup.objects.none()
-                for course_unit in course_units:
-                    if hasattr(course_unit, 'mission_groups'):
-                        mission_groups = mission_groups | course_unit.mission_groups.all()
-                if not profile.is_mission_manager():
-                    return mission_groups.exclude(deleted=True).distinct()
-                return mission_groups.distinct()
+                if profile.has_identities(IdentityChoices.edu_admin):
+                    for org in profile.get_organizations():
+                        queryset = queryset | MissionGroup.objects.filter(organization=org)
+                queryset = queryset | profile.get_mission_groups()
+                return queryset.distinct()
 
     class ProblemList(object):
         # 任务下的题目 - deep2 - relation
