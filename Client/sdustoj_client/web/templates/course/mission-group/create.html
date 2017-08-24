@@ -23,8 +23,9 @@ SATable.SimpleAjaxForm({
   items: [
 
     { name: 'caption', caption: '任务组名称', type: 'Text', typeInfo: { max_length: 150 } },
+      { name: 'weight', caption: '权重', type: 'Number'},
     { name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
-    { name: 'deleted', caption: 'deleted', type: 'Boolean', defaultTrue: false },
+    { name: 'deleted', caption: '废弃', type: 'Boolean', defaultTrue: false },
 
 
   ]

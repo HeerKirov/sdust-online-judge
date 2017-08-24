@@ -14,7 +14,7 @@
       <div class="container">
         <nav class="nav flex-column nav-pills">
           <a class="nav-link {% block nav_mission_group %}{% endblock %}" href="{% url 'web-mission-group-instance' id %}">任务组详细信息</a>
-        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER' in user_info.user.get_identities %}
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities %}
           <a class="nav-link {% block nav_mission %}{% endblock %}" href="{% url 'web-mission-group-mission-list' id %}">任务</a>
         {% endif %}
 
