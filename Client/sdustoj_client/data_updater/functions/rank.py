@@ -1,6 +1,6 @@
 from sqlalchemy.orm import sessionmaker
 from data_updater.models import server as server_models
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import mktime
 
 # 该部分function的作用是定时更新rank。
@@ -44,15 +44,16 @@ def get_organization_id(submissions):
     return None
 
 
-def update_rank_by_user(user_id, mission, submissions):
+def update_rank_by_user(user_id, mission, submissions, **kwargs):
     """
     按照user_id来更新rank。
     :param user_id: 传入user_id
-    :param mission: 传入mission_id
+    :param mission: 传入mission
     :param submissions: 传入该用户所有提交的列表。
     :return: 没有返回值。
     """
     print("Update user :%s" % (user_id,))
+    title_map = kwargs['title_map'] if 'title_map' in kwargs else None
     rank = session.query(server_models.Rank).filter_by(user_id=user_id).first()
     organization_id = get_organization_id(submissions)
     if rank is None:  # 还没有碰过。给这个人创建新的rank模型。
@@ -80,6 +81,7 @@ def update_rank_by_user(user_id, mission, submissions):
         p_id = str(s.problem_id)  # 获得题目的id。
         if p_id not in result:  # 该题目还没有被提交过，首先创建它
             result[p_id] = {
+                'title': title_map[p_id] if title_map is not None and p_id in title_map else None,
                 'sub_count': 0,
                 'ac_time': None,
                 'wrong_count': 0,
@@ -103,7 +105,7 @@ def update_rank_by_user(user_id, mission, submissions):
                 p_res['wrong_count'] += 1
                 p_res['status'] = s.status
         # 下面处理OI部分数据
-        now_score = s.score
+        now_score = s.score if s.score is not None else 0
 
         if now_score > p_res['max_score']:
             p_res['max_score'] = now_score
@@ -112,7 +114,10 @@ def update_rank_by_user(user_id, mission, submissions):
     # 下面处理一下总数据
     # 处理一下平均数，处理一下总成绩，回写rank
     mission_type = mission.config['type']
-    mission_valid_submission = mission.config['type_config']['valid_submission']
+    if 'type_config' in mission.config and 'valid_submission' in mission.config['type_config']:
+        mission_valid_submission = mission.config['type_config']['valid_submission']
+    else:
+        mission_valid_submission = None
     for p, v in result.items():  # 遍历一遍所有题目的数据
         if v['sub_count'] > 0:
             v['average_score'] /= v['sub_count']
@@ -140,11 +145,17 @@ def update_rank_of_mission(mission):
         order_by(server_models.Submission.submit_time).\
         order_by(server_models.Submission.user_id).\
         all()
+    problems = session.query(server_models.MissionProblemRelation).filter_by(mission_id=mission.id).all()
+    problem_map = {}
+    for u in problems:
+        problem = session.query(server_models.Problem).filter_by(id=u.problem_id).first()
+        if problem is not None:
+            problem_map[str(problem.id)] = problem.title
     # 更新策略：
     # 以提交为基点进行操作。将提交按照user_id分组，然后分别查询rank.
     groups = get_submissions_group(submissions)
     for k, v in groups.items():
-        update_rank_by_user(k, mission, v)
+        update_rank_by_user(k, mission, v, title_map=problem_map)
     print("Update completed.")
 
 
@@ -157,8 +168,10 @@ def update_ranks(update_all=False):
     if update_all:
         missions = session.query(server_models.Mission).filter_by(deleted=False).all()
     else:
+        now = datetime.now()
         missions = session.query(server_models.Mission).\
-            filter_by(deleted=False).filter(server_models.Mission.end_time >= datetime.now()).all()
+            filter_by(deleted=False).filter(server_models.Mission.end_time >= now - timedelta(minutes=2)).\
+            filter(server_models.Mission.start_time <= now) .all()
     for mission in missions:
         update_rank_of_mission(mission)
     session.commit()

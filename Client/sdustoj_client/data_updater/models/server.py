@@ -39,6 +39,17 @@ class Problem(_Base):
         return '<Problem %s: %s>' % (self.id, self.title)
 
 
+class MissionProblemRelation(_Base):
+    __tablename__ = 'rest_api_missionproblemrelation'
+
+    id = Column(BigInteger, primary_key=True)
+    mission_id = Column(BigInteger)
+    problem_id = Column(BigInteger)
+
+    available = Column(Boolean)
+    deleted = Column(Boolean)
+
+
 class Environment(_Base):
     __tablename__ = 'rest_api_environment'
 
