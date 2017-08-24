@@ -274,7 +274,14 @@ SAForm.initForm = function(self) {
           }
         },
         error: function(info, message, errorObj) {
-          self.setError(self, info, message, errorObj)
+          var data = info.responseJSON;
+          if(data){
+          var response = "错误:\n";
+          for(var i in data){
+            response += "\n" + i + ": " + JSON.stringify(data[i]) + "\n";
+          }
+          alert(response);
+          }else alert(info.responseText)
         }
       })
 

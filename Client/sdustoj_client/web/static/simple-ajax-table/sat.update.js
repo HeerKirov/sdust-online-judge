@@ -465,6 +465,31 @@ SAInfo.initData = function(self, info) {
     to: (info.removeToURL ? info.removeToURL : null)
   } : null
   self.info.items = info.items ? info.items : []
+  self.info.errorMessage = {  //错误信息采用覆盖策略。传入的自定义信息会覆盖默认的处理文本。
+      400: {
+        head: '错误的访问', text: '发送了错误的请求信息。', showData: true
+      },
+      401: {
+        head: '未认证', text: '请进行用户认证。', showData: false
+      },
+      403: {
+        head: '访问被拒绝', text: '您位于不具备访问权限的用户组。', showData: false
+      },
+      404: {
+        head: '访问失败', text: '请求的信息未找到。', showData: false
+      },
+      500: {
+        head: '服务器错误', text: '服务器遇到了未料到到的情况。', showData: false
+      },
+      'else': {
+        head: '发生错误', text: '发生错误。见详细信息。', showData: true
+      }
+  };
+  if(info.errorMessage){
+    for(var em in info.errorMessage)self.info.errorMessage[em] = info.errorMessage[em];
+  }
+  self.info.errorCustomField = info.errorCustomField ? info.errorCustomField : 'cause';
+  self.info.errorCustom = info.errorCustom ? info.errorCustom : { }; //来自406的错误信息与其他错误信息分开管理。
 }
 
 SAInfo.POST = function(ajaxInfo, form, toURL, saInfo) {
@@ -513,7 +538,14 @@ SAInfo.SPECIAL = function(ajaxInfo, form, toURL, saInfo) {
       }
     },
     error: function(info, x, xx) {
-      alert(info.responseText)
+      var data = info.responseJSON;
+      if(data){
+        var response = "错误:\n";
+        for(var i in data){
+          response += "\n" + i + ": " + JSON.stringify(data[i]) + "\n";
+        }
+        alert(response);
+      }else alert(info.responseText)
     }
   })
 }
@@ -537,6 +569,10 @@ SAInfo.initInfo = function(self) {
   $(divLoading).append(divLoadingContent)
   $(divLoadingContent).append(iconLoading)
   dom.divLoading = divLoading
+
+  var divError = getDom.Div('column justify-content-sm-center jumbotron bg-faded');
+
+  dom.divError = divError;
 
   var divContainer = getDom.Container()
   var divHead = getDom.RowBetween()
@@ -562,7 +598,7 @@ SAInfo.initInfo = function(self) {
     $(divHead).append(formRemove)
 
     $(removeBtn).click(function() {
-      if (confirm("一旦删除将不可恢复，确认码？")) {
+      if (confirm("一旦删除将不可恢复，确认删除吗？")) {
         SAInfo.ajaxMethod[info.removeAttr.method](info.removeAttr, form, info.removeAttr.to)
       }
     })
@@ -607,7 +643,8 @@ SAInfo.initInfo = function(self) {
   })
 
   $(divContainer).hide()
-  $('#' + info.id).append(divLoading).append(divContainer)
+  $(divError).hide()
+  $('#' + info.id).append(divLoading).append(divContainer).append(divError)
 }
 
 SAInfo.initItem = function(self, item) {
@@ -650,6 +687,48 @@ SAInfo.fillInfo = function(self, item, value) {
   }
 }
 
+SAInfo.fillError = function (self, status, data) {
+  var content = "";
+  var customFunction = function (causeText) {
+    var c = "<b><div>访问被禁止</div></b>\n";
+    c += "<div>" + causeText + "</div>";
+    return c;
+  };
+  var standardFunction = function (title, text, data) {
+    var c = "<div><strong>" + title + "</strong></div>\n";
+    c += "<div>" + text + "</div>\n";
+    if(data){
+      c += "<hr/><div><pre>\n";
+      for(var i in data){
+        c += i + ": " + JSON.stringify(data[i]) + "\n\n";
+      }
+      c += "</pre></div>";
+    }
+    return c;
+  }
+  if(status == 406){ // 特别错误状态。
+    var customField = data[self.info.errorCustomField];
+    if(customField){  // 目标字段被找到
+      var causeText = self.info.errorCustom[customField];  // 查询对应的语法。
+      if(!causeText){ // 没找到，试图找到else标记作为缺省。
+        causeText = self.info.errorCustom['else']; // 默认以此作为else标记。
+      }
+      if(causeText){
+        content = customFunction(causeText);
+      }else { // 无论如何都找不到。还是采用标准输出。
+        content = standardFunction("发生错误", "请求不可用。" ,data);
+      }
+    }else{  // 没有找到目标字段。采用标准错误输出。
+      content = standardFunction("发生错误", "请求不可用。", data);
+    }
+  }else{  // 标准错误状态。
+    var message = self.info.errorMessage[status];
+    if(!message)message = self.info.errorMessage['else'];
+    content = standardFunction(message.head, message.text, message.showData ? data : null);
+  }
+  self.dom.divError.html(content);
+};
+
 SAInfo.requestInfo = function(self) {
   var getAttr = self.info.getAttr
   $.ajax({
@@ -670,7 +749,12 @@ SAInfo.requestInfo = function(self) {
           self.fillInfo(self, item, ret[item.name])
         }
       }
-    }
+    },error: function (ret) {
+        self.dom.divLoading.hide();
+        self.dom.divError.show();
+        var data = ret.responseJSON;
+        self.fillError(self, ret.status, data);
+      }
   })
 }
 
@@ -680,7 +764,8 @@ SATable.SimpleAjaxInfo = function(info) {
     initInfo: SAInfo.initInfo,
     initItem: SAInfo.initItem,
     requestInfo: SAInfo.requestInfo,
-    fillInfo: SAInfo.fillInfo
+    fillInfo: SAInfo.fillInfo,
+    fillError: SAInfo.fillError,
   }
   saInfo.initData(saInfo, info)
   saInfo.initInfo(saInfo)

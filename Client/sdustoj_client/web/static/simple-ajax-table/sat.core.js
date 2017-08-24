@@ -561,6 +561,11 @@ SATable.initTable = function() {
   var getDom = SATable.getDom
 
   var divContainer = getDom.Container()
+  self.dom.divContainer = divContainer;
+
+  var divError = getDom.Div('column justify-content-sm-center jumbotron bg-faded');
+  self.dom.divError = divError;
+  divError.hide();
 
   // head
   $(divContainer).append(self.createHead())
@@ -579,7 +584,7 @@ SATable.initTable = function() {
   // 每页显示结果数量
   self.limit = self.getLimit()
 
-  $('#' + self.id).append(divContainer)
+  $('#' + self.id).append(divContainer).append(divError)
 }
 
 SATable.initData = function(tableInfo) {
@@ -604,6 +609,32 @@ SATable.initData = function(tableInfo) {
       col.ordering = 0
     }
   }
+
+  self.errorMessage = {  //错误信息采用覆盖策略。传入的自定义信息会覆盖默认的处理文本。
+      400: {
+        head: '错误的访问', text: '发送了错误的请求信息。', showData: true
+      },
+      401: {
+        head: '未认证', text: '请进行用户认证。', showData: false
+      },
+      403: {
+        head: '访问被拒绝', text: '您位于不具备访问权限的用户组。', showData: false
+      },
+      404: {
+        head: '访问失败', text: '请求的信息未找到。', showData: false
+      },
+      500: {
+        head: '服务器错误', text: '服务器遇到了未料到到的情况。', showData: false
+      },
+      'else': {
+        head: '发生错误', text: '发生错误。见详细信息。', showData: true
+      }
+  };
+  if(tableInfo.errorMessage){
+    for(var em in tableInfo.errorMessage)self.errorMessage[em] = tableInfo.errorMessage[em];
+  }
+  self.errorCustomField = tableInfo.errorCustomField ? tableInfo.errorCustomField : 'cause';
+  self.errorCustom = tableInfo.errorCustom ? tableInfo.errorCustom : { }; //来自406的错误信息与其他错误信息分开管理。
 
   var tableIDs = {}
   tableIDs.id = self.id + 'SAT'
@@ -814,6 +845,48 @@ SATable.fillTable = function(data) {
   self.fillTableBody(data.data)
 }
 
+SATable.fillError = function (self, status, data) {
+  var content = "";
+  var customFunction = function (causeText) {
+    var c = "<b><div>访问被禁止</div></b>\n";
+    c += "<div>" + causeText + "</div>";
+    return c;
+  };
+  var standardFunction = function (title, text, data) {
+    var c = "<div><strong>" + title + "</strong></div>\n";
+    c += "<div>" + text + "</div>\n";
+    if(data){
+      c += "<hr/><div><pre>\n";
+      for(var i in data){
+        c += i + ": " + JSON.stringify(data[i]) + "\n\n";
+      }
+      c += "</pre></div>";
+    }
+    return c;
+  }
+  if(status == 406){ // 特别错误状态。
+    var customField = data[self.errorCustomField];
+    if(customField){  // 目标字段被找到
+      var causeText = self.errorCustom[customField];  // 查询对应的语法。
+      if(!causeText){ // 没找到，试图找到else标记作为缺省。
+        causeText = self.errorCustom['else']; // 默认以此作为else标记。
+      }
+      if(causeText){
+        content = customFunction(causeText);
+      }else { // 无论如何都找不到。还是采用标准输出。
+        content = standardFunction("发生错误", "请求不可用。" ,data);
+      }
+    }else{  // 没有找到目标字段。采用标准错误输出。
+      content = standardFunction("发生错误", "请求不可用。", data);
+    }
+  }else{  // 标准错误状态。
+    var message = self.errorMessage[status];
+    if(!message)message = self.errorMessage['else'];
+    content = standardFunction(message.head, message.text, message.showData ? data : null);
+  }
+  self.dom.divError.html(content);
+};
+
 SATable.getRequest = function() {
   var self = this
   var dom = self.dom
@@ -882,6 +955,11 @@ SATable.update = function() {
     success: function(ret) {
       var data = self.dataGenerator(ret)
       self.fillTable(data)
+    }, error: function (ret) {
+        self.dom.divContainer.hide();
+        self.dom.divError.show();
+        var data = ret.responseJSON;
+        self.fillError(self, ret.status, data);
     }
   })
 }
@@ -899,6 +977,7 @@ SATable.SimpleAjaxTable = function(tableInfo) {
     fillTableHead: SATable.fillTableHead,
     fillTableBody: SATable.fillTableBody,
     fillTable: SATable.fillTable,
+    fillError: SATable.fillError,
     flushTable: SATable.flushTable,
     fillPagination: SATable.fillPagination,
     flushPagination: SATable.flushPagination,
