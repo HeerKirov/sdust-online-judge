@@ -227,6 +227,7 @@ def reptile_submit():
     psql = lpsql.session()
     submissions = psql.query(PojSubmission).filter_by(finished=False).order_by(PojSubmission.id).all()
     if len(submissions) > 0:  # 有未完成的内容，确认进行查询。
+        print("Poj analyse submissions count %s @ %s" % (len(submissions), datetime.datetime.now()))
         remain = RemainList(submissions)  # 构成一个剩余列表，以便排查
         top = None
         while True:

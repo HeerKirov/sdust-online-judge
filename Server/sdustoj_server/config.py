@@ -3,24 +3,24 @@ PG_SETTINGS = {
     'host': 'localhost',
     'port': '5432',
     'db': 'sdustoj_server',
-    'user': 'oj',
-    'password': '1234'
+    'user': 'heer',
+    'password': '262144'
 }
 
 REDIS_SETTINGS = {
-    'host': 'localhost',
+    'host': '120.25.229.109',
     'port': '6379',
-    'password': '1234',
-    'db': 0
+    'password': '262144',
+    'db': 10  # 这儿用一个大的数字进行测试
 }
 
 # 系统初始根用户信息，密码仅在首次创建用户时设定
 # 当日后无需检查时，可将此项设为None，则每次同步数据库时不会检查
 INIT_USER_SETTINGS = {
-    'username': 'korosensei',
-    'password': 'big_boss',
-    'first_name': 'せんせー',
-    'last_name': '殺',
+    'username': 'admin',
+    'password': 'admin262144',
+    'first_name': 'Administrator',
+    'last_name': 'Mr.',
 }
 
 # OJ相关设置

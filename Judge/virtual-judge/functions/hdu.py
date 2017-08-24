@@ -218,6 +218,7 @@ def reptile_submit():
     psql = lpsql.session()
     submissions = psql.query(HduSubmission).filter_by(finished=False).order_by(HduSubmission.id).all()
     if len(submissions) > 0:  # 有未完成的内容，确认进行查询。
+        print("Hdu analyse submissions count %s @ %s" % (len(submissions), datetime.datetime.now()))
         remain = RemainList(submissions)  # 构成一个剩余列表，以便排查
         page = 0
         while True:
@@ -243,3 +244,4 @@ def init():
         raise Exception('Login failed. Please check your authentication or network.')
 
 init()
+
