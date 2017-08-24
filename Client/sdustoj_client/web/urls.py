@@ -1,5 +1,7 @@
 from django.conf.urls import url, include
-from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages,MyOrganizationPages,CourseGroup,Course,Mission,TeachingAdminPages,MissionGroup,LearningAdminPages
+from .views import MainPages, PersonalPages, UserAdminPages, OrganizationAdminPages
+from .views import MyOrganizationPages,CourseGroup,Course,Mission,TeachingAdminPages,MissionGroup,LearningAdminPages
+from .views import SearchRedirectPage
 
 
 personal_patterns = [
@@ -108,6 +110,7 @@ mission_patterns = [
     url(r'^info/([\w\-.+@]+)/submission/$',Mission.Submission.list,name="web-mission-submission-list"),
     url(r'^info/([\w\-.+@]+)/submission/info/([\w\-.+@]+)/$',Mission.Submission.instance,name="web-mission-submission-instance"),
     url(r'^info/([\w\-.+@]+)/submission/submit$',Mission.Submission.submit,name="web-mission-submission-submit"),
+    url(r'^info/([\w\-.+@]+)/score/$', Mission.Score.score, name="web-mission-score")
 ]
 
 teachingcourse_patterns = [
@@ -132,6 +135,11 @@ learningcourse_patterns = [
     url(r'^info/([\w\-.+@]+)/mission-group/info/([\w\-.+@]+)/mission/$', LearningAdminPages.Mission.list, name="web-learning-course-mission-group-mission-list"),
 ]
 
+search_patterns = [
+    url(r'^mission/([\w\-.+@]+)/$', SearchRedirectPage.Mission.mission, name="web-search-mission"),
+    url(r'^mission/([\w\-.+@]+)/problem/([\w\-.+@]+)/$', SearchRedirectPage.Mission.mission_problem, name="web-search-mission-problem")
+]
+
 url_patterns = [
     url(r'home/', MainPages.home, name='web-home'),
     url(r'login/', MainPages.login, name='web-login'),
@@ -149,4 +157,5 @@ url_patterns = [
     url(r'^teachingcoursegroup/',include(teachingcoursegroup_patterns)),
     url(r'^mission-group/',include(mission_group_patterns)),
     url(r'^learningcourse/',include(learningcourse_patterns)),
+    url(r'search/', include(search_patterns))
 ]

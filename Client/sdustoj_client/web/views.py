@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, reverse
 from rest_api.models import IdentityChoices
+from rest_api import models
 
 
 class Utils(object):
@@ -633,19 +634,22 @@ class Mission(object):
                 "pid": pid,
             })
 
-
     class Submission(object):
         @staticmethod
         def list(request, mid):
+            mission = models.Mission.objects.filter(id=mid).first()
+            display_type = mission.config['type'] if 'type' in mission.config else 'acm'
             return Utils.Render.all_user(request, "mission/submission/list.html", {
                 "mid": mid,
+                "display_type": display_type,
             })
 
         @staticmethod
         def instance(request, mid, sid):
+
             return Utils.Render.all_user(request, "mission/submission/instance.html", {
                 "mid": mid,
-                "sid": sid,
+                "sid": sid
             })
 
         @staticmethod
@@ -657,6 +661,16 @@ class Mission(object):
             return Utils.Render.all_user(request, "mission/submission/submit.html", {
                 "pid": pid,
                 "mid": mid,
+            })
+
+    class Score(object):
+        @staticmethod
+        def score(request, mid):
+            # 个人成绩
+            return Utils.Render.all_user(request, "mission/score/instance.html", {
+                "mid": mid,
+                "uid": request.user.username,
+                'status_map': models.Submission.STATUS_CHOICES
             })
 
 
@@ -732,3 +746,18 @@ class LearningAdminPages(object):
                 "cid": cid,
                 "id": id
             })
+
+
+class SearchRedirectPage(object):
+    class Mission(object):
+        @staticmethod
+        def mission(request, mid):
+            return redirect(reverse('web-mission-instance', args=[mid]))
+
+        @staticmethod
+        def mission_problem(request, mid, pid):
+            relation = models.MissionProblemRelation.objects.filter(mission_id=mid, problem_id=pid).first()
+            if relation is not None:
+                return redirect(reverse('web-mission-problem-instance', args=[mid, relation.id]))
+            else:
+                return redirect(reverse('web-mission-problem-list', args=[mid]))

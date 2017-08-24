@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status, exceptions, response, settings, permissions as permissions_
 from rest_framework.response import Response
+from rest_framework.decorators import detail_route, list_route, api_view
 from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -17,8 +18,11 @@ from .utils import ListReadonlyResourceViewSet, InstanceReadonlyResourceViewSet,
 from .utils import ListNestedResourceViewSet, InstanceNestedResourceViewSet, InstanceReadonlyNestedResourceViewSet
 from .utils import ListNestedViewSet, ListReadonlyNestedViewSet, InstanceDeleteNestedViewSet
 from .utils import InstanceReadonlyNestedViewSet, CreateNestedViewSet
+from .utils import RemainSet
 from .permissions import *
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
+from rest_framework.status import *
+from django.utils import timezone
+from bulk_update.helper import bulk_update
 
 
 # 个人api
@@ -1368,27 +1372,100 @@ class MissionViewSets(object):
                     parent_mission = get_object_or_404(Mission.objects.all(), id=parent_id)
                     if parent_mission.get_state() == MissionState.not_started:
                         data = {
-                            'message': 'The mission is not started.'
+                            'message': 'The mission is not started.',
+                            'cause': 'not_started'
                         }
-                        return Response(data, 406)
+                        return Response(data, status=HTTP_406_NOT_ACCEPTABLE)
                 result = super().list(request, *args, **kwargs)
 
                 return result
 
             def create(self, request, *args, **kwargs):
-                # 对学生而言，不能在任务开始之前做提交
-                profile = self.request.user.profile
-                if profile.has_identities(IdentityChoices.student):
-                    # 学生权限下需要做时间验证.
-                    parent_id = kwargs[self.parent_lookup]
-                    parent_mission = get_object_or_404(Mission.objects.all(), id=parent_id)
-                    if parent_mission.get_state() == MissionState.not_started:
-                        data = {
-                            'message': 'The mission is not started.'
-                        }
-                        return Response(data, 406)
-                result = super().create(request, *args, **kwargs)
-                return result
+                if 'dataStr' in request.data:  # 这表示启用特殊构建模式
+                    kwargs['dataStr'] = request.data['dataStr']
+                    return self.all_update(request, *args, **kwargs)
+                else:
+                    return super().create(request, *args, **kwargs)
+
+            def all_update(self, request, *args, **kwargs):
+                """
+                提供给前端进行快速题目维护的API入口。
+                :param request: 
+                :return: 
+                """
+                def match_and_update(p_rel, data_temp):
+                    # 比对修改relation的数据
+                    try:
+                        if 'weight' in data_temp and p_rel.weight != data_temp['weight']:
+                            p_rel.weight = float(data_temp['weight'])
+                        if 'available' in data_temp and p_rel.available != data_temp['available']:
+                            p_rel.available = bool(data_temp['available'])
+                        if 'deleted' in data_temp and p_rel.deleted != data_temp['deleted']:
+                            p_rel.deleted = bool(data_temp['deleted'])
+                    except Exception:
+                        return {'validate': 'Type Error.'}
+                    return None
+
+                # 获得parent
+                lookup = kwargs[self.parent_lookup]
+                parent = get_object_or_404(self.parent_queryset, **{self.parent_pk: lookup})
+                # 获取json数据
+                datas = kwargs['dataStr']
+                # 需要做的事：获取任务可用的题目并进行比对，判断可用的合法性;
+                # 获取任务已有的所有题目。遍历已有题目，在data中查询当前题目并提交修改;在data中找不到的题目进行删除;剩余未动的data数据添加
+                available_problem_relations = parent.available_problem_relations().all()
+                available_pids = set(it.problem_id for it in available_problem_relations)
+                for data in datas:
+                    if 'problem_id' not in data:
+                        return Response({'problem_id': 'This field is required.'}, status=HTTP_400_BAD_REQUEST)
+                    elif data['problem_id'] not in available_pids:
+                        return Response({
+                            'error': 'Problem %s is not available.' % (data['problem_id'],)
+                        }, status=HTTP_400_BAD_REQUEST)
+
+                p_relations = MissionProblemRelation.objects.filter(mission=parent).all()  # 所有的题目关联查询集
+                remains = RemainSet(datas)  # 剩余的处理集合
+                delete_bulk_list = list()
+                update_bulk_list = list()
+                # 每个remain包括：problem_id, weight, available, deleted
+                for p in p_relations:
+                    # 遍历现有的题目关系集。
+                    # p包括：id, mission(_id), problem(_id), weight, available, deleted
+                    remain = remains.pop(lambda r: r['problem_id'] == p.problem_id)
+                    if remain is not None:  # 找到则进行比对修改
+                        error = match_and_update(p, remain)
+                        if error is not None:
+                            return Response(error, status=HTTP_400_BAD_REQUEST)
+                        update_bulk_list.append(p)
+                    else:  # 找不到表示已经删除
+                        delete_bulk_list.append(p)
+                # 之后，remains内的项会被作为新建项。
+                username = self.request.user.username
+                create_bulk_list = list(MissionProblemRelation(
+                    mission=parent,
+                    problem_id=remain['problem_id'],
+                    weight=remain['weight'],
+                    available=remain['available'] if 'available' in remain else True,
+                    deleted=remain['deleted'] if 'deleted' in remain else False,
+                    creator=username,
+                    updater=username,
+                    update_time=timezone.now()
+                ) for remain in remains)
+                # 做完这些处理之后，统一进行提交。
+                MissionProblemRelation.objects.bulk_create(create_bulk_list)
+                bulk_update(update_bulk_list)
+                for i in delete_bulk_list:
+                    i.delete()
+                # 返回生成
+                queryset = MissionProblemRelation.objects.filter(mission=parent).all()
+
+                page = self.paginate_queryset(queryset)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True)
+                    return self.get_paginated_response(serializer.data)
+
+                serializer = self.get_serializer(queryset, many=True)
+                return Response(serializer.data)
 
         # 任务可以使用的全部题目 - deep2 - relation
         class ProblemAvailableViewSet(ListReadonlyNestedResourceViewSet):
@@ -1460,6 +1537,7 @@ class MissionViewSets(object):
                     elif submission_display == 'self':
                         self.queryset = Submission.objects.\
                             filter(**{parent_related_name: parent}).filter(user=profile).order_by('-update_time')
+                    self.queryset = self.queryset.filter(submit_time__gte=parent.start_time)
                 else:
                     self.queryset = Submission.objects.filter(**{parent_related_name: parent}).order_by('-update_time')
                 return parent_related_name, parent
@@ -1473,20 +1551,20 @@ class MissionViewSets(object):
                     parent_mission = get_object_or_404(Mission.objects.all(), id=parent_id)
                     if parent_mission.get_state() == MissionState.not_started:
                         data = {
-                            'message': 'The mission is not started.'
+                            'message': 'The mission is not started.',
+                            'cause': 'not_started'
                         }
-                        return Response(data, 406)
+                        return Response(data, HTTP_406_NOT_ACCEPTABLE)
 
                 return super().create(request, *args, **kwargs)
 
             def perform_create(self, serializer):
-
                 extra_data = getattr(self, 'extra_data')
                 extra_data['profile'] = self.request.user.profile
                 return super().perform_create(serializer)
 
     class SubmissionInstance(object):
-        # 任务下的提交
+        # 任务下的提交 - deep2
         class SubmissionViewSet(InstanceReadonlyNestedViewSet):
             queryset = Submission.objects.all()
             serializer_class = SubmissionSerializers.Instance
@@ -1506,11 +1584,35 @@ class MissionViewSets(object):
                     obj = self.get_object()
                     if obj is None or getattr(obj, 'user') != profile:
                         data = {
-                            'message': 'You cannot see others\' submissions.'
+                            'message': 'You cannot see others\' submissions.',
+                            'cause': 'no_others'
                         }
-                        return Response(data, 406)
+                        return Response(data, HTTP_406_NOT_ACCEPTABLE)
                 instance = super().retrieve(request, *args, **kwargs)
                 return instance
+
+            def _set_queryset(self, **kwargs):
+                parent_queryset = getattr(self, 'parent_queryset')
+                parent_lookup = getattr(self, 'parent_lookup')
+                parent_pk = getattr(self, 'parent_pk')
+                parent_related_name = getattr(self, 'parent_related_name')
+
+                lookup = kwargs[parent_lookup]
+
+                parent = get_object_or_404(parent_queryset, **{parent_pk: lookup})  # 获得了任务的model
+                # 由于存在配置，需要限制学生的访问范围。
+                profile = self.request.user.profile
+                if not profile.is_mission_manager():  # 这表示是学生。需要作出限制。
+                    submission_display = parent.config['submission_display']
+                    if submission_display == 'no':
+                        self.queryset = Submission.objects.none()
+                    elif submission_display == 'self':
+                        self.queryset = Submission.objects.\
+                            filter(**{parent_related_name: parent}).filter(user=profile)
+                    self.queryset = self.queryset.filter(submit_time__gte=parent.start_time)
+                else:
+                    self.queryset = Submission.objects.filter(**{parent_related_name: parent})
+                return parent_related_name, parent
 
     class RankInstance(object):
         # 任务下的成绩信息
@@ -1551,13 +1653,15 @@ class MissionViewSets(object):
                     elif parent.config['score_display'] == 'close':  # 临时封闭成绩，检测时间段，如果在缎内不显示
                         if parent.get_state() != MissionState.ended:
                             data = {
-                                'message': 'Score is not available now.'
+                                'message': 'Score is not available now.',
+                                'cause': 'close'
                             }
-                            return Response(data, 406)
+                            return Response(data, HTTP_406_NOT_ACCEPTABLE)
                     elif parent.config['score_display'] == 'no':  # 就是不给你看
                         data = {
-                            'message': 'Score is not available.'
+                            'message': 'Score is not available.',
+                            'cause': 'no'
                         }
-                        return Response(data, 406)
+                        return Response(data, HTTP_406_NOT_ACCEPTABLE)
                 instance = super().retrieve(request, *args, **kwargs)
                 return instance

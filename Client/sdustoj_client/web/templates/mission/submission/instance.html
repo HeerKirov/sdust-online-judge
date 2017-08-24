@@ -10,6 +10,7 @@
   <div class="col-lg-8 col-md-10">
   <h3 id="id">提交 - {{ submission.id }}</h3>
   <br>
+  <div id="success_content">
   <h4>提交信息</h4>
   <table class="table">
     <tr class="col-12 row">
@@ -91,6 +92,12 @@
   <div class="jumbotron">
     <pre><code id="code"></code></pre>
   </div>
+  </div>
+  <div id="error_content">
+      <table class="table">
+          <tr><td id="error_text"></td></tr>
+      </table>
+  </div>
 </div>
 {% endblock %}
 
@@ -104,6 +111,7 @@ $(document).ready(function() {
     url: "{% url 'api-mission-submission-detail' mid sid %}",
     dataType: "json",
     success: function(ret) {
+        $("#error_content").hide()
       $("#id").text(("提交 -" + ret.id));
       $("#sid").text(ret.sid);
       $("#problem").text(ret.problem_title);
@@ -117,7 +125,7 @@ $(document).ready(function() {
       info = iDate.toLocaleString()
       $("#update_time").text(info);
 
-      $("#status").text(ret.status);
+      $("#status").text(ret.status_word);
       $("#score").text(ret.score);
       $("#time").text(ret.time);
       $("#memory").text(ret.memory);
@@ -161,7 +169,16 @@ $(document).ready(function() {
         $(tr).append(td4)
         $("#limits").append(tr)
       }
-    }
+    },
+      error: function (ret) {
+        $("#success_content").hide()
+          if(ret.status == 406){
+            var data = ret.responseJSON;
+            if(data.cause == "no_others"){
+              $("#error_text").text("你不能查看其他人的提交信息。")
+            }
+          }
+      }
   })
 })
 

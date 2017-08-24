@@ -78,6 +78,32 @@ def is_parent_organizations(base, goal=None):
     return False
 
 
+class RemainSet(object):
+    __set = None
+
+    def __init__(self, iterator=None):
+        if iterator is not None:
+            self.__set = list(iterator)
+        else:
+            self.__set = list()
+
+    def pop(self, condition):
+        ret = None
+        for i in self.__set:
+            if condition(i):
+                ret = i
+                break
+        if ret is not None:
+            self.__set.remove(ret)
+        return ret
+
+    def is_empty(self):
+        return len(self.__set) <= 0
+
+    def __iter__(self):
+        return self.__set.__iter__()
+
+
 # -- Functions --------------------------------------------------------------------------
 
 def is_root(user):

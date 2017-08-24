@@ -111,7 +111,7 @@ $(document).ready(function() {
     dataType: "json",
     success: function(ret) {
       $("#available").text(ret.available ? "可用": "不可用");
-      $("#pid").text(ret.id)
+      $("#pid").text(ret.problem.id)
       $("#title").text(ret.problem.title);
       $("#introduction").text(ret.problem.introduction);
       $("#description").append(ret.problem.description ? markdown.toHTML(ret.problem.description): "没有描述");

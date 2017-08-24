@@ -1145,6 +1145,9 @@ class Rank(models.Model):
     sum_score = models.FloatField(default=0)
     result = pg_fields.JSONField()
 
+    def get_mission_problems(self):
+        return self.mission.problems.all()
+
 
 # -- Problem ------------------------------------------------------------------
 

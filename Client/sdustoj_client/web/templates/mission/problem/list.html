@@ -25,7 +25,7 @@ SATable.DRFTable({
     { name: 'updater', type: 'text', placeholder: '请输入更新者用户名', caption: '更新者' }
   ],
   columns: [
-    { name: 'id', caption: 'ID', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'web-mission-problem-list' mid %}info/', key: 'id' } },
+    { name: 'problem_id', caption: 'ID', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'web-mission-problem-list' mid %}info/', key: 'id' } },
     { name: 'title', caption: '标题', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-mission-problem-list' mid %}info/', key: 'id' } },
     { name: "introduction", caption: "简介", type: 'Text' },
     { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },

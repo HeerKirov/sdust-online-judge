@@ -1,0 +1,156 @@
+{% extends "mission/adminBasic.html" %}
+{% load staticfiles %}
+{% load utils %}
+
+{% block title %}成绩{% endblock %}
+
+{% block nav_score %}active{% endblock %}
+
+{% block sub_content2 %}
+
+   <div class="col-lg-8 col-md-10">
+  <div class="row justify-content-between">
+    <div class="col-6">
+      <h3>成绩</h3>
+    </div>
+  </div>
+  <br>
+  <table class="table" id="success_content">
+    <tr>
+      <td><b>总览</b></td>
+      <td><table class="table" id="information"></table></td>
+    </tr>
+    <tr>
+      <td><b>明细</b></td>
+      <td><table class="table" id="scores"></table></td>
+    </tr>
+  </table>
+   <table class="table" id="error_content">
+       <tr>
+           <td id="error_text"></td>
+       </tr>
+   </table>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(function() {
+  var status_map = {
+    {% for k in status_map %}
+        {{ k| key:0 }}:"{{ k| key:1 }}",
+    {% endfor %}
+  }
+  $("#success_content").hide();
+  $("#error_content").hide();
+  $.ajax({
+    type: "get",
+    url: "{% url 'api-mission-rank-detail' mid uid %}",
+    dataType: "json",
+    success: function (ret) {
+        $("#success_content").show();
+        var config = ret['mission_config'];
+        var display_type = config['type'];  //oi or acm
+        //生成总览信息。
+        //生成横向表。ACM模式显示submit_count, solved, penalty(转时间);OI模式显示submit_count, max_score
+        if(display_type == "acm"){
+            var tr1 = $("<tr></tr>");
+            tr1.append($("<td>提交次数</td>"));
+            tr1.append($("<td>Solved</td>"));
+            tr1.append($("<td>Penalty</td>"));
+            var tr2 = $("<tr></tr>");
+            var td1 = $("<td></td>");
+            var td2 = $("<td></td>");
+            var td3 = $("<td></td>");
+            td1.text(ret['sub_count']);
+            td2.text(ret['solved']);
+            td3.text(ret['penalty']);
+            tr2.append(td1);
+            tr2.append(td2);
+            tr2.append(td3);
+            $("#information").append(tr1);
+            $("#information").append(tr2);
+        }else{
+            tr1 = $("<tr></tr>");
+            tr1.append($("<td>提交次数</td>"));
+            tr1.append($("<td>总分</td>"));
+            tr1.append($("<td></td>"));
+            tr2 = $("<tr></tr>");
+            td1 = $("<td></td>");
+            td2 = $("<td></td>");
+            td3 = $("<td></td>");
+            td1.text(ret['sub_count']);
+            td2.text(ret['sum_score']);
+            tr2.append(td1);
+            tr2.append(td2);
+            tr2.append(td3);
+            $("#information").append(tr1);
+            $("#information").append(tr2);
+        }
+        //生成详细成绩。
+        //生成纵向表。ACM模式显示题号，提交次数/错误次数，状态，AC时间;OI模式显示题号，提交次数，得分
+        if(display_type == "acm"){
+            var tr3 = $("<tr></tr>");
+            tr3.append($("<td>题号</td>"));
+            tr3.append($("<td>提交/错误</td>"));
+            tr3.append($("<td>状态</td>"));
+            tr3.append($("<td>通过时间</td>"));
+            $("#scores").append(tr3);
+        }else{
+            tr3 = $("<tr></tr>");
+            tr3.append($("<td>题号</td>"));
+            tr3.append($("<td>提交</td>"));
+            tr3.append($("<td>得分</td>"));
+            $("#scores").append(tr3);
+            //同时提取一下oi的分数选择模式
+            try{
+                var oi_valid_submission = config['type_config']['valid_submission'];
+            }catch (e){
+                oi_valid_submission = 'invalid';
+            }
+        }
+        var get_oi_score = function(data){
+            if(oi_valid_submission == 'highest')return data['max_score'];
+            else if(oi_valid_submission == 'latest')return data['latest_score'];
+            else return null;
+        }
+        for(var i in ret['result']){
+            var data = ret['result'][i];
+            var tr4 = $("<tr></tr>");
+            var td_1 = $("<td></td>");
+            td_1.text(i);
+            tr4.append(td_1);
+            if(display_type == "acm"){
+                var td_2 = $("<td></td>");
+                var td_3 = $("<td></td>");
+                var td_4 = $("<td></td>");
+                td_2.text(data['sub_count'] + "/" + data['wrong_count']);
+                td_3.text(status_map[data['status']]);
+                td_4.text(data['ac_time']);
+                tr4.append(td_2);
+                tr4.append(td_3);
+                tr4.append(td_4);
+            }else{
+                td_2 = $("<td></td>");
+                td_3 = $("<td></td>");
+                td_2.text(data['sub_count']);
+                td_3.text(get_oi_score(data));
+                tr4.append(td_2);
+                tr4.append(td_3);
+            }
+            $("#scores").append(tr4);
+        }
+    },
+      error: function (ret) {
+        $("#error_content").show();
+        var data = ret.responseJSON;
+        if(ret.status==406){
+            if(data.cause == 'close')$("#error_text").text("成绩查询目前不可用。请等待任务结束。");
+            else $("#error_text").text("成绩查询被禁用。")
+        }
+      }
+  })
+})
+</script>
+{% endblock %}

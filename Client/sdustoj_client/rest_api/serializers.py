@@ -1628,7 +1628,7 @@ class ProblemSerializers(object):
 
 class ProblemRelationSerializers(object):
     class List(serializers.ModelSerializer):
-        problem_id = serializers.PrimaryKeyRelatedField(queryset=Problem.objects.all(), source='problem')
+        problem_id = serializers.PrimaryKeyRelatedField(read_only=True, source='problem')
         title = serializers.SlugRelatedField(read_only=True, source='problem', slug_field='title')
         introduction = serializers.SlugRelatedField(read_only=True, source='problem', slug_field='introduction')
         source = serializers.SlugRelatedField(read_only=True, source='problem', slug_field='source')
@@ -1677,6 +1677,8 @@ class SubmissionSerializers(object):
         user = serializers.SlugRelatedField(read_only=True, slug_field='username')
         user_name = serializers.SlugRelatedField(read_only=True, slug_field='name', source='user')
         code = serializers.CharField(write_only=True)
+
+        status_word = serializers.CharField(read_only=True, source='get_status_display')
 
         def create(self, validated_data):
             # 需要做范围限制判定。
@@ -1746,6 +1748,8 @@ class SubmissionSerializers(object):
         compile_info = serializers.SlugRelatedField(read_only=True, slug_field='info')
         test_data_status = serializers.SlugRelatedField(read_only=True, slug_field='status')
 
+        status_word = serializers.CharField(read_only=True, source='get_status_display')
+
         class Meta:
             model = Submission
             read_only_fields = ('id', 'sid', 'time', 'length', 'memory', 'status', 'finished', 'score',
@@ -1755,6 +1759,9 @@ class SubmissionSerializers(object):
 
 class RankSerializers(object):
     class Instance(serializers.ModelSerializer):
+        mission_mode = serializers.SlugRelatedField(read_only=True, source='mission', slug_field='mode')
+        mission_config = serializers.SlugRelatedField(read_only=True, source='mission', slug_field='config')
+
         class Meta:
             model = Rank
             exclude = ('organization', 'mission', 'user')

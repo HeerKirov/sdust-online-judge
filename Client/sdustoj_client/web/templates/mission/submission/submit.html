@@ -51,7 +51,7 @@
     $(function (e) {
        url = "{% url 'api-mission-problem-list' mid %}";
         var data = {}
-        data.limit = 1000
+            data.limit = 1000  // 可变的最大题目数量
             $.ajax({
            type: "GET",
            url: url,
@@ -187,8 +187,15 @@ function login() {
       url = "{% url 'web-mission-submission-list' mid %}"
       location.href = url
     },
-    error: function(a, b, c) {
-      test_output(a)
+    error: function(ret) {
+        var data = ret.responseJSON;
+
+      if(ret.status == 406){
+        if(data.cause == 'not_started')alert("任务尚未开始，无法进行提交。");
+        else alert("提交不可用。")
+      }else{
+          test_output(data)
+      }
     }
   })
 

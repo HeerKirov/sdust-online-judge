@@ -20,13 +20,17 @@ SATable.DRFTable({
   search: true,
   columns: [
     { name: 'id', caption: 'ID', sort: true, ordering: -1, type: 'Link', typeInfo: { base_url: '{% url 'web-mission-submission-list' mid %}info/', key: 'id' } },
-    { name: 'problem_title', caption: '题目', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'web-mission-submission-list' mid %}info/', key: 'id' } },
+    { name: 'problem_title', caption: '题目', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'web-search-mission' mid %}problem/', key: 'problem' } },
     { name: 'env_name', caption: '语言', type: 'Text' },
-    { name: 'status', caption: '状态', type: 'Text' },
+      {% if display_type == 'acm' %}
+    { name: 'status_word', caption: '状态', type: 'Text' },
+      {% else %}
     { name: 'score', caption: '完成度', type: 'Text' },
+      {% endif %}
     { name: 'time', caption: '时间', type: 'Text' },
     { name: 'memory', caption: '内存', type: 'Text' },
     { name: 'length', caption: '长度', type: 'Text' },
+    { name: 'user_name', caption: '提交者', type: 'Text' },  // 做一个重定向来选择用户的页。
     { name: 'submit_time', caption: '提交时间', sort: true, type: 'Datetime' },
   ],
   createURL: '{% url 'web-mission-submission-submit' mid %}'
