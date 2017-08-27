@@ -107,6 +107,7 @@ mission_patterns = [
     url(r'^info/([\w\-.+@]+)/$',Mission.instance,name="web-mission-instance"),
     url(r'^info/([\w\-.+@]+)/problem/$',Mission.Problem.list,name="web-mission-problem-list"),
     url(r'^info/([\w\-.+@]+)/problem/info/([\w\-.+@]+)/$',Mission.Problem.instance,name="web-mission-problem-instance"),
+    url(r'^info/([\w\-.+@]+)/problem/create/$',Mission.Problem.create,name="web-mission-problem-create"),
     url(r'^info/([\w\-.+@]+)/submission/$',Mission.Submission.list,name="web-mission-submission-list"),
     url(r'^info/([\w\-.+@]+)/submission/info/([\w\-.+@]+)/$',Mission.Submission.instance,name="web-mission-submission-instance"),
     url(r'^info/([\w\-.+@]+)/submission/submit$',Mission.Submission.submit,name="web-mission-submission-submit"),

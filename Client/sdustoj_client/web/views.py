@@ -634,6 +634,12 @@ class Mission(object):
                 "pid": pid,
             })
 
+        @staticmethod
+        def create(request, mid):
+            return Utils.Render.all_user(request, "mission/problem/create.html", {
+                "mid": mid,
+            })
+
     class Submission(object):
         @staticmethod
         def list(request, mid):

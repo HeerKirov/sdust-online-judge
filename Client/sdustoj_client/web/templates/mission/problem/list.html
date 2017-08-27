@@ -19,11 +19,6 @@ SATable.DRFTable({
   id: 'problem',
   title: '题目',
   url: "{% url 'api-mission-problem-list' mid %}",
-  search: true,
-  filters: [
-    { name: 'creator', type: 'text', placeholder: '请输入创建者用户名', caption: '创建者' },
-    { name: 'updater', type: 'text', placeholder: '请输入更新者用户名', caption: '更新者' }
-  ],
   columns: [
     { name: 'problem_id', caption: 'ID', sort: true, ordering: 1, type: 'Link', typeInfo: { base_url: '{% url 'web-mission-problem-list' mid %}info/', key: 'id' } },
     { name: 'title', caption: '标题', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-mission-problem-list' mid %}info/', key: 'id' } },
@@ -33,7 +28,7 @@ SATable.DRFTable({
     { name: "available", caption: "可用", type: 'Boolean' },
     { name: "deleted", caption: "废弃", type: 'Boolean' },
   ],
-{#  createURL: '{% url 'web-problem-create' %}'#}
+  createURL: '{% url 'web-mission-problem-create' mid %}'
 })
 
 </script>
