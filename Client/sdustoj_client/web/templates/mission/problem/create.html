@@ -1,0 +1,65 @@
+{% extends "mission/adminBasic.html" %}
+{% load staticfiles %}
+{% block css %}
+    <style type="text/css" rel="stylesheet">
+        .update
+        {
+            display: none;
+        }
+    </style>
+{% endblock %}
+{% block title %}题目{% endblock %}
+
+{% block nav_problem %}active{% endblock %}
+
+{% block sub_content2 %}
+
+  <div class="col-lg-8 col-md-10">
+    <div class="row justify-content-between">
+        <div class="col-6">
+          <h3>题目</h3>
+        </div>
+        {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
+        <div class="col-2">
+          <button class="btn btn-primary" id = "update">确认操作</button>
+        </div>
+        {% endif %}
+     </div>
+    <br>
+    <div id="problem">
+
+    </div>
+  <div id = "tree" class="ztree"></div>
+  </div>
+
+
+{% endblock %}
+
+{% block script %}
+    <script type="text/javascript" src="{% static 'flexible-table/problem-table.js' %}"></script>
+    <script>
+    var column = [
+    { name: 'problem_id', title: 'ID', type: 'text', readOnly: true},
+    { name: 'title', title: '标题', type: 'text', readOnly: true},
+    { name: 'weight', title: '权重', type: 'text', readOnly: false},
+    { name: 'available', title: '可用', type: 'select', readOnly: false},
+    { name: 'deleted', title: '废弃', type: 'select', readOnly: false},
+]
+        var tableInfo = {
+            id: "problem",
+            url: "{% url 'api-mission-problem-list' mid %}",
+            update_url : "{% url 'api-mission-problem-list' mid %}",
+            success_url: "{% url 'web-mission-problem-list' mid %}",
+            title: "title",
+            column: column,
+        }
+
+        var treeInfo = {
+            id: "tree",
+            url: "{% url 'api-mission-available-problem-list' mid %}",
+        }
+
+    ProblemTable.Table(tableInfo, treeInfo)
+    </script>
+{% endblock %}
+
