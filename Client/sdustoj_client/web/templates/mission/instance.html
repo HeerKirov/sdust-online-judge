@@ -264,6 +264,7 @@ $(document).ready(function() {
       if(ret.mode == 'CUSTOM')
       {
           $("#type").empty().text(ret.config.type);
+          $("#i_type").empty()
           var arr_type = ['acm', 'oi']
           for(var i in arr_type)
           {
@@ -276,6 +277,7 @@ $(document).ready(function() {
               $("#i_type").append(option)
           }
           $("#submission_display").text(ret.config.submission_display);
+          $("#i_submission_display").empty()
           var arr_submission = ['self', 'all', 'no']
           for(var i in arr_submission)
           {
@@ -288,6 +290,7 @@ $(document).ready(function() {
               $("#i_submission_display").append(option)
           }
           $("#score_display").text(ret.config.score_display);
+          $("#i_score_display").empty()
           var arr_score = ['yes', 'close', 'no']
           for(var i in arr_score)
           {
@@ -301,7 +304,8 @@ $(document).ready(function() {
           }
           if(ret.config.type=='oi')
           {
-              $("#valid_submission").text(ret.config.type_config.valid_submission);
+              $("#valid_submission").empty().text(ret.config.type_config.valid_submission);
+              $("#i_valid_submission").empty()
               var arr_valid = ['highest', 'latest']
               for(var i in arr_valid)
               {
