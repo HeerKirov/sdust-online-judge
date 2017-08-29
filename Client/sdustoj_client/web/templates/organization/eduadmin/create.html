@@ -20,18 +20,7 @@ SATable.SimpleAjaxForm({
   toSuccess: '{% url 'web-eduadmin-list' oid %}',
   url: '{% url 'admin-organization-edu-admins-list' oid %}',
   items: [
-    {
-      name: 'available',
-      caption: '可用',
-      type: 'Boolean',
-      defaultTrue: false
-    },
-    {
-      name: 'deleted',
-      caption: 'delete',
-      type: 'Boolean',
-      defaultTrue: false
-    },
+
 
     {% comment %}{
       name: 'identities',
@@ -71,6 +60,18 @@ SATable.SimpleAjaxForm({
         max_length: 128,
         confirm: true
       }
+    },
+      {
+      name: 'available',
+      caption: '可用',
+      type: 'Boolean',
+      defaultTrue: true
+    },
+    {
+      name: 'deleted',
+      caption: '废弃',
+      type: 'Boolean',
+      defaultTrue: false
     },
     {
       name: 'sex',

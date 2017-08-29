@@ -390,6 +390,11 @@ class MyOrganizationPages(object):
                 "readonly": "true" if not writeable else "false",
                 "writeable": writeable
             })
+        @staticmethod
+        def create(request,oid):
+            return Utils.Render.teacher_or_edu_admin(request, 'myorganization/course-meta/create.html',{
+                'oid': oid
+            })
 
     class CourseGroup(object):
         @staticmethod

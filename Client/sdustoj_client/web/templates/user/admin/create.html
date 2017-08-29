@@ -21,31 +21,7 @@ SATable.SimpleAjaxForm({
   toSuccess: '{% url 'web-admin-all' %}',
   url: '{% url 'admin-admin-list' %}',
   items: [
-    {
-      name: 'available',
-      caption: '可用',
-      type: 'Boolean',
-      defaultTrue: true
-    },
-    {
-      name: 'is_staff',
-      caption: '管理员',
-      type: 'Boolean',
-      defaultTrue: false
-    },
-    {
-      name: 'identities',
-      caption: '权限',
-      type: 'Select',
-      typeInfo: {
-        many: true,
-        choices: [
-          { text: '超级管理员', value: 'ROOT' },
-          { text: '用户管理员', value: 'USER_ADMIN' },
-          { text: '机构管理员', value: 'ORG_ADMIN' },
-        ]
-      }
-    },
+
     {
       name: 'username',
       caption: '用户名',
@@ -71,6 +47,38 @@ SATable.SimpleAjaxForm({
         confirm: true
       }
     },
+       {
+      name: 'identities',
+      caption: '权限',
+      type: 'Select',
+      typeInfo: {
+        many: true,
+        choices: [
+          { text: '超级管理员', value: 'ROOT' },
+          { text: '用户管理员', value: 'USER_ADMIN' },
+          { text: '机构管理员', value: 'ORG_ADMIN' },
+        ]
+      }
+    },
+      {
+      name: 'available',
+      caption: '可用',
+      type: 'Boolean',
+      defaultTrue: true
+    },
+       {
+      name: 'deleted',
+      caption: '废弃',
+      type: 'Boolean',
+      defaultTrue: false
+    },
+    {
+      name: 'is_staff',
+      caption: '管理员',
+      type: 'Boolean',
+      defaultTrue: false
+    },
+
     {
       name: 'sex',
       caption: '性别',

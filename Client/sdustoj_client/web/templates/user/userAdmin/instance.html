@@ -28,7 +28,7 @@ SATable.SimpleAjaxInfo({
   removeURL: '{% url 'admin-user-admin-detail' u %}',
   removeToURL: '{% url 'web-admin-useradmin' %}',
   items: [
-    { name: 'username', caption: '用户名', type: 'Text', readOnly: true },
+    { name: 'username', caption: '用户名', type: 'Text' },
     'Divide',
     { name: 'is_staff', caption: '管理员', type: 'Boolean' },
     { name: 'identities', caption: '权限', type: 'Select', typeInfo: {
@@ -39,7 +39,7 @@ SATable.SimpleAjaxInfo({
           { text: '用户管理员', value: 'USER_ADMIN' },
           { text: '机构管理员', value: 'ORG_ADMIN' },
       ]
-    } },
+    } ,readOnly: true},
     'Divide',
     { name: 'name', caption: '姓名', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'sex', caption: '性别', type: 'Select', typeInfo: {

@@ -21,18 +21,7 @@ SATable.SimpleAjaxForm({
   toSuccess: '{% url 'web-admin-orgadmin' %}',
   url: '{% url 'admin-org-admin-list' %}',
   items: [
-    {
-      name: 'available',
-      caption: '可用',
-      type: 'Boolean',
-      defaultTrue: true
-    },
-    {
-      name: 'is_staff',
-      caption: '管理员',
-      type: 'Boolean',
-      defaultTrue: false
-    },
+
     {
       name: 'identities',
       caption: '权限',
@@ -70,6 +59,24 @@ SATable.SimpleAjaxForm({
         max_length: 128,
         confirm: true
       }
+    },
+      {
+      name: 'available',
+      caption: '可用',
+      type: 'Boolean',
+      defaultTrue: true
+    },
+      {
+      name: 'deleted',
+      caption: '废弃',
+      type: 'Boolean',
+      defaultTrue: false
+    },
+    {
+      name: 'is_staff',
+      caption: '管理员',
+      type: 'Boolean',
+      defaultTrue: false
     },
     {
       name: 'sex',
