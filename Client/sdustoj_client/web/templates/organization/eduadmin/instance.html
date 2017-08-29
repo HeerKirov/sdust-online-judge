@@ -30,18 +30,7 @@ SATable.SimpleAjaxInfo({
   removeToURL: '{% url 'web-eduadmin-list' oid %}',
   items: [
     { name: 'username', caption: '用户名', type: 'Text', readOnly: true },
-    {% comment %}'Divide',
-    { name: 'is_staff', caption: '管理员', type: 'Boolean' },
-    { name: 'identities', caption: '权限', type: 'Select', typeInfo: {
-      many: true,
-      choices: [
-          { text: '无', value: 'None' },
-          { text: '超级管理员', value: 'ROOT' },
-          { text: '用户管理员', value: 'USER_ADMIN' },
-          { text: '机构管理员', value: 'ORG_ADMIN' },
-      ]
-    } },{% endcomment %}
-    'Divide',
+
     { name: 'name', caption: '姓名', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'sex', caption: '性别', type: 'Select', typeInfo: {
       many: false,
@@ -58,7 +47,7 @@ SATable.SimpleAjaxInfo({
     { name: 'qq', caption: 'QQ', type: 'Text', typeInfo: { max_length: 128 } },
     { name: 'wechat', caption: '微信', type: 'Text', typeInfo: { max_length: 128 } },
     { name: 'blog', caption: '博客', type: 'Text', typeInfo: { max_length: 128 , link: true} },
-      { name: 'instroduction', caption: '介绍', type: 'Text'},
+    { name: 'instroduction', caption: '介绍', type: 'Text'},
     'Divide',
     { name: 'available', caption: '可用', type: 'Boolean' },
     { name: 'deleted', caption: '废弃', type: 'Boolean' },

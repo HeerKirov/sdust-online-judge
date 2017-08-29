@@ -21,10 +21,11 @@ SATable.SimpleAjaxForm({
   toSuccess: '{% url 'web-organization' %}',
   url: '{% url 'admin-organization-list' %}',
   items: [
-    { name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
     { name: 'name', caption: '机构ID', type: 'Text', typeInfo: { max_length: 32 } },
-    { name: 'parent', caption: '上级机构ID', type: 'Text', typeInfo: { max_length: 32 } },
     { name: 'caption', caption: '机构名称', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'parent', caption: '上级机构ID', type: 'Select', typeInfo: { max_length: 32 } },
+    { name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
+    { name: 'deleted', caption: '废弃', type: 'Boolean', defaultTrue: false },
     { name: 'introduction', caption: '简介', type: 'Text', typeInfo: { article:true, max_length: 150 } },
   ]
 })

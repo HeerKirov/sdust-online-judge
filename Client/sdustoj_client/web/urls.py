@@ -51,6 +51,7 @@ myOrg_patterns = [
     url(r'^$', MyOrganizationPages.Organization.list, name='web-myorganization'),
     url(r'^info/([\w\-.+@]+)/$', MyOrganizationPages.Organization.instance, name='web-myorganization-instance'),
     url(r'^info/([\w\-.+@]+)/course-meta/$', MyOrganizationPages.CourseMeta.list, name='web-course-meta-list'),
+    url(r'^info/([\w\-.+@]+)/course-meta/create/$', MyOrganizationPages.CourseMeta.create, name='web-course-meta-create'),
     url(r'^info/([\w\-.+@]+)/course-meta/info/([\w\-.+@]+)/$', MyOrganizationPages.CourseMeta.instance, name='web-course-meta-instance'),
     url(r'^info/([\w\-.+@]+)/edu-admin/$', MyOrganizationPages.EduAdmin.list, name='web-edu-admin-list'),
     url(r'^info/([\w\-.+@]+)/edu-admin/info/([\w\-.+@]+)/$', MyOrganizationPages.EduAdmin.instance, name='web-edu-admin-instance'),
