@@ -103,13 +103,13 @@ SAInfo.Select = function(self, item, value) {
     $(p).text(value)
   }
 
-  var inputGroup = getDom.Div('input-group')
-  var spanBtn = getDom.Span('input-group-btn')
-  var select = $('<select class="form-control" name="'+item.name+'"></select>')
-  var btn = getDom.Button('保存')
-  $(btn).attr('type', 'submit')
-  $(inputGroup).append(select).append(spanBtn)
-  $(spanBtn).append(btn)
+  var inputGroup = getDom.Div('input-group');
+  var spanBtn = getDom.Span('input-group-btn');
+  var select = $('<select class="form-control" name="'+item.name+'"></select>');
+  var btn = getDom.Button('保存');
+  $(btn).attr('type', 'submit');
+  $(inputGroup).append(select).append(spanBtn);
+  $(spanBtn).append(btn);
 
   if (typeInfo.many) {
     $(select).attr('multiple', 'multiple')
@@ -117,7 +117,7 @@ SAInfo.Select = function(self, item, value) {
   if (typeInfo.ajax) {
     SAInfo.requestSelectData(self, select, item, value)
   } else {
-    var data = typeInfo.choices
+    var data = typeInfo.choices;
     for (var i in data) {
       var it = data[i]
       var option = $('<option></option>')
@@ -216,10 +216,11 @@ SAInfo.Text = function(self, item, value) {
   } else if(typeInfo && typeInfo.link && value !== null ){
     var a = $("<a></a>")
     var url = value
-    var n=url.indexOf("https://")
-    if(n == -1)
+    var n1=url.indexOf("http://");
+    var n2=url.indexOf("https://");
+    if(n1 == -1 && n2 == -1)
     {
-      url = "https://" + url
+      url = "http://" + url
     }
     a.attr("href", url)
     a.attr("target","_blank")
@@ -455,6 +456,8 @@ SAInfo.initData = function(self, info) {
   self.info = {}
   self.dom = {}
 
+  self.info.gotoAttr = info.gotoButton;
+
   self.info.id = info.id
   self.info.title = info.title ? info.title : null
   self.info.getAttr = info.getURL ? { method: (info.getMethod ? info.getMethod.toUpperCase() : 'GET'), url: info.getURL } : null
@@ -583,9 +586,31 @@ SAInfo.initInfo = function(self) {
     var h2 = getDom.H2(info.title)
     dom.divH2 = divH2
     dom.h2Title = h2
-    $(divH2).append(h2)
+      $(divH2).append(h2)
+
+
     $(divHead).append(divH2)
   }
+  if(info.gotoAttr){
+    var spanGoto = getDom.Span();
+    var gotoBtn = getDom.Button('');
+    var formGoto = getDom.Form('');
+    dom.btnGoto = gotoBtn;
+    $(gotoBtn).append(getDom.IconNext());
+    $(spanGoto).append(gotoBtn);
+    $(formGoto).append(spanGoto);
+    $(divHead).append(formGoto);
+
+    if(info.gotoAttr.tooltip)
+      $(gotoBtn).attr("data-toggle","tooltip").attr("title", info.gotoAttr.tooltip);
+
+    if(info.gotoAttr.url)
+      $(gotoBtn).click(function () {
+        window.location = info.gotoAttr.url
+      });
+  }
+
+
   if (info.removeAttr) {
     var spanRemove = getDom.Span()
     var removeBtn = getDom.Button('')
