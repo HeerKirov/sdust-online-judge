@@ -4,7 +4,7 @@ import os
 from json import loads
 
 pool = redis.ConnectionPool(
-    host='localhost', port=6379, db=0, password='hust'
+    host='120.25.229.109', port=6379, db=9, password='262144'
 )
 r = redis.Redis(connection_pool=pool)
 
@@ -46,14 +46,50 @@ def write_special_judge(redis_info):
     os.system('chmod +x '+path+'/spj')
 
 
+def write_template(redis_info):
+    p_info = redis_info[1]
+    data = loads(p_info.decode('utf-8'))
+    problem_id = data['problem_id']
+    templates = data['templates']
+    path = make_dir(problem_id)
+    for title, content in templates.items():
+        if content is None:
+            if os.path.exists(path + '/' + title):
+                os.remove(path + '/' + title)
+        else:
+            c = open(path + '/' + title, 'wb')
+            c.write(content.encode('utf-8'))
+            c.close()
+    print('[WriteTemplate] problem %s' % (problem_id,))
+
+
+def write_makefile(redis_info):
+    p_info = redis_info[1]
+    data = loads(p_info.decode('utf-8'))
+    problem_id = data['problem_id']
+    makefiles = data['makefiles']
+    path = make_dir(problem_id)
+    for title, content in makefiles.items():
+        if content is None:
+            if os.path.exists(path + '/' + title):
+                os.remove(path + '/' + title)
+        else:
+            c = open(path + '/' + title, 'wb')
+            c.write(content.encode('utf-8'))
+            c.close()
+    print('[WriteMakefile] problem %s' % (problem_id,))
+
+
 func = {
     'test-data': write_test_data,
-    'special-judge': write_special_judge
+    'special-judge': write_special_judge,
+    'template': write_template,
+    'makefile': write_makefile
 }
 
 
 while True:
-    info = r.blpop(('test-data', 'special-judge'), timeout=1)
+    info = r.blpop(('test-data', 'special-judge', 'template', 'makefile'), timeout=1)
     if info is not None:
         kwarg = info[0].decode('utf-8')
         func[kwarg](info)
