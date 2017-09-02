@@ -399,7 +399,6 @@ ProblemTable.update = function (data){
     }
     $("#update").click(function () {
         var url = self.update_url
-        alert(JSON.stringify(self.database))
         $.ajax({
             type: "POST",
             url: url,
