@@ -1,70 +1,149 @@
 {% extends "problem/adminBasic.html" %}
 {% load staticfiles %}
 
-{% block title %}提交记录{% endblock %}
+{% block title %}提交代码{% endblock %}
 
 {% block nav_problem %}active{% endblock %}
 
 {% block sub_content %}
 <div class="container row justify-content-sm-center">
   <div class="col-lg-8 col-md-10">
-    <form id="submitForm" method="POST" onsubmit="login();return false;">
-      <fieldset>
-        {% csrf_token %}
         <div class="form-group row">
-          <label class="col-lg-3 col-md-4 control-label">题目</label>
+          <label class="col-lg-3 col-md-4 control-label">题目ID</label>
           <div class="col-lg-9 col-md-8">
-            <input name="problem_id" class="form-control" type="number" value="{{ problem.id }}">
+            <input id="problem_id" class="form-control" type="number" value="{{ problem.id }}">
           </div>
         </div>
         <div class="form-group row">
           <label class="col-lg-3 col-md-4 control-label">语言</label>
           <div class="col-lg-9 col-md-8">
-            <select name="env_id" class="form-control">
-              {% for i in envs %}
-              <option value="{{ i.id }}">{{ i.name }}</option>
+            <select name="env_id" class="form-control" id="select_env">
+              {% for i in limits %}
+              <option value="{{ i.environment_id }}">{{ i.env_name }}</option>
               {% endfor %}
             </select>
           </div>
         </div>
+{#        <div class="form-group row">#}
+{#          <label class="col-lg-3 col-md-4 control-label">代码</label>#}
+{#          <div class="col-lg-9 col-md-8">#}
+{#            <textarea name="code" class="form-control"></textarea>#}
+{#          </div>#}
+{#        </div>#}
         <div class="form-group row">
-          <label class="col-lg-3 col-md-4 control-label">代码</label>
-          <div class="col-lg-9 col-md-8">
-            <textarea name="code" class="form-control"></textarea>
-          </div>
+            <label class="col-lg-3 col-md-4 control-label">代码</label>
+            <table class="col-lg-9 col-md-8" id="table_code"></table>
         </div>
         <br/>
         <div class="input-group-btn">
-          <button type="submit" class="btn btn-primary" title="保存信息">保 存</button>
+          <button id="submit_btn" class="btn btn-primary" title="提交代码">提 交</button>
         </div>
-      </fieldset>
-    </form>
   </div>
 </div>
 {% endblock %}
 
 {% block script %}
 <script>
-function login() {
-  var form = $("#submitForm")
-  var data = getFormData(form)
+$(document).ready(function () {
+    var None = null;
+    var templates = {{ templates|safe }};
+    var select_env = null;
+    var blocks = {};
 
-  $.ajax({
-    type: "POST",
-    async: false,
-    url: "{% url 'admin-submissions-list' %}",
-    data: data,
-    dataType: 'json',
-    success: function(ret) {
-      url = "{% url 'problem_submission' %}"
-      location.href = url
-    },
-    error: function(a, b, c) {
-      test_output(a)
+    function update_template(env_id) {
+        //切换模板到指定的id下。
+        var div = $("#table_code");
+        div.html("");
+        blocks = {};
+        var template = templates[env_id];
+        if (template === undefined) {
+            div.append($("<label></label>").text("找不到目标语言的模板。"));
+            select_env = null;
+        } else {
+            if (template === null) {//使用默认模板。
+                template = [{filename:null, code:[{type: "block", content: "code"}]}];
+            }
+            select_env = env_id;
+            //构造模板。
+            for (var i in template) {
+                var file = template[i];
+                if(i>0)div.append($("<hr/>"));
+                if(file['filename']!==null) {
+                    div.append($("<tr><td><b>" + file.filename + "</b></td></tr>"));
+                    div.append($("<hr/>"));
+                }
+                var code_content = $("<td></td>");
+                for(var j in file.code){
+                    var item = file.code[j];
+                    if(item.type=="block"){
+                        var block = $('<textarea class="form-control" rows="5"></textarea>');
+                        blocks[item.content] = block;
+                        code_content.append(block);
+                    }else{
+                        var text = item.content;
+                        var next = file.code[parseInt(j)+1];
+                        if(text.length>0&&next){
+                            //这里做一个处理，当一个string后面还有block，且这个block的末尾是换行时，将换行替换为一个特别的箭头。
+                            var endchar = text[text.length-1];
+                            if(endchar==='\n'){
+                                text = text.slice(0, text.length-1) + '⇙';
+                            }
+                        }
+                        block = $('<pre></pre>').text(text);
+                        code_content.append(block);
+                    }
+                }
+                div.append($("<tr></tr>").append(code_content));
+            }
+        }
     }
-  })
+    $("#problem_id").blur(function () {
+        var newvalue = $("#problem_id").val();
+        var oldvalue = {{ problem.id }};
+        if(newvalue!=oldvalue){
+            window.location =  '/JudgeAdmin/web/submit/' + newvalue + '/';
+        }
+    })
+   $("#select_env").change(function () {
+       update_template($("#select_env").val());
+   });
+    $("#submit_btn").click(function () {
+        var code = {}
+        for(var i in blocks){
+            var block = blocks[i];
+            code[i] = block.val();
+        }
+        var data = {
+            problem_id: $("#problem_id").val(),
+            env_id: $("#select_env").val(),
+            code: JSON.stringify(code),
+            contest: null,
+            client: null
+        };
+        $.ajax({
+            type: 'POST',
+            async: true,
+            url: "{% url 'admin-submissions-list' %}",
+            data: data,
+            dataType: 'json',
+            success: function (ret) {
+                window.location = "{% url 'problem_submission' %}"
+            }, error: function (ret) {
+                var status = ret.status;
+                var content = ret.responseJSON;
+                var msg = "错误 " + status + ":\n";
+                for(var i in content){
+                    msg += i + ": " + content[i] + "\n";
+                }
+                alert(msg);
+            }
+        })
+    });
 
-  return false
-}
+   //init
+    update_template({{ init }});
+});
+
+
 </script>
 {% endblock %}

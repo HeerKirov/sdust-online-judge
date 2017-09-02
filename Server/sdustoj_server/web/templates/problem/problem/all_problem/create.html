@@ -3,7 +3,7 @@
 
 {% block title %}创建全新题目{% endblock %}
 
-{% block nav_meta_problem %}active{% endblock %}
+{% block nav_problem %}active{% endblock %}
 
 {% block sub_content %}
 <div class="container row justify-content-sm-center">
@@ -89,6 +89,32 @@
                   <input name="length_limit" class="form-control length-limit" type="number">
                 </div>
               </div>
+
+              <div class="form-group row">
+                <label class="col-lg-3 col-md-4 control-label">自定义编译</label>
+                <div class="col-lg-9 col-md-8">
+                  <input name="is_make" class="form-control is-make" type="checkbox">
+                </div>
+              </div>
+            <div class="form-group row div-makefile">
+                <label class="col-lg-3 col-md-4 control-label">编译内容</label>
+                <div class="col-lg-9 col-md-8">
+                    <textarea name="makefile" class="form-control makefile"></textarea>
+                </div>
+              </div>
+            <div class="form-group row">
+                <label class="col-lg-3 col-md-4 control-label">文件模板</label>
+                <div class="col-lg-9 col-md-8">
+                  <input name="is_temp" class="form-control is-temp" type="checkbox">
+                </div>
+              </div>
+            <div class="form-group row div-template">
+                <label class="col-lg-3 col-md-4 control-label">模板内容</label>
+                <div class="col-lg-9 col-md-8">
+                    <textarea name="template" class="form-control template"></textarea>
+                </div>
+              </div>
+
               <div class="input-group-btn">
                 <button type="button" class="btn btn-danger limit-delete">删除此限制</button>
               </div>
@@ -155,10 +181,27 @@ var limitForm = null
 var testForm = null
 
 $('#limit-add').click(function() {
-  $('#div-limits').append($(limitForm).clone(true))
+    var nw = $(limitForm).clone(true)
+    nw.find('.div-template').hide()
+    nw.find('.div-makefile').hide()
+  $('#div-limits').append(nw)
 })
 $('.limit-delete').click(function() {
   $(this).parent().parent().remove()
+})
+$('.is-make').click(function () {
+    if($('.is-make').is(':checked')){
+        $('.div-makefile').show()
+    }else{
+        $('.div-makefile').hide()
+    }
+})
+$('.is-temp').click(function () {
+    if($('.is-temp').is(':checked')){
+        $('.div-template').show()
+    }else{
+        $('.div-template').hide()
+    }
 })
 limitForm = $('#limit-form').clone(true)
 $('#limit-form').remove()
@@ -194,11 +237,19 @@ $('#btn-submit').click(function() {
     var time_limit = $(this).find('.time-limit').val()
     var memory_limit = $(this).find('.memory-limit').val()
     var length_limit = $(this).find('.length-limit').val()
+      var is_temp = $(this).find('.is-temp').is(':checked')
+      var is_make = $(this).find('.is-make').is(':checked')
+      var template = is_temp?$(this).find('.template').val():null
+      var makefile = is_make?$(this).find('.makefile').val():null
     data.limits.push({
       environment: env,
       time_limit: time_limit,
       memory_limit: memory_limit,
-      length_limit: length_limit
+      length_limit: length_limit,
+        is_temp:is_temp,
+        is_make:is_make,
+        template:template,
+        makefile:makefile
     })
   })
 

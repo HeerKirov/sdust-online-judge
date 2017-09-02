@@ -38,23 +38,7 @@ SATable.SimpleAjaxForm({
       caption: '可用',
       type: 'Boolean',
       defaultTrue: true
-    },
-    {
-      name: 'time_limit',
-      caption: '时间限制',
-      type: 'Number'
-    },
-    {
-      name: 'memory_limit',
-      caption: '内存限制',
-      type: 'Number'
-    },
-    {
-      name: 'length_limit',
-      caption: '代码长度限制',
-      type: 'Number'
-    },
-    {
+    }, {
       name: 'environment',
       caption: '编程环境',
       type: 'Select',
@@ -68,7 +52,36 @@ SATable.SimpleAjaxForm({
         responseHandler: SATable.DRF.keepRequest,
         dataGenerator: getOptions
       }
+    }, {
+      name: 'time_limit',
+      caption: '时间限制',
+      type: 'Number'
+    }, {
+      name: 'memory_limit',
+      caption: '内存限制',
+      type: 'Number'
+    }, {
+      name: 'length_limit',
+      caption: '代码长度限制',
+      type: 'Number'
+    }, {
+      name: 'is_make',
+      caption: '自定义编译',
+      type: 'Boolean'
+    }, {
+      name: 'makefile',
+      caption: '自定义编译',
+      type: 'Text'
+    },{
+      name: 'is_temp',
+      caption: '文件模板',
+      type: 'Boolean'
+    }, {
+      name: 'template',
+      caption: '文件模板',
+      type: 'Text'
     }
+
   ]
 })
 </script>
