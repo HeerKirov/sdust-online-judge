@@ -3,19 +3,19 @@
 
 # SDUSTOJ数据库的参数
 pg_db = {
-    'user': 'korosensei',
-    'password': 'big_boss',
+    'user': 'heer',
+    'password': '262144',
     'host': 'localhost',
     'port': '5432',
-    'database': 'sdustoj'
+    'database': 'sdustoj_server'
 }
 
 # 用于监听SDUSTOJ消息的Redis的参数
 redis_db = {
-    'host': 'localhost',
+    'host': '120.25.229.109',
     'port': '6379',
-    'password': 'hust',
-    'db': 0
+    'password': '262144',
+    'db': 10
 }
 
 # 接受SDUSTOJ命令的队列
@@ -30,32 +30,34 @@ subscribe = [
 ]
 
 # 该评测机在SDUSTOJ中的ID
-judger_id = 1
+judger_id = 2
 
 
 # == HUSTOJ 通信相关设置 ===============================================================================================
 
 # HUSTOJ数据库的参数
 mysql_db = {
-    'user': 'root',
-    'password': 'big_boss',
+    'user': 'heer',
+    'password': '262144',
     'host': 'localhost',
     'database': 'jol'
 }
 
 # 用于HUSTOJ服务器接受消息的Redis的参数
 local_redis_db = {
-    'host': 'localhost',
+    'host': '120.25.229.109',
     'port': '6379',
-    'password': 'hust',
-    'db': 0
+    'password': '262144',
+    'db': 9
 }
 
 # 向HUSTOJ发送命令的队列
 local_queue = {
     'test-data': 'test-data',
     'special-judge': 'special-judge',
-    'submission-analyse': 'sa'
+    'submission-analyse': 'sa',
+    'makefile': 'makefile',
+    'template': 'template'
 }
 
 # 向HUSTOJ更新提交时将提交挂在哪一HUSTOJ用户下
