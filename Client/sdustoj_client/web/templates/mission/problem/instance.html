@@ -12,18 +12,12 @@
       <h3>题目详情</h3>
     </div>
     <div class="col-2">
-      <a class="btn btn-primary" href="{% url 'web-mission-submission-submit' mid %}?problem={{ pid }}" >提交代码</a>
+      <a class="btn btn-primary" href="{% url 'web-mission-submission-submit' mid %}?problem={{ problem }}" >提交代码</a>
 
     </div>
   </div>
   <br>
   <table class="table">
-    {% if 'ProblemAdmin' in user.group or 'Root' in user.group %}
-    <tr>
-      <td><b>题元</b></td>
-      <td>{{ problem.meta_problem.id }}: {{ problem.meta_problem.title }}</td>
-    </tr>
-    {% endif %}
     <tr>
       <td><b>可用</b></td>
       <td id="available"></td>
@@ -52,10 +46,12 @@
         <div class="jumbotron" style="padding-top: 15px; padding-bottom: 15px;" id="sample"></div>
       </td>
     </tr>
+  {% if user_info.functions.is_else_student %}
     <tr>
       <td><b>特殊评测</b></td>
       <td id="is_special_judge"></td>
     </tr>
+  {% endif %}
     <tr>
       <td><b>编程限制</b></td>
       <td>
@@ -74,6 +70,7 @@
         </table>
       </td>
     </tr>
+  {% if user_info.functions.is_else_student %}
     <tr>
       <td><b>创建时间</b></td>
       <td id="create_time"></td>
@@ -90,6 +87,7 @@
       <td><b>更新者</b></td>
       <td id="updater"></td>
     </tr>
+  {% endif %}
     <tr>
       <td><b>来源</b></td>
       <td id="source"></td>
@@ -116,6 +114,9 @@ $(document).ready(function() {
       $("#introduction").text(ret.problem.introduction);
       $("#description").append(ret.problem.description ? markdown.toHTML(ret.problem.description): "没有描述");
       $("#sample").append(ret.problem.sample ? markdown.toHTML(ret.problem.sample): "没有样例");
+
+
+    {% if user_info.functions.is_else_student %}
       $("#is_special_judge").text(ret.problem.is_special_judge ? "是": "否");
       var iDate = new Date(ret.problem.create_time)
       var info = iDate.toLocaleString()
@@ -125,6 +126,8 @@ $(document).ready(function() {
       info = iDate.toLocaleString()
       $("#update_time").text(info);
       $("#updater").text(ret.updater);
+    {% endif %}
+
       $("#source").text(ret.problem.source);
       $("#author").text(ret.problem.author);
       for(var i in ret.problem.limit) {
