@@ -8,6 +8,7 @@ from config import CLIENT_SETTINGS
 from .submissions import submit
 from .models import *
 from .utils import dict_sub
+import json
 
 
 def now_dt():
@@ -75,10 +76,10 @@ class PersonalSerializers(object):
     class PersonalInfoSerializer(serializers.ModelSerializer):
         class Meta:
             model = UserProfile
-            exclude = ('user', 'is_staff', 'identities', 'courses')
+            exclude = ('user', 'is_staff', 'identities', 'courses', 'missions')
             read_only_fields = (
                 'username', 'creator', 'updater', 'create_time', 'update_time',
-                'last_login', 'ip'
+                'last_login', 'ip', 'available', 'deleted'
             )
 
     class UserPasswordSerializer(serializers.ModelSerializer):
@@ -635,7 +636,7 @@ class OrgUserSerializers(object):
 
         class Meta:
             model = Teacher
-            exclude = ('user', 'profile', 'organization')
+            exclude = ('user', 'profile', 'organization', 'id')
             read_only_fields = (
                 'creator', 'updater', 'create_time', 'update_time',
             )
@@ -679,7 +680,7 @@ class OrgUserSerializers(object):
 
         class Meta:
             model = Teacher
-            exclude = ('user', 'profile', 'organization')
+            exclude = ('user', 'profile', 'organization', 'id')
             read_only_fields = (
                 'username',
                 'creator', 'updater', 'create_time', 'update_time',
@@ -742,7 +743,7 @@ class OrgUserSerializers(object):
 
         class Meta:
             model = Student
-            exclude = ('user', 'profile', 'organization')
+            exclude = ('user', 'profile', 'organization', 'id')
             read_only_fields = (
                 'creator', 'updater', 'create_time', 'update_time',
             )
@@ -786,7 +787,7 @@ class OrgUserSerializers(object):
 
         class Meta:
             model = Student
-            exclude = ('user', 'profile', 'organization')
+            exclude = ('user', 'profile', 'organization', 'id')
             read_only_fields = (
                 'username',
                 'creator', 'updater', 'create_time', 'update_time',
@@ -1224,7 +1225,8 @@ class CategorySerializers(object):
 
             class Meta:
                 model = CourseMetaCategoryRelation
-                fields = ('id', 'category_id', 'title', 'introduction', 'source', 'author', 'number_problem')
+                fields = ('id', 'category_id', 'title', 'introduction', 'source', 'author',
+                          'number_problem')
                 read_only_fields = _RESOURCE_READONLY
 
         # 课程基类正在使用的题库
@@ -1527,6 +1529,69 @@ class MissionSerializers(object):
                 exclude = ('mission', 'mission_group')
                 read_only_fields = ('id',) + _RESOURCE_READONLY
 
+        # 直接在任务组中创建新的任务，为教师提供快速入口
+        class ListDirect(serializers.ModelSerializer):
+            caption = serializers.CharField(write_only=True)
+            available = serializers.BooleanField(default=True)
+            deleted = serializers.BooleanField(default=False)
+            start_time = serializers.DateTimeField(write_only=True)
+            end_time = serializers.DateTimeField(write_only=True)
+            config = serializers.JSONField(required=False, allow_null=True, write_only=True)
+            mode = serializers.CharField(write_only=True)
+
+            weight = serializers.DecimalField(default=1, max_digits=19, decimal_places=10)
+
+            def validate(self, attrs):
+                if attrs['start_time'] >= attrs['end_time']:
+                    raise ValidationError('Start time must be early than End time.')
+                mode = attrs['mode']
+                if mode == 'CUSTOM':  # 要求自定义的情况下必须提供config信息
+                    if 'config' in attrs:
+                        config = attrs['config']  # 这个东西需要做严格的验证。
+                        message = Mission.validate_config(config)
+                        if message is not None:
+                            raise ValidationError(message)
+                    else:
+                        raise ValidationError('You must give the config if you want custom.')
+                else:  # 采用自定义模式下，config的信息不管用，直接从默认配置里拉取
+                    attrs['config'] = Mission.default_mode_config(mode)
+                return attrs
+
+            def create(self, validated_data):
+                # 直接创建新的任务，隶属于上级任务组与上级课程基类。
+                mission_group = validated_data['mission_group']
+                mission = Mission(
+                    caption=validated_data['caption'],
+                    course_meta=mission_group.course_meta,
+                    organization=mission_group.organization,
+                    start_time=validated_data['start_time'],
+                    end_time=validated_data['end_time'],
+                    mode=validated_data['mode'],
+                    config=validated_data['config'],
+                    creator=validated_data['creator'],
+                    updater=validated_data['updater'],
+                    update_time=validated_data['update_time'],
+                    available=validated_data['available'],
+                    deleted=validated_data['deleted']
+                )
+                create_data = {
+                    'mission': mission,
+                    'mission_group': mission_group,
+                    'weight': validated_data['weight'],
+                    'creator': validated_data['creator'],
+                    'updater': validated_data['updater'],
+                    'update_time': validated_data['update_time'],
+                    'available': True,
+                    'deleted': False
+                }
+                mission.save()
+                return super().create(create_data)
+
+            class Meta:
+                model = MissionGroupRelation
+                exclude = ('mission', 'mission_group', 'id')
+                read_only_fields = ('id',) + _RESOURCE_READONLY
+
         # 任务组所拥有的任务
         class Instance(serializers.ModelSerializer):
             mission_id = serializers.PrimaryKeyRelatedField(read_only=True, source='mission')
@@ -1673,7 +1738,7 @@ class SubmissionSerializers(object):
         env_name = serializers.SlugRelatedField(read_only=True, slug_field='name', source='environment')
         user = serializers.SlugRelatedField(read_only=True, slug_field='username')
         user_name = serializers.SlugRelatedField(read_only=True, slug_field='name', source='user')
-        code = serializers.CharField(write_only=True)
+        code = serializers.JSONField(write_only=True)
 
         status_word = serializers.CharField(read_only=True, source='get_status_display')
 
@@ -1689,6 +1754,8 @@ class SubmissionSerializers(object):
             mission = validated_data['mission']
             env = validated_data['environment']
             code = validated_data['code']
+            if isinstance(code, str):
+                code = json.loads(code)
             user = CLIENT_SETTINGS['username']
             if problem not in mission.problems.all():
                 raise ValidationError('problem is not available.')
@@ -1701,7 +1768,12 @@ class SubmissionSerializers(object):
                 'user': user,
                 'contest': '%s' % (mission.id,),
             }
-            result = submit(submission_json)
+            result_ok, result = submit(submission_json)
+            if result_ok is False:
+                ret = ""
+                for k, v in result.items():
+                    ret += "%s: %s,\n" % (k, json.dumps(v))
+                raise ValidationError(ret)
             submission = Submission(
                 sid=result['id'],
                 problem=problem,
@@ -1714,7 +1786,7 @@ class SubmissionSerializers(object):
                 finished=result['finished'],
                 submit_time=result['submit_time'],
                 update_time=result['update_time'],
-                ip=profile.ip,
+                ip=profile.ip,  # todo 更换ip来源。
                 mission=mission,
                 organization=mission.organization
             )
@@ -1743,7 +1815,6 @@ class SubmissionSerializers(object):
 
         code = serializers.SlugRelatedField(read_only=True, slug_field='code')
         compile_info = serializers.SlugRelatedField(read_only=True, slug_field='info')
-        test_data_status = serializers.SlugRelatedField(read_only=True, slug_field='status')
 
         status_word = serializers.CharField(read_only=True, source='get_status_display')
 

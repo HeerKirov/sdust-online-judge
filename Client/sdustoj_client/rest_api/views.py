@@ -19,6 +19,7 @@ from .utils import ListNestedResourceViewSet, InstanceNestedResourceViewSet, Ins
 from .utils import ListNestedViewSet, ListReadonlyNestedViewSet, InstanceDeleteNestedViewSet
 from .utils import InstanceReadonlyNestedViewSet, CreateNestedViewSet
 from .utils import RemainSet
+from . import utils
 from .permissions import *
 from rest_framework.status import *
 from django.utils import timezone
@@ -301,7 +302,7 @@ class UserViewSets(object):
         class StudentViewSet(ListNestedResourceViewSet):
             queryset = getattr(Student, 'objects').order_by('username')
             serializer_class = OrgUserSerializers.ListStudent
-            permission_classes = (IsStudentReadonlyOrEduAdmin,)
+            permission_classes = (IsAnyOrgReadonlyOrEduAdmin,)
             search_fields = ('username', 'name')
             ordering_fields = ('username', 'name', 'sex', 'last_login',
                                'creator', 'updater', 'create_time', 'update_time')
@@ -370,7 +371,7 @@ class UserViewSets(object):
         class StudentViewSet(InstanceNestedResourceViewSet):
             queryset = getattr(Student, 'objects').order_by('username')
             serializer_class = OrgUserSerializers.InstanceStudent
-            permission_classes = (IsStudentReadonlyOrEduAdmin,)
+            permission_classes = (IsAnyOrgReadonlyOrEduAdmin,)
             lookup_field = 'username'
 
             parent_queryset = Organization.objects.all()
@@ -474,9 +475,6 @@ class UserViewSets(object):
             parent_related_name = 'course'
 
             def _set_queryset(self, **kwargs):
-                # 有关可以使用的题库的选定规则：
-                # 机构使用的题库，仅显示与该机构有直接关联的题库；
-                # 机构可以使用的题库，仅显示该机构还没添加、但是(上级机构添加了的题库|上级机构是root时的所有题库).
                 parent_queryset = getattr(self, 'parent_queryset')
                 parent_lookup = getattr(self, 'parent_lookup')
                 parent_pk = getattr(self, 'parent_pk')
@@ -770,7 +768,6 @@ class CategoryViewSet(object):
                 exist_id = [i.id for i in parent.categories.all()]  # 获得该meta旗下的所有的已用题库的id-list
 
                 self.queryset = parent.available_categories()
-                self.queryset = self.queryset.exclude(id__in=exist_id).all()
                 return parent_related_name, parent
 
     class CategoryInstance(object):
@@ -904,7 +901,7 @@ class CourseViewSets(object):
             def set_queryset(self):
                 profile = self.request.user.profile
                 if not profile.is_org_manager():
-                    return profile.get_courses().exlcude(deleted=True)
+                    return profile.get_courses().exclude(deleted=True)
                 else:
                     return profile.get_courses()
 
@@ -1142,7 +1139,7 @@ class MissionViewSets(object):
         class MissionMetaViewSet(ListNestedResourceViewSet):
             queryset = Mission.objects.all()
             serializer_class = MissionSerializers.Mission.List
-            permission_classes = (IsTeacherOrEduAdmin,)
+            permission_classes = (IsEduAdmin,)
             ordering_fields = ('caption', 'start_time', 'end_time')
             search_fields = ('caption',)
 
@@ -1183,13 +1180,52 @@ class MissionViewSets(object):
         class MissionMissionGroupViewSet(ListNestedResourceViewSet):
             queryset = MissionGroupRelation.objects.all()
             serializer_class = MissionSerializers.MissionMissionGroup.List
-            permission_classes = (IsStudentReadonlyOrAnyOrg,)
+            permission_classes = (IsAnyOrgReadonlyOrEduAdmin,)
             ordering_fields = ('id',)
 
             parent_queryset = MissionGroup.objects.all()
             parent_lookup = 'mission_group_id'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
             parent_related_name = 'mission_group'  # 在当前models中，上级model的关联名
             parent_pk = 'id'  # 上级model的主键名
+
+            def perform_create(self, serializer):
+                instance = super().perform_create(serializer)
+                profiles = instance.mission_group.course_unit.get_relation_profiles()
+                for profile in profiles:
+                    profile.update_missions_cache()
+                return instance
+
+        # 直接创建新任务 - deep2
+        class MissionDirectMissionGroupViewSet(utils.CreateNestedMixin, utils.ExtraDataMixin,
+                                               utils.NestedMixin, viewsets.GenericViewSet):
+            queryset = MissionGroupRelation.objects.all()
+            serializer_class = MissionSerializers.MissionMissionGroup.ListDirect
+            permission_classes = (IsTeacherOrEduAdmin,)
+
+            parent_queryset = MissionGroup.objects.all()
+            parent_lookup = 'mission_group_id'  # url传入的资源参数代号，按照drf-nested规则定义在urls中
+            parent_related_name = 'mission_group'  # 在当前models中，上级model的关联名
+            parent_pk = 'id'  # 上级model的主键名
+
+            def create(self, request, *args, **kwargs):
+                if 'dataStr' in self.request.data:
+                    data = loads(request.data['dataStr'])
+                else:
+                    data = request.data
+                related_name, parent = getattr(self, '_set_queryset')(**kwargs)
+                extra_data = getattr(self, 'extra_data')
+                extra_data[related_name] = parent
+                extra_data = getattr(self, 'extra_data')
+                extra_data['creator'] = request.user.username
+                extra_data['updater'] = request.user.username
+                extra_data['update_time'] = timezone.now()
+
+                serializer = self.get_serializer(data=data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                headers = self.get_success_headers(serializer.data)
+                show_serializer = MissionSerializers.MissionMissionGroup.List(instance=serializer.instance)
+                return Response(show_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
             def perform_create(self, serializer):
                 instance = super().perform_create(serializer)
@@ -1227,7 +1263,7 @@ class MissionViewSets(object):
         class MissionViewSet(InstanceResourceViewSet):
             queryset = Mission.objects.all()
             serializer_class = MissionSerializers.Mission.Instance
-            permission_classes = (IsStudentReadonlyOrAnyOrg,)
+            permission_classes = (IsSpecialMissionInstance,)
             lookup_field = 'id'
 
             def perform_destroy(self, instance):
@@ -1268,7 +1304,7 @@ class MissionViewSets(object):
         # 任务组下的任务 - deep2 - relation
         class MissionMissionGroupViewSet(InstanceNestedResourceViewSet):
             queryset = MissionGroupRelation.objects.all()
-            serializer_class = MissionSerializers.MissionMissionGroup.List
+            serializer_class = MissionSerializers.MissionMissionGroup.Instance
             permission_classes = (IsStudentReadonlyOrAnyOrg,)
             lookup_field = 'id'
 
@@ -1446,7 +1482,7 @@ class MissionViewSets(object):
                 lookup = kwargs[self.parent_lookup]
                 parent = get_object_or_404(self.parent_queryset, **{self.parent_pk: lookup})
                 # 获取json数据
-                datas = kwargs['dataStr']
+                datas = loads(kwargs['dataStr'])
                 # 需要做的事：获取任务可用的题目并进行比对，判断可用的合法性;
                 # 获取任务已有的所有题目。遍历已有题目，在data中查询当前题目并提交修改;在data中找不到的题目进行删除;剩余未动的data数据添加
                 available_problem_relations = parent.available_problem_relations().all()
@@ -1591,7 +1627,11 @@ class MissionViewSets(object):
                             'cause': 'not_started'
                         }
                         return Response(data, HTTP_406_NOT_ACCEPTABLE)
-
+                if 'HTTP_X_FORWARDED_FOR' in request.META:
+                    ip = request.META['HTTP_X_FORWARDED_FOR']
+                else:
+                    ip = request.META['REMOTE_ADDR']
+                self.extra_data['ip'] = ip
                 return super().create(request, *args, **kwargs)
 
             def perform_create(self, serializer):
