@@ -15,6 +15,8 @@ from .log import print_log
 
 from conf import judger_id
 
+import json
+
 PgSession = sessionmaker(bind=pg_models.engine)
 pg_session = PgSession()
 
@@ -31,19 +33,21 @@ def update(**kwargs):
     language_name = kwargs['language']
     language_id = language[language_name]  # 提交所使用的语言
     submission = pg_session.query(pg_models.Submission).filter_by(id=sid).first()  # 查询sdustoj数据库中的该submission
-    code = pg_session.query(pg_models.SubmissionCode).filter_by(submission_id=sid).first().code['code']  # 查询该提交的代码
+    codes = pg_session.query(pg_models.SubmissionCode).filter_by(submission_id=sid).first().code  # 查询该提交的代码
 
     # by hk in 2017.05.18======
     # 查询编程限制。
     limits = pg_session.query(pg_models.Limit).filter_by(problem_id=submission.problem_id).all()
     max_length = None
+    using_limit = None
     for limit in limits:
         environment = pg_session.query(pg_models.Environment).filter_by(id=limit.environment_id).first()
         if environment.judge_id == language_name:  # 确认这是正在使用的编程环境
             max_length = limit.length_limit
+            using_limit = limit
             break
 
-    code_length = len(code)
+    code_length = submission.length
     if max_length is not None and code_length > max_length:  # 可以知道长度超出限制
         finished = True
         status = 'LLE'
@@ -58,16 +62,17 @@ def update(**kwargs):
     # 处理禁用单词
     invalid_words = pg_session.query(pg_models.InvalidWord).filter_by(problem_id=submission.problem_id).all()
     for invalid_word in invalid_words:
-        if invalid_word.word in code:  # 代码包含该禁用单词
-            finished = True
-            status = 'IW'
-            table = pg_models.Submission.__table__  # 测试数据状态的表本身？
-            pg_session.execute(
-                table.update().where(table.c.id == sid), {'status': status, 'finished': finished}
-            )  # 看起来这句话的意思是更新该条提交在sdustoj数据库中的信息……
-            submission.judge_id = judger_id  # 更新评测机的ID为本机ID。
-            pg_session.commit()  # 提交更改
-            return
+        for block, code in codes.items():
+            if invalid_word.word in code:  # 代码包含该禁用单词
+                finished = True
+                status = 'IW'
+                table = pg_models.Submission.__table__  # 测试数据状态的表本身？
+                pg_session.execute(
+                    table.update().where(table.c.id == sid), {'status': status, 'finished': finished}
+                )  # 看起来这句话的意思是更新该条提交在sdustoj数据库中的信息……
+                submission.judge_id = judger_id  # 更新评测机的ID为本机ID。
+                pg_session.commit()  # 提交更改
+                return
 
     # ======================
 
@@ -122,12 +127,24 @@ def update(**kwargs):
     mysql_session.commit()
     # 执行到这里就是已经成功生成了全部的提交，将它们同步到hustoj数据库
 
+    if using_limit is not None:  # 提取模板提交开关
+        is_temp = using_limit.is_temp
+    else:
+        is_temp = False
+
     code_create = []
     code_user_create = []
     sub_mark = []  # 标记的列表。内容为元组(测试数据ID,提交submission的ID).
     for tid, sub in submission_mark:  # 提取所有的测试数据ID与提交信息内容
         print_log('Submission Updated: %s' % (sub.solution_id,))
         # 向数据库中写入代码
+        if is_temp:
+            code = json.dumps(codes)
+        elif 'code' in codes:
+            code = codes['code']
+        else:
+            code = ""  # 防止出错，这么搞算了……
+
         code_create.append(mysql_models.SourceCode(  # 似乎这个SourceCode是提交的代码
             solution_id=sub.solution_id,
             source=code
@@ -166,6 +183,7 @@ def _handler(sid):  # 处理某个提交。
     max_status = 4
     sum_score = 0
     sum_weight = 0
+    solution = None
     for test_data_id, solution_id in status.items():  # 遍历查询所有测试数据的提交的测试数据ID和hustoj提交的ID。
         while True:
             try:
@@ -195,7 +213,7 @@ def _handler(sid):  # 处理某个提交。
             max_status = result
         # 上三行获得更高优先级的结果数据。 priority用来规定结果状态的优先级。
         # 下面计算权重数值。
-        sum_score += map_score
+        sum_score += map_score * weight
         sum_weight += weight
 
         print('\tGot solution %s, result is %s' % (solution_id, result))
@@ -227,6 +245,12 @@ def _handler(sid):  # 处理某个提交。
         submission.status = map_status
         submission.score_info = sum_score / sum_weight if sum_weight > 0 else 0
         submission.finished = True  # 标记该提交为已完成。
+        # 处理一下编译信息的问题。
+        if map_status == 'CE' and solution is not None:
+            compile_info = pg_session.query(pg_models.CompileInfo).filter_by(submission_id=submission.id).first()
+            compile_info_hustoj = mysql_session.query(mysql_models.CompileInfo).filter_by(solution_id=solution.solution_id).first()
+            if compile_info is not None and compile_info_hustoj is not None:
+                compile_info.info = compile_info_hustoj.error
         print('\tFinished, unmarked.')
     submission.update_time = datetime.now()
     pg_session.commit()
