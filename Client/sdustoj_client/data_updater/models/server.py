@@ -70,6 +70,9 @@ class Limit(_Base):
     memory_limit = Column(Integer, default=-1)
     length_limit = Column(Integer, default=-1)
 
+    is_temp = Column(Boolean, default=False)
+    template_list = Column(JSONB, nullable=True, default=None)
+
 
 class Category(_Base):
     __tablename__ = 'rest_api_category'
