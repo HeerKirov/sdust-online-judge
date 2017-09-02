@@ -6,6 +6,7 @@ import time
 
 from conf import queue, subscribe, local_queue, default_status
 from conf import redis_db, local_redis_db
+from conf import language
 
 pool = redis.ConnectionPool(
     host=redis_db['host'],
@@ -24,6 +25,58 @@ local_pool = redis.ConnectionPool(
 lr = redis.Redis(connection_pool=local_pool)
 
 sub_analyse_key = local_queue['submission-analyse']  # 提交解析队列？
+
+
+class Template(object):  # 处理模板文件相关。
+    @staticmethod
+    def write(problem_id, **kwargs):
+        """
+        将数据发送到hustoj本地的写入器，写入模板文件。
+        模板文件有多个，命名方式为"template_<语言编号>".kwargs中使用sdustoj语言名称: 文件内容的格式。
+        :param problem_id: 
+        :param kwargs: 
+        :return: 
+        """
+        if len(kwargs) <= 0:
+            return
+        templates = {}
+        # 做一个初始化。
+        for lang, num in language.items():
+            templates['template_' + str(num)] = None
+        for lang, file in kwargs.items():
+            if lang in language:
+                templates['template_' + str(language[lang])] = file
+        data = {
+            'problem_id': str(problem_id),
+            'templates': templates
+        }
+        lr.rpush(local_queue['template'], dumps(data))
+
+
+class Makefile(object):
+    @staticmethod
+    def write(problem_id, **kwargs):
+        """
+        将数据发送到hustoj本地的写入器，写入自定义编译文件。
+        命名方式为"makefile_<语言编号>".kwargs中使用sdustoj语言名称: 文件内容的格式。
+        :param problem_id: 
+        :param kwargs: 
+        :return: 
+        """
+        if len(kwargs) <= 0:
+            return
+        makefiles = {}
+        # 做一个初始化。
+        for lang, num in language.items():
+            makefiles['makefile_' + str(num)] = None
+        for lang, file in kwargs.items():
+            if lang in language:
+                makefiles['makefile_' + str(language[lang])] = file
+        data = {
+            'problem_id': str(problem_id),
+            'makefiles': makefiles
+        }
+        lr.rpush(local_queue['makefile'], dumps(data))
 
 
 class TestData(object):  # 看起来处理测试数据相关。与Client对接将测试数据写入本地文件系统。

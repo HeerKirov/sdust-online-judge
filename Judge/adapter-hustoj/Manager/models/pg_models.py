@@ -95,6 +95,12 @@ class Limit(_Base):
     memory_limit = Column(Integer)
     length_limit = Column(Integer)
 
+    is_temp = Column(Boolean)
+    is_make = Column(Boolean)
+
+    template_list = Column(JSONB)
+    makefile = Column(String)
+
     deleted = Column(Boolean)
 
 
@@ -139,7 +145,7 @@ class CompileInfo(_Base):
     __tablename__ = 'rest_api_compileinfo'
 
     submission_id = Column(BigInteger, primary_key=True)
-    info = Column(JSONB)
+    info = Column(String)
 
 
 class TestDataStatus(_Base):
