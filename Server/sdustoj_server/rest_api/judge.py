@@ -4,7 +4,10 @@ from .models import Judge
 from config import REDIS_SETTINGS
 
 pool = redis.ConnectionPool(
-    host=REDIS_SETTINGS['host'], port=int(REDIS_SETTINGS['port']), db=0, password=REDIS_SETTINGS['password']
+    host=REDIS_SETTINGS['host'],
+    port=int(REDIS_SETTINGS['port']),
+    db=int(REDIS_SETTINGS['db']),
+    password=REDIS_SETTINGS['password']
 )
 r = redis.Redis(connection_pool=pool)
 
@@ -81,7 +84,7 @@ def update_all(judge=None):
 # -- 发布提交相关 ------------------------------------------------------------------------------------------------------
 
 def push_submission(submission_id):
-    r.rpush(str(submission_id), '')
+    r.rpush(str(submission_id), '_')
 
 
 def publish_submission(submission):
