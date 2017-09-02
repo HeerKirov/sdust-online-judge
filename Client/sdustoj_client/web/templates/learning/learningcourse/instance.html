@@ -23,9 +23,8 @@ SATable.SimpleAjaxInfo({
   updateMethod: 'PATCH',
   removeMethod: 'DELETE',
   getURL: '{% url 'api-course-detail' cid %}',
-  updateURL: '{% url 'api-course-detail' cid %}',
-  removeURL: '{% url 'api-course-detail' cid %}',
-  removeToURL: document.referrer,
+{#  removeURL: '{% url 'api-course-detail' cid %}',#}
+{#  removeToURL: document.referrer,#}
   items: [
     { name: 'meta', caption: '课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
     { name: 'meta_caption', caption: '课程基类名称', type:'Text',typeInfo: { max_length: 150 } },
@@ -33,7 +32,7 @@ SATable.SimpleAjaxInfo({
     { name: 'caption', caption: '课程名称', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
     { name: 'start_time', caption: '开课时间',  type: 'Date'},
-    { name: 'end_time', caption: '结课登录',  type: 'Date' },
+    { name: 'end_time', caption: '结课时间',  type: 'Date' },
       'Divide',
 
     { name: 'available', caption: '可用', type: 'Boolean' },
@@ -41,8 +40,8 @@ SATable.SimpleAjaxInfo({
     'Divide',
     { name: 'creator', caption: '创建者', type: 'Text', readOnly: true },
     { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },
-    { name: 'updater', caption: '最后更新者', type: 'Text', readOnly: true },
-    { name: 'update_time', caption: '最后更新时间', type: 'Datetime', readOnly: true },
+    { name: 'updater', caption: '更新者', type: 'Text', readOnly: true },
+    { name: 'update_time', caption: '更新时间', type: 'Datetime', readOnly: true },
 
   ]
 })

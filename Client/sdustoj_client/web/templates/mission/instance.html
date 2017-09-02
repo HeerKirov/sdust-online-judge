@@ -27,13 +27,14 @@
     <div class="col-6">
       <h3>任务详情</h3>
     </div>
-    {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
-    <div class="col-2">
-      <button class="btn btn-primary" id = "update">修改信息</button>
-      <button class="btn btn-primary" id = "submit" style="display: none">保存</button>
+    {% if user_info.functions.is_else_student %}
+    <div class="col-1">
+      <button class="btn btn-primary" id = "update"><i class="fa fa-pencil-square-o fa-fw"></i></button>
+      <button class="btn btn-primary" id = "submit" style="display: none"><i class="fa fa-floppy-o fa-fw"></i></button>
     </div>
+  {% endif %}{% if user_info.functions.is_edu_admin %}
     <div class="col-2">
-      <button class="btn btn-primary" id = "delete">删除</button>
+      <button class="btn btn-danger" id = "delete"><i class="fa fa-trash fa-fw"></i></button>
     </div>
     {% endif %}
   </div>
@@ -45,11 +46,19 @@
     </div>
     <hr/>
   <form id = "form">
+    <div class="row">
+      <div class="col-4"><b>&emsp;课程基类ID</b></div>
+      <div class="col-4" id="course_meta"></div>
+    </div>
+    <div class="row">
+      <div class="col-4"><b>&emsp;课程基类名称</b></div>
+      <div class="col-4" id="meta_caption"></div>
+    </div>
+      <br>
   <div class="row">
       <div class="col-4"><b>&emsp;任务ID</b></div>
       <div class="col-4" id="mid"></div>
   </div>
-  <br>
   <div class="row">
       <div class="col-4"><b>&emsp;任务名称</b></div>
       <div class="col-4">
@@ -58,6 +67,21 @@
       </div>
   </div>
   <br>
+    <div class="row">
+      <div class="col-4"><b>&emsp;开始时间</b></div>
+      <div class="col-4">
+          <p id="start_time" class="orig_info"></p>
+          <input id="i_start_time" name="i_start_time" class="form-control update" type="text" readonly="readonly">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-4"><b>&emsp;结束时间</b></div>
+      <div class="col-4">
+          <p id="end_time" class="orig_info"></p>
+          <input id="i_end_time" name="i_end_time" class="form-control update" type="text" readonly="readonly">
+      </div>
+    </div>
+    <hr>
   <div class="row">
     <div class="col-4">
       <b>&emsp;可用</b>
@@ -67,7 +91,6 @@
       <select class="form-control  update" id="i_available" name="i_available"></select>
     </div>
   </div>
-  <br>
     <div class="row">
       <div class="col-4">
           <b>&emsp;废弃</b>
@@ -78,31 +101,6 @@
       </div>
     </div>
     <br>
-    <div class="row">
-      <div class="col-4"><b>&emsp;开始时间</b></div>
-      <div class="col-4">
-          <p id="start_time" class="orig_info"></p>
-          <input id="i_start_time" name="i_start_time" class="form-control update" type="text" readonly="readonly">
-      </div>
-    </div>
-    <br>
-    <div class="row">
-      <div class="col-4"><b>&emsp;结束时间</b></div>
-      <div class="col-4">
-          <p id="end_time" class="orig_info"></p>
-          <input id="i_end_time" name="i_end_time" class="form-control update" type="text" readonly="readonly">
-      </div>
-    </div>
-    <br>
-  <div class="row">
-      <div class="col-4"><b>&emsp;课程基类ID</b></div>
-      <div class="col-4" id="course_meta"></div>
-    </div>
-    <br>
-    <div class="row">
-      <div class="col-4"><b>&emsp;课程基类名称</b></div>
-      <div class="col-4" id="meta_caption"></div>
-    </div>
   <hr/>
   <div class="row">
       <div class="col-4"><b>&emsp;创建时间</b></div>
@@ -145,9 +143,9 @@
           <div class="col-4">
               <p id="submission_display" class="orig_info"></p>
               <select class="form-control  update" id="i_submission_display" name="i_submission_display">
-                  <option value="all">all</option>
-                  <option value="self">self</option>
-                  <option value="no">no</option>
+                  <option value="all">全部</option>
+                  <option value="self">仅自己</option>
+                  <option value="no">禁用</option>
               </select>
           </div>
         </div>
@@ -156,9 +154,9 @@
           <div class="col-4">
               <p id="score_display" class="orig_info"></p>
               <select class="form-control  update" id="i_score_display" name="i_score_display">
-                  <option value="yes">yes</option>
-                  <option value="close">close</option>
-                  <option value="no">no</option>
+                  <option value="yes">开启</option>
+                  <option value="close">任务结束前关闭</option>
+                  <option value="no">禁用</option>
               </select>
           </div>
         </div>
@@ -167,8 +165,8 @@
           <div class="col-4">
               <p id="type" class="orig_info"></p>
               <select class="form-control  update" id="i_type" name="i_type">
-                  <option value="acm">acm</option>
-                  <option value="oi">oi</option>
+                  <option value="acm">ACM模式</option>
+                  <option value="oi">OI模式</option>
               </select>
           </div>
         </div>
@@ -178,8 +176,8 @@
               <div class="col-4">
                   <p id="valid_submission" class="orig_info"></p>
                   <select class="form-control  update" id="i_valid_submission" name="i_valid_submission">
-                      <option value="highest">highest</option>
-                      <option value="latest">latest</option>
+                      <option value="highest">取最高分</option>
+                      <option value="latest">取最近一次提交</option>
                   </select>
               </div>
             </div>
@@ -249,13 +247,18 @@ $(document).ready(function() {
       $("#course_meta").text(ret.course_meta);
       $("#meta_caption").text(ret.meta_caption);
       $("#i_caption").val(ret.caption);
-      $("#mode").text(ret.mode + "模式");
-      var arr_mode = ['CUSTOM', 'ACM', 'C4', 'CCF'];
+      var arr_mode = {
+          CUSTOM: '自定义配置',
+          ACM: 'ACM模式',
+          C4: 'C4模式',
+          CCF: 'CCF模式'
+      };
+      $("#mode").text(arr_mode[ret.mode]);
       for(var i in arr_mode)
       {
           var option = $("<option></option>")
-          option.val(arr_mode[i]).text(arr_mode[i] + "模式")
-          if(arr_mode[i] == ret.mode)
+          option.val(i).text(arr_mode[i]);
+          if(i == ret.mode)
           {
                 option.attr('selected', 'selected')
           }
@@ -263,40 +266,53 @@ $(document).ready(function() {
       }
       if(ret.mode == 'CUSTOM')
       {
-          $("#type").empty().text(ret.config.type);
+          var arr_type = {
+              acm: 'ACM模式',
+              oi: 'OI模式',
+          };
+          $("#type").empty().text(arr_type[ret.config.type]);
           $("#i_type").empty()
-          var arr_type = ['acm', 'oi']
           for(var i in arr_type)
           {
               var option = $("<option></option>")
-              option.val(arr_type[i]).text(arr_type[i])
-              if(arr_type[i] == ret.config.type)
+              option.val(i).text(arr_type[i])
+              if(i == ret.config.type)
               {
                     option.attr('selected', 'selected')
               }
               $("#i_type").append(option)
           }
-          $("#submission_display").text(ret.config.submission_display);
+
+          var arr_submission = {
+              self: '仅个人',
+              all: '全部',
+              no: '禁用'
+          };
+          $("#submission_display").text(arr_submission[ret.config.submission_display]);
           $("#i_submission_display").empty()
-          var arr_submission = ['self', 'all', 'no']
           for(var i in arr_submission)
           {
               var option = $("<option></option>")
-              option.val(arr_submission[i]).text(arr_submission[i])
-              if(arr_submission[i] == ret.config.submission_display)
+              option.val(i).text(arr_submission[i])
+              if(i == ret.config.submission_display)
               {
                     option.attr('selected', 'selected')
               }
               $("#i_submission_display").append(option)
           }
-          $("#score_display").text(ret.config.score_display);
+
+          var arr_score = {
+              yes: '启用',
+              close: '任务结束前封闭',
+              no: '永久禁用'
+          };
+          $("#score_display").text(arr_score[ret.config.score_display]);
           $("#i_score_display").empty()
-          var arr_score = ['yes', 'close', 'no']
           for(var i in arr_score)
           {
               var option = $("<option></option>")
-              option.val(arr_score[i]).text(arr_score[i])
-              if(arr_score[i] == ret.config.score_display)
+              option.val(i).text(arr_score[i])
+              if(i == ret.config.score_display)
               {
                     option.attr('selected', 'selected')
               }
@@ -304,14 +320,18 @@ $(document).ready(function() {
           }
           if(ret.config.type=='oi')
           {
-              $("#valid_submission").empty().text(ret.config.type_config.valid_submission);
+              var arr_valid = {
+                  highest: '取最高分',
+                  latest: '取最近一次提交'
+              }
+              $("#valid_submission").empty().text(arr_valid[ret.config.type_config.valid_submission]);
               $("#i_valid_submission").empty()
-              var arr_valid = ['highest', 'latest']
+
               for(var i in arr_valid)
               {
                   var option = $("<option></option>")
-                  option.val(arr_valid[i]).text(arr_valid[i])
-                  if(arr_valid[i] == ret.config.type_config.valid_submission)
+                  option.val(i).text(arr_valid[i])
+                  if(i == ret.config.type_config.valid_submission)
                   {
                         option.attr('selected', 'selected')
                   }

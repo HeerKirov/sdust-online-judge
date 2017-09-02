@@ -1,7 +1,7 @@
 {% extends "course-group/adminBasic2.html" %}
 {% load staticfiles %}
 
-{% block title %}课程组{% endblock %}
+{% block title %}教师{% endblock %}
 
 {% block nav_myorganization %} active {% endblock %}
 {% block nav_teacher %} active {% endblock %}
@@ -17,7 +17,7 @@
 <script>
 SATable.SimpleAjaxInfo({
   id: 'teacherinfo',
-  title: '课程信息',
+  title: '教师',
   getMethod: 'GET',
   updateMethod: 'PATCH',
   removeMethod: 'DELETE',

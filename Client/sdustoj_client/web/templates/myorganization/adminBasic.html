@@ -20,7 +20,7 @@
           {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
           <a class="nav-link {% block nav_teacher %}{% endblock %}" href="{% url 'web-teacher-list' oid %}">教师</a>
           {% endif %}
-          {% if 'EDU_ADMIN' in user_info.user.get_identities or 'STUDENT' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
+          {% if user_info.functions.is_student_up %}
           <a class="nav-link {% block nav_student %}{% endblock %}" href="{% url 'web-student-list' oid %}">学生</a>
           {% endif %}
           {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}

@@ -22,8 +22,10 @@ SATable.SimpleAjaxInfo({
   updateMethod: 'PATCH',
   removeMethod: 'DELETE',
   getURL: '{% url 'api-course-course-group-detail' cid id %}',
-  removeURL: '{% url 'api-course-course-group-detail' cid id %}',
+{% if user_info.functions.is_edu_admin %}
+    removeURL: '{% url 'api-course-course-group-detail' cid id %}',
   removeToURL: document.referrer,
+{% endif %}
   items: [
     { name: 'meta', caption: '课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
       { name: 'meta_caption', caption: '课程基类名称', type:'Text',typeInfo: { max_length: 150 } },

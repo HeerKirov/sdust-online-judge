@@ -33,8 +33,9 @@
               <li class="nav-item"><a class="nav-link {% block nav_course_info %}{% endblock %}" href="{% url 'web-course-meta-instance' oid uid %}">&nbsp&nbsp&nbsp&nbsp基本信息</a></li>
             <li class="nav-item"><a class="nav-link {% block nav_course_group %}{% endblock %}" href="{% url 'web-course-group-list' oid uid  %}">&nbsp&nbsp&nbsp&nbsp课程组</a></li>
               <li class="nav-item"><a class="nav-link {% block nav_course %}{% endblock %}" href="{% url 'web-myorg-coursemeta-course-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp课程</a></li>
-              <li class="nav-item"><a class="nav-link {% block nav_mission %}{% endblock %}" href="{% url 'web-myorg-coursemeta-mission-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp任务</a></li>
-              {% if 'EDU_ADMIN' in user_info.user.get_identities %}
+            {% if 'EDU_ADMIN' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities %}
+            <li class="nav-item"><a class="nav-link {% block nav_mission %}{% endblock %}" href="{% url 'web-myorg-coursemeta-mission-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp任务</a></li>
+
               <li class="nav-item"><a class="nav-link {% block nav_using_categories%}{% endblock %}" href="{% url 'web-myorg-coursemeta-category-list' oid uid %}">&nbsp&nbsp&nbsp&nbsp使用的题库</a></li>
               {% endif %}
             </ul>

@@ -27,17 +27,17 @@ SATable.SimpleAjaxInfo({
   items: [
     { name: 'username', caption: '用户名', type: 'Text', readOnly: true },
     'Divide',
-    { name: 'is_staff', caption: '管理员', type: 'Boolean' },
-    { name: 'identities', caption: '权限', type: 'Select', typeInfo: {
-      many: true,
-      choices: [
-          { text: '无', value: 'None' },
-          { text: '超级管理员', value: 'ROOT' },
-          { text: '用户管理员', value: 'USER_ADMIN' },
-          { text: '机构管理员', value: 'ORG_ADMIN' },
-      ]
-    } },
-    'Divide',
+{#    { name: 'is_staff', caption: '管理员', type: 'Boolean' },#}
+{#    { name: 'identities', caption: '权限', type: 'Select',readOnly: true, typeInfo: {#}
+{#      many: true,#}
+{#      choices: [#}
+{#          { text: '无', value: 'None' },#}
+{#          { text: '超级管理员', value: 'ROOT' },#}
+{#          { text: '用户管理员', value: 'USER_ADMIN' },#}
+{#          { text: '机构管理员', value: 'ORG_ADMIN' },#}
+{#      ]#}
+{#    } },#}
+{#    'Divide',#}
     { name: 'name', caption: '姓名', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'sex', caption: '性别', type: 'Select', typeInfo: {
       many: false,
@@ -54,11 +54,9 @@ SATable.SimpleAjaxInfo({
     { name: 'qq', caption: 'QQ', type: 'Text', typeInfo: { max_length: 128 } },
     { name: 'wechat', caption: '微信', type: 'Text', typeInfo: { max_length: 128 } },
     { name: 'blog', caption: '博客', type: 'Text', typeInfo: { max_length: 128 ,  link: true} },
+    { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { max_length: 256 } },
     'Divide',
-    { name: 'available', caption: '可用', type: 'Boolean' },
-    'Divide',
-    { name: 'last_login', caption: '最后登录', type: 'Datetime', readOnly: true },
-    { name: 'ip', caption: '最后登录IP', type: 'Text', readOnly: true },
+    { name: 'available', caption: '可用', type: 'Boolean', readOnly: true },
     'Divide',
     { name: 'creator', caption: '创建者', type: 'Text', readOnly: true },
     { name: 'create_time', caption: '创建时间', type: 'Datetime', readOnly: true },

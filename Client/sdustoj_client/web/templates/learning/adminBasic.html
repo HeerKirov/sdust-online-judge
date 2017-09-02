@@ -14,7 +14,7 @@
     <div class="col-lg-3 col-md-4">
       <div class="container">
         <nav class="nav flex-column nav-pills">
-        <a class="nav-link {% block nav_course_info %}{% endblock %}" href="{% url 'web-course-instance' cid %}">课程详细信息</a>
+        <a class="nav-link {% block nav_course_info %}{% endblock %}" href="{% url 'web-learning-course-instance' cid %}">课程详细信息</a>
         <a class="nav-link {% block nav_mission %}{% endblock %}" href="{% url 'web-learning-course-mission-group-list' cid %}">任务组</a>
         {% block sub_nav2 %}{% endblock %}
         </nav>

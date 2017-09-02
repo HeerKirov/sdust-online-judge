@@ -1,7 +1,7 @@
 {% extends "learning/mission-group/adminBasic.html" %}
 {% load staticfiles %}
 
-{% block title %}任务详情{% endblock %}
+{% block title %}任务组{% endblock %}
 {% block subnav_mission_group_info %}active{% endblock %}
 
 
@@ -21,13 +21,14 @@ SATable.SimpleAjaxInfo({
   removeMethod: 'DELETE',
   getURL: '{% url 'api-mission-group-detail' id %}',
   items: [
-     { name: 'courser_meta', caption: '所属课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
+     { name: 'course_meta', caption: '所属课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
     { name: 'meta_caption', caption: '所属课程基类名称', type:'Text',typeInfo: { max_length: 150 } },
 
 
     { name: 'id', caption: '任务组ID', type:'Number' },
     { name: 'caption', caption: '任务组名称', type: 'Text', typeInfo: { max_length: 150 } },
-    { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
+      'Divide',
+    { name: 'weight', caption: '评分权重', type: 'Text' },
 
       'Divide',
 

@@ -1,7 +1,7 @@
 {% extends "mission-group/adminBasic.html" %}
 {% load staticfiles %}
 
-{% block title %}任务详情{% endblock %}
+{% block title %}任务组详情{% endblock %}
 
 {% block nav_mission_group %} active {% endblock %}
 
@@ -19,20 +19,23 @@ SATable.SimpleAjaxInfo({
   id: 'mission-group-info',
   title: '任务组信息',
   getMethod: 'GET',
+  updateMethod: 'PATCH',
   removeMethod: 'DELETE',
   getURL: '{% url 'api-mission-group-detail' id %}',
+  updateURL: '{% url 'api-mission-group-detail' id %}',
   {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER_ADMIN' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities or 'ROOT' in user_info.user.get_identities %}
   removeURL: '{% url 'api-mission-group-detail' id %}',
   removeToURL: document.referrer,
   {% endif %}
   items: [
-     { name: 'courser_meta', caption: '所属课程基类ID', type:'Text',typeInfo: { max_length: 150 } },
-    { name: 'meta_caption', caption: '所属课程基类名称', type:'Text',typeInfo: { max_length: 150 } },
+     { name: 'course_meta', caption: '所属课程基类ID', type:'Text',typeInfo: { max_length: 150 }, readOnly: true },
+    { name: 'meta_caption', caption: '所属课程基类名称', type:'Text',typeInfo: { max_length: 150 }, readOnly: true },
 
 
-    { name: 'id', caption: '任务组ID', type:'Number' },
+    { name: 'id', caption: '任务组ID', type:'Number', readOnly: true },
     { name: 'caption', caption: '任务组名称', type: 'Text', typeInfo: { max_length: 150 } },
-    { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
+      'Divide',
+    { name: 'weight', caption: '评分权重', type: 'Text' },
 
       'Divide',
 

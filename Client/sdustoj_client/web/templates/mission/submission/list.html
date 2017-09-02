@@ -25,7 +25,7 @@ SATable.DRFTable({
       {% if display_type == 'acm' %}
     { name: 'status_word', caption: '状态', type: 'Text' },
       {% else %}
-    { name: 'score', caption: '完成度', type: 'Text' },
+    { name: 'score', caption: '完成度', type: 'Number', typeInfo: {digit: 2} },
       {% endif %}
     { name: 'time', caption: '时间', type: 'Text' },
     { name: 'memory', caption: '内存', type: 'Text' },

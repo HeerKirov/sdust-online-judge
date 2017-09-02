@@ -21,6 +21,7 @@ SATable.DRFTable({
   url: "{% url 'api-course-mission-group-list' cid %}",
   search: true,
   columns: [
+      { name: "id", caption: "任务组ID", sort: true, type: 'Link', typeInfo:   { base_url: '{% url 'web-learning-course-mission-group-list' cid %}info/', key: 'id' }   },
     { name: "caption", caption: "任务组名称", sort: true, type: 'Link', typeInfo:   { base_url: '{% url 'web-learning-course-mission-group-list' cid %}info/', key: 'id' }   },
     { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
     { name: 'update_time', caption: '更新时间', sort: true, type: 'Datetime' },

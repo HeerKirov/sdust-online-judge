@@ -21,13 +21,14 @@ SATable.DRFTable({
   url: "{% url 'api-course-group-mission-group-list' gid %}",
   search: true,
   columns: [
+      { name: "id", caption: "任务组ID", sort: true, type: 'Link', typeInfo:   { base_url: '/JudgeOnline/web/mission-group/info/', key: 'id' }   },
     { name: "caption", caption: "任务组名称", sort: true, type: 'Link', typeInfo:   { base_url: '/JudgeOnline/web/mission-group/info/', key: 'id' }   },
     { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
-    { name: 'update_time', caption: '更新束时间', sort: true, type: 'Datetime' },
+    { name: 'update_time', caption: '最后更新', sort: true, type: 'Datetime' },
     { name: "available", caption: "可用", type: 'Boolean' },
     { name: "deleted", caption: "废弃", type: 'Boolean' },
   ],
-    {% if 'EDU_ADMIN' in user_info.user.get_identities or 'TEACHER' in user_info.user.get_identities  or 'ROOT' in user_info.user.get_identities or 'ORG_ADMIN' in user_info.user.get_identities %}
+    {% if user_info.functions.is_teacher_up %}
     createURL: "{% url 'web-course-group-mission-group-create' gid%}"
     {% endif %}
 })

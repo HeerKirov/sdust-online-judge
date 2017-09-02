@@ -25,10 +25,7 @@ SATable.DRFTable({
   columns: [
     { name: 'category_id', caption: '题库ID', sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-organization-categories' oid %}info/', key: 'id' } },
     { name: "title", caption: "名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-organization-categories' oid %}info/', key: 'id' } },
-    { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
-    { name: 'update_time', caption: '最后更新', sort: true, type: 'Datetime' },
-    { name: "available", caption: "可用", type: 'Boolean' },
-    { name: "deleted", caption: "废弃", type: 'Boolean' },
+    { name: 'introduction', caption: '介绍', sort: true, type: 'Text' }
 
   ],
   createURL: "{% url 'web-categories-create' oid %}"

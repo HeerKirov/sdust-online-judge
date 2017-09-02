@@ -23,17 +23,19 @@ SATable.SimpleAjaxInfo({
   updateMethod: 'PATCH',
   removeMethod: 'DELETE',
   getURL: '{% url 'api-course-detail' cid %}',
-  updateURL: '{% url 'api-course-detail' cid %}',
+{% if user_info.functions.is_edu_admin %}
+    updateURL: '{% url 'api-course-detail' cid %}',
   removeURL: '{% url 'api-course-detail' cid %}',
   removeToURL: document.referrer,
+{% endif %}
   items: [
     { name: 'meta', caption: '课程基类ID', type:'Text',typeInfo: { max_length: 150 }, readOnly: true },
     { name: 'meta_caption', caption: '课程基类名称', type:'Text',typeInfo: { max_length: 150 }, readOnly: true },
-    { name: 'cid', caption: '课程ID', type:'Number' },
+    { name: 'cid', caption: '课程ID', type:'Number', readOnly: true },
     { name: 'caption', caption: '课程名称', type: 'Text', typeInfo: { max_length: 150 } },
     { name: 'introduction', caption: '介绍', type: 'Text', typeInfo: { article: true, max_length: 1024 } },
     { name: 'start_time', caption: '开课时间',  type: 'Date'},
-    { name: 'end_time', caption: '结课登录',  type: 'Date' },
+    { name: 'end_time', caption: '结课时间',  type: 'Date' },
       'Divide',
 
     { name: 'available', caption: '可用', type: 'Boolean' },

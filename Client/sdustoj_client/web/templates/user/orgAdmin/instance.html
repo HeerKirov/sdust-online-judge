@@ -1,7 +1,7 @@
 {% extends "user/adminBasic.html" %}
 {% load staticfiles %}
 
-{% block title %}编辑机构管理员{% endblock %}
+{% block title %}机构管理员{% endblock %}
 
 {% block nav_orgAdmin %}active{% endblock %}
 
@@ -57,6 +57,7 @@ SATable.SimpleAjaxInfo({
     { name: 'qq', caption: 'QQ', type: 'Text', typeInfo: { max_length: 128 } },
     { name: 'wechat', caption: '微信', type: 'Text', typeInfo: { max_length: 128 } },
     { name: 'blog', caption: '博客', type: 'Text', typeInfo: { max_length: 128 , link: true} },
+    {name: 'introduction', caption: '介绍', type: 'Text', typeInfo: {max_length: 256}},
     'Divide',
     { name: 'available', caption: '可用', type: 'Boolean' },
     { name: 'deleted', caption: '废弃', type: 'Boolean' },

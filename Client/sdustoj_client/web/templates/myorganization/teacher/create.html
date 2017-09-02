@@ -26,7 +26,7 @@ SATable.SimpleAjaxForm({
       name: 'available',
       caption: '可用',
       type: 'Boolean',
-      defaultTrue: false
+      defaultTrue: true
     },
     {
       name: 'deleted',
@@ -35,15 +35,19 @@ SATable.SimpleAjaxForm({
       defaultTrue: false
     },
 
+{#    {#}
+{#      name: 'identities',#}
+{#      caption: '权限',#}
+{#      type: 'Select',#}
+{#      typeInfo: {#}
+{#        many: true,#}
+{#        choices: [#}
+{#          { text: '教师', value: 'Teacher' },#}
+{##}
+{#        ]#}
+{#      }#}
+{#    },#}
 
-    {
-      name: 'teacher_id',
-      caption: 'id',
-      type: 'Text',
-      typeInfo: {
-        max_length: 150
-      }
-    },
     {
       name: 'username',
       caption: '用户名',
@@ -67,6 +71,14 @@ SATable.SimpleAjaxForm({
       typeInfo: {
         max_length: 128,
         confirm: true
+      }
+    },
+      {
+      name: 'teacher_id',
+      caption: '教师ID',
+      type: 'Text',
+      typeInfo: {
+        max_length: 150
       }
     },
     {

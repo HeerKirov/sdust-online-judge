@@ -23,7 +23,8 @@ SATable.DRFTable({
   url: "{% url 'api-organization-course-meta-list' oid %}",
   search: true,
   columns: [
-    { name: "caption", caption: "名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-course-meta-list' oid %}info/', key: 'id' } },
+    { name: "id", caption: "ID", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-course-meta-list' oid %}info/', key: 'id' } },
+    { name: "caption", caption: "基类名称", sort: true, type: 'Link', typeInfo: { base_url: '{% url 'web-course-meta-list' oid %}info/', key: 'id' } },
     { name: 'create_time', caption: '创建时间', sort: true, type: 'Datetime' },
     { name: 'update_time', caption: '最后更新', sort: true, type: 'Datetime' },
     { name: "available", caption: "可用", type: 'Boolean' },

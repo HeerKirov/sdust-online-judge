@@ -44,20 +44,20 @@
     { name: 'weight', title: '权重', type: 'text', readOnly: false},
     { name: 'available', title: '可用', type: 'select', readOnly: false},
     { name: 'deleted', title: '废弃', type: 'select', readOnly: false},
-]
+    ];
         var tableInfo = {
             id: "problem",
             url: "{% url 'api-mission-problem-list' mid %}",
             update_url : "{% url 'api-mission-problem-list' mid %}",
             success_url: "{% url 'web-mission-problem-list' mid %}",
             title: "title",
-            column: column,
-        }
+            column: column
+        };
 
         var treeInfo = {
             id: "tree",
-            url: "{% url 'api-mission-available-problem-list' mid %}",
-        }
+            url: "{% url 'api-mission-available-problem-list' mid %}"
+        };
 
     ProblemTable.Table(tableInfo, treeInfo)
     </script>
