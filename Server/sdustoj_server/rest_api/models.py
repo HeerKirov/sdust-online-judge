@@ -259,8 +259,96 @@ class Limit(Resource):
     # 代码长度限制
     length_limit = IntegerField(default=-1)
 
+    # 启用自定义编译
+    is_make = BooleanField(default=False)
+    # 启用文件模板
+    is_temp = BooleanField(default=False)
+
+    # 自定义编译内容
+    makefile = TextField(null=True, default=None)
+    # 文件模板内容
+    template = TextField(null=True, default=None)
+    # 缓存文件模板的块结构
+    template_list = JSONField(null=True, default=None)
+
     def __str__(self):
         return '<Limit %s of Problem %s>' % (self.id, self.problem.id)
+
+    @staticmethod
+    def analyse_template(template):
+        """
+        分析一个模板文本。将block和file的列表从其中解析出来。
+        {%Main.c%}表示文件，直到遇到下一个该标签或者文件结尾。文件名只允许包括数字/字母/下划线/斜线/点。
+        {{code}}表示需要填写的代码块。里面的文本表示该块的名称。
+        {%}
+        :param template: 
+        :return: Json结构。{
+            file: [
+                {
+                    filename:<文件名>,
+                    code:[
+                        {type:<"block"|"string">, content:<块标题|内容>}
+                    ]
+                }
+            ]
+        }
+        """
+        if template is None:
+            return None
+        ret = []
+        import re
+        file_regex = '{%\\s*([a-zA-Z0-9_/\\\.]+)\\s*%}\r?\n?([\\S\\s]*?)\r?\n?{%}'
+        files = re.findall(file_regex, template)
+        for filename, content in files:
+            contents = []
+            begin = 0
+            while True:
+                index = content.find("{{", begin)
+                if index < 0:  # 没有块开头。剩下的部分将作为一个代码块放入。
+                    if len(content) - begin > 0:
+                        contents.append({"type": "string", "content": content[begin:]})
+                    break
+                # 否则就是存在新的块开头。
+                index_end = content.find("}}", index)  # 查找块结尾。
+                if index_end < 0:  # 没有结尾，那么还是视作代码块。
+                    contents.append({"type": "string", "content": content[begin:]})
+                    break
+                # 有结尾才可以视作代码块+块。
+                if index - begin > 0:
+                    contents.append({"type": "string", "content": content[begin:index]})
+                contents.append({"type": "block", "content": content[index + 2:index_end].strip()})
+                begin = index_end + 2
+                if begin >= len(content):
+                    break
+            ret.append({
+                "filename": filename,
+                "code": contents
+            })
+        return {"file": ret}
+
+    def check_code(self, code_json):
+        """
+        检查一份code的json文本，检查该code的内容是否能够契合该limit的模板，或者当limit非自定义时是否拥有code。
+        :param code_json: 
+        :return: 
+        """
+
+        if self.is_temp:
+            error_list = []
+            for file in self.template_list['file']:
+                for code in file['code']:
+                    if code['type'] == 'block':
+                        if code['content'] not in code_json:
+                            error_list.append(code['content'])
+            if len(error_list) > 0:
+                return False, error_list
+            else:
+                return True, None
+        else:
+            if 'code' not in code_json:
+                return False, ['code']
+            else:
+                return True, None
 
 
 class InvalidWord(Resource):
