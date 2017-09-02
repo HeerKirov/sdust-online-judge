@@ -70,7 +70,7 @@
     </tr>
     <tr class="col-12 row">
       <td class="col-4"><b>编译信息</b></td>
-      <td class="col-8">{% if submission.compile_info.info %}{{ submission.compile_info.info }}{% endif %}</td>
+        <td class="col-8">{% if submission.compile_info.info %}<pre>{{ submission.compile_info.info }}</pre>{% endif %}</td>
     </tr>
     <tr class="col-12 row">
       <td class="col-4"><b>详细数据</b></td>
@@ -103,7 +103,12 @@
   <br>
   <h4>代码</h4>
   <div class="jumbotron">
-    <pre><code>{{ submission.code.code.code }}</code></pre>
+      <table>
+          {% for k, v in submission.code.code.items %}
+              <tr><td><b>{{ k }}</b></td></tr>
+              <tr><td><pre><code>{{ v }}</code></pre></td></tr>
+          {% endfor %}
+      </table>
   </div>
 </div>
 {% endblock %}
