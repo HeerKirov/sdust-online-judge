@@ -59,10 +59,16 @@ class OrgPermission(AuthorityPermission):  # 机构内的permission的基类。
         if not user.is_authenticated:
             return False
         identities = user.profile.identities
-        if request.method in SAFE_METHODS:
-            id_check = self.read_identities
+        if hasattr(self, 'danger_identities') and request.method not in SAFE_METHODS:
+            if request.method == 'DELETE':
+                id_check = getattr(self, 'danger_identities')
+            else:
+                id_check = self.write_identities
         else:
-            id_check = self.write_identities
+            if request.method in SAFE_METHODS:
+                id_check = self.read_identities
+            else:
+                id_check = self.write_identities
         result = self._has_org_identity(id_check, identities, request)
         return result
 
@@ -71,10 +77,16 @@ class OrgPermission(AuthorityPermission):  # 机构内的permission的基类。
         if not user.is_authenticated:
             return False
         identities = user.profile.identities
-        if request.method in SAFE_METHODS:
-            id_check = self.read_identities
+        if hasattr(self, 'danger_identities') and request.method not in SAFE_METHODS:
+            if request.method == 'DELETE':
+                id_check = getattr(self, 'danger_identities')
+            else:
+                id_check = self.write_identities
         else:
-            id_check = self.write_identities
+            if request.method in SAFE_METHODS:
+                id_check = self.read_identities
+            else:
+                id_check = self.write_identities
         for identity in id_check:
             if identity in identities:  # 这表示用户有这个权限的登记
                 if identity in ORG_IDENTITY_CHOICES:
@@ -129,12 +141,12 @@ class IsTeacher(OrgPermission):
 
 
 class IsTeacherOrEduAdmin(OrgPermission):
-    read_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root]
-    write_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root]
+    read_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
+    write_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
 
 
 class IsTeacherOrEduAdminReadonly(OrgPermission):
-    read_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root]
+    read_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
     write_identities = [IdentityChoices.root]
 
 
@@ -144,8 +156,8 @@ class IsTeacherReadonly(OrgPermission):
 
 
 class IsTeacherReadonlyOrEduAdmin(OrgPermission):
-    read_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root]
-    write_identities = [IdentityChoices.edu_admin, IdentityChoices.root]
+    read_identities = [IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
+    write_identities = [IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
 
 
 class IsStudent(OrgPermission):
@@ -159,39 +171,51 @@ class IsStudentReadonly(OrgPermission):
 
 
 class IsStudentReadonlyOrEduAdmin(OrgPermission):
-    read_identities = [IdentityChoices.student, IdentityChoices.edu_admin, IdentityChoices.root]
-    write_identities = [IdentityChoices.edu_admin, IdentityChoices.root]
+    read_identities = [IdentityChoices.student, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
+    write_identities = [IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root]
 
 
 class IsAnyOrg(OrgPermission):
     read_identities = [
-        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
     ]
     write_identities = [
-        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
     ]
 
 
 class IsAnyOrgReadonly(OrgPermission):
     read_identities = [
-        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
     ]
     write_identities = [IdentityChoices.root]
 
 
 class IsAnyOrgReadonlyOrEduAdmin(OrgPermission):
     read_identities = [
-        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
     ]
     write_identities = [
-        IdentityChoices.edu_admin, IdentityChoices.root
+        IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
     ]
 
 
 class IsStudentReadonlyOrAnyOrg(OrgPermission):
     read_identities = [
-        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
     ]
     write_identities = [
-        IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.root
+        IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
+    ]
+
+
+class IsSpecialMissionInstance(OrgPermission):
+    read_identities = [
+        IdentityChoices.student, IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
+    ]
+    write_identities = [
+        IdentityChoices.teacher, IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
+    ]
+    danger_identities = [
+        IdentityChoices.edu_admin, IdentityChoices.org_admin, IdentityChoices.root
     ]
