@@ -373,6 +373,14 @@ SATable.types.Link = function(content, column, info) {
 SATable.types.Text = function(content, column, info) {
   return content
 }
+SATable.types.Number = function (content, column, info) {
+  if(content!==null&&content!==undefined){
+    var typeInfo = column.typeInfo;
+    var digit = typeInfo ? typeInfo.digit : -1;
+    return digit >= 0 ? parseFloat(content).toFixed(typeInfo.digit): parseFloat(content);
+  }
+  return '';
+}
 
 SATable.InputType = {
   'text': SATable.getDom.InputText
