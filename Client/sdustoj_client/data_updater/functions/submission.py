@@ -23,6 +23,7 @@ Session = sessionmaker(bind=server_models.engine)
 session = Session()
 
 
+# 废弃代码
 def request_submit(submission_json):
     request_url = '%s/' % (url.rstrip('/'),)
     r = requests.post(url, submission_json, auth=auth)
@@ -32,6 +33,7 @@ def request_submit(submission_json):
         return None
 
 
+# 废弃代码
 def submit(submission_json):
     """
     发起一次提交，将submission提交到Server端。该函数会返回Server端的请求回执信息。

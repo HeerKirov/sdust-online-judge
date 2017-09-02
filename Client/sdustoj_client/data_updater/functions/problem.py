@@ -59,7 +59,9 @@ def write_problem_limits(problem_json):
                                               env_name=limit_json['env_name'],
                                               time_limit=limit_json['time_limit'],
                                               memory_limit=limit_json['memory_limit'],
-                                              length_limit=limit_json['length_limit'])
+                                              length_limit=limit_json['length_limit'],
+                                              is_temp=limit_json['is_temp'],
+                                              template_list=limit_json['template'] if limit_json['is_temp'] else None)
             session.add(limit_model)
             session.commit()
         elif limit is not None:
@@ -67,6 +69,8 @@ def write_problem_limits(problem_json):
             limit.time_limit = limit_json['time_limit']
             limit.memory_limit = limit_json['memory_limit']
             limit.length_limit = limit_json['length_limit']
+            limit.is_temp = limit_json['is_temp']
+            limit.template = limit_json['template'] if limit_json['is_temp'] else None
             session.commit()
 
 

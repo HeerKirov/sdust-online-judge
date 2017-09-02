@@ -1,6 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 from data_updater.models import server as server_models
 from datetime import datetime, timedelta
+import json
 from time import mktime
 
 # 该部分function的作用是定时更新rank。
@@ -96,11 +97,12 @@ def update_rank_by_user(user_id, mission, submissions, **kwargs):
         # 更新ACM部分数据
         if p_res['ac_time'] is None:  # 该题目还没有被AC
             if s.status == 'AC':  # 这次对了
-                now_time = datetime.now()
-                p_res['ac_time'] = now_time
+                now_time = s.submit_time  # todo 通过时间计算为第一次AC题目的提交时间。
+
+                p_res['ac_time'] = str(now_time)
                 p_res['status'] = 'AC'
                 rank.solved += 1
-                rank.penalty += mktime(now_time - mission.start_time) + p_res['wrong_count'] * 20 * 60
+                rank.penalty += (now_time - mission.start_time).total_seconds() + p_res['wrong_count'] * 20 * 60
             else:  # 仍未AC
                 p_res['wrong_count'] += 1
                 p_res['status'] = s.status
