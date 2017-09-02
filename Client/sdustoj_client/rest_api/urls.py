@@ -161,6 +161,9 @@ api_course_group_router.register(
 # --------
 api_mission_group_router = NestedSimpleRouter(api_router, r'mission-groups', lookup='mission_group')
 api_mission_group_router.register(
+    r'missions-direct', MissionViewSets.MissionList.MissionDirectMissionGroupViewSet,
+    base_name='api-mission-group-mission-direct')
+api_mission_group_router.register(
     r'missions', MissionViewSets.MissionList.MissionMissionGroupViewSet, base_name='api-mission-group-mission')
 api_mission_group_router.register(
     r'missions', MissionViewSets.MissionInstance.MissionMissionGroupViewSet, base_name='api-mission-group-mission')
