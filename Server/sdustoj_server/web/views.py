@@ -8,6 +8,8 @@ from django.contrib.auth.models import Group
 
 from config import OJ_SETTINGS, OJ_STATUS_SCORE
 
+import json
+
 MAX_INPUT_SIZE = OJ_SETTINGS['test_data_input_max_size']
 
 
@@ -1015,12 +1017,20 @@ def submit_problem(request, pid):
         return redirect(reverse('homepage'))
 
     prob = get_object_or_404(Problem.objects.filter(available=True, deleted=False), id=int(pid))
-    environments = Environment.objects.filter(available=True, deleted=False).order_by('id')
+    if hasattr(prob, 'limits'):
+        limits = prob.limits.filter(available=True, deleted=False).order_by('environment_id')
+    else:
+        limits = Limit.objects.none()
+    templates_json = {}
+    for limit in limits.all():
+        templates_json[limit.environment_id] = limit.template_list['file'] if limit.is_temp else None
 
     return render(request, 'problem/problem/submit.html', {
         'user': info,
         'problem': prob,
-        'envs': environments
+        'limits': limits,
+        'templates': json.dumps(templates_json),
+        'init': limits[0].environment_id if len(limits) > 0 else -1
     })
 
 
