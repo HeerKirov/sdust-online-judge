@@ -1,0 +1,33 @@
+{% extends "myorganization/adminBasic.html" %}
+{% load staticfiles %}
+
+{% block title %}创建课程基类{% endblock %}
+
+{% block nav_myorganization %} active {% endblock %}
+
+{% block nav_course_meta %} active {% endblock %}
+
+{% block sub_content2 %}
+
+<div class="col-lg-8 col-md-10">
+    <div id="course_meta"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+SATable.SimpleAjaxForm({
+  id: 'course_meta',
+  method: 'POST',
+  toSuccess: '{% url 'web-course-meta-list' oid %}',
+  url: '{% url 'api-organization-course-meta-list' oid %}',
+  items: [
+
+    { name: 'caption', caption: '课程基类名称', type: 'Text', typeInfo: { max_length: 150 } },
+    { name: 'available', caption: '可用', type: 'Boolean', defaultTrue: true },
+    { name: 'deleted', caption: '废弃', type: 'Boolean', defaultTrue: false },
+  ]
+})
+</script>
+
+{% endblock %}
