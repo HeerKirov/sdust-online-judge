@@ -14,7 +14,8 @@ class Utils(object):
                     'is_authenticated': True,
                     'name': profile.name if profile.name else profile.username,
                     'user': profile,
-                    'identities': profile.identities
+                    'identities': profile.identities,
+                    'functions': profile.identity_service,
                 }
             else:
                 info = {
@@ -429,14 +430,14 @@ class MyOrganizationPages(object):
     class Mission(object):
         @staticmethod
         def list(request, oid, uid):
-            return Utils.Render.all_user(request, 'myorganization/course-meta/mission/list.html', {
+            return Utils.Render.edu_admin(request, 'myorganization/course-meta/mission/list.html', {
                 "oid": oid,
                 "uid": uid
             })
 
         @staticmethod
         def create(request, oid, uid):
-            return Utils.Render.all_user(request, "myorganization/course-meta/mission/create.html", {
+            return Utils.Render.edu_admin(request, "myorganization/course-meta/mission/create.html", {
                 "oid": oid,
                 "uid": uid
             })
@@ -444,20 +445,20 @@ class MyOrganizationPages(object):
     class Category(object):
         @staticmethod
         def list(request, oid, uid):
-            return Utils.Render.all_user(request, 'myorganization/course-meta/category/list.html', {
+            return Utils.Render.edu_admin(request, 'myorganization/course-meta/category/list.html', {
                 "oid": oid,
                 "uid": uid
             })
 
         @staticmethod
         def create(request, oid, uid):
-            return Utils.Render.all_user(request, "myorganization/course-meta/category/create.html", {
+            return Utils.Render.edu_admin(request, "myorganization/course-meta/category/create.html", {
                 "oid": oid,
                 "uid": uid
             })
         @staticmethod
         def instance(request, oid, mid,cid):
-            return Utils.Render.all_user(request, "myorganization/course-meta/category/instance.html", {
+            return Utils.Render.edu_admin(request, "myorganization/course-meta/category/instance.html", {
                 "oid": oid,
                 "uid": mid,
                 "mid": mid,
@@ -634,9 +635,15 @@ class Mission(object):
 
         @staticmethod
         def instance(request, mid, pid):
+            rel = models.MissionProblemRelation.objects.filter(id=pid).first()
+            if rel is not None:
+                problem_id = rel.problem.id
+            else:
+                problem_id = None
             return Utils.Render.all_user(request, "mission/problem/instance.html", {
                 "mid": mid,
                 "pid": pid,
+                "problem": problem_id
             })
 
         @staticmethod
@@ -657,10 +664,12 @@ class Mission(object):
 
         @staticmethod
         def instance(request, mid, sid):
-
+            mission = models.Mission.objects.filter(id=mid).first()
+            display_type = mission.config['type'] if 'type' in mission.config else 'acm'
             return Utils.Render.all_user(request, "mission/submission/instance.html", {
                 "mid": mid,
-                "sid": sid
+                "sid": sid,
+                "display_type": display_type,
             })
 
         @staticmethod
@@ -669,9 +678,28 @@ class Mission(object):
                 pid = request.GET['problem']
             else:
                 pid = -1
+            mission = models.Mission.objects.filter(id=mid).first()
+            if mission is None:
+                return redirect(reverse('homepage'))
+            problems = mission.problems.all()
+            if pid != -1:
+                problem = problems.filter(id=pid).first()
+            else:
+                problem = problems.first()
+            if problem is not None:
+                limits = problem.get_limits().order_by('environment_id')
+            else:
+                limits = models.Limit.objects.none()
+            templates_json = {}
+            for limit in limits.all():
+                templates_json[limit.environment_id] = limit.template_list['file'] if limit.is_temp else None
             return Utils.Render.all_user(request, "mission/submission/submit.html", {
-                "pid": pid,
+                "pid": problem.id if problem is not None else 0,
                 "mid": mid,
+                "problems": problems,
+                'init': limits[0].environment_id if len(limits) > 0 else -1,
+                "templates": templates_json,
+                "limits": limits
             })
 
     class Score(object):
@@ -702,9 +730,13 @@ class MissionGroup(object):
 
         @staticmethod
         def instance(request, id, mid):
+            mission = models.MissionGroupRelation.objects.filter(id=mid).first()
+            if mission is None:
+                return redirect(reverse('web-home'))
             return Utils.Render.all_user(request, "mission-group/mission/instance.html", {
                 "id": id,
                 "mid": mid,
+                "mission_id": mission.mission_id
             })
 
         @staticmethod
