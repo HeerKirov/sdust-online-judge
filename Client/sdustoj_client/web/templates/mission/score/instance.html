@@ -44,6 +44,21 @@ $(document).ready(function() {
   }
   $("#success_content").hide();
   $("#error_content").hide();
+  function append_zero_front(str, len){
+      var s = str + '';
+      var zero_num = len - s.length >0 ? len - s.length : 0;
+      for(var i=0;i<zero_num;++i)s = '0' + s;
+      return s;
+  }
+  function penalty_to_timedelta(penalty){
+      var sec, min, hour;
+      sec = penalty % 60;
+      min = parseInt(penalty / 60);
+
+      hour = parseInt(min / 60);
+      min = min % 60;
+      return append_zero_front(hour, 2) + ':' + append_zero_front(min, 2) + ':' + append_zero_front(sec, 2);
+  }
   $.ajax({
     type: "get",
     url: "{% url 'api-mission-rank-detail' mid uid %}",
@@ -65,11 +80,12 @@ $(document).ready(function() {
             var td3 = $("<td></td>");
             td1.text(ret['sub_count']);
             td2.text(ret['solved']);
-            td3.text(ret['penalty']);
+            td3.text(penalty_to_timedelta(parseInt(ret['penalty'])));
             tr2.append(td1);
             tr2.append(td2);
             tr2.append(td3);
             $("#information").append(tr1);
+            $("#information").append($('<hr>'));
             $("#information").append(tr2);
         }else{
             tr1 = $("<tr></tr>");
@@ -81,11 +97,12 @@ $(document).ready(function() {
             td2 = $("<td></td>");
             td3 = $("<td></td>");
             td1.text(ret['sub_count']);
-            td2.text(ret['sum_score']);
+            td2.text(Number(ret['sum_score']).toFixed(2));
             tr2.append(td1);
             tr2.append(td2);
             tr2.append(td3);
             $("#information").append(tr1);
+            $("#information").append($('<hr>'));
             $("#information").append(tr2);
         }
         //生成详细成绩。
@@ -96,13 +113,17 @@ $(document).ready(function() {
             tr3.append($("<td>提交/错误</td>"));
             tr3.append($("<td>状态</td>"));
             tr3.append($("<td>通过时间</td>"));
+            $("#scores").append($('<hr>'));
             $("#scores").append(tr3);
+            $("#scores").append($('<hr>'));
         }else{
             tr3 = $("<tr></tr>");
             tr3.append($("<td>题号</td>"));
             tr3.append($("<td>提交</td>"));
             tr3.append($("<td>得分</td>"));
+            $("#scores").append($('<hr>'));
             $("#scores").append(tr3);
+            $("#scores").append($('<hr>'));
             //同时提取一下oi的分数选择模式
             try{
                 var oi_valid_submission = config['type_config']['valid_submission'];
@@ -127,7 +148,7 @@ $(document).ready(function() {
                 var td_4 = $("<td></td>");
                 td_2.text(data['sub_count'] + "/" + data['wrong_count']);
                 td_3.text(status_map[data['status']]);
-                td_4.text(data['ac_time']);
+                td_4.text(new Date(data['ac_time']).toLocaleString());
                 tr4.append(td_2);
                 tr4.append(td_3);
                 tr4.append(td_4);
@@ -135,7 +156,7 @@ $(document).ready(function() {
                 td_2 = $("<td></td>");
                 td_3 = $("<td></td>");
                 td_2.text(data['sub_count']);
-                td_3.text(get_oi_score(data));
+                td_3.text(Number(get_oi_score(data)).toFixed(2));
                 tr4.append(td_2);
                 tr4.append(td_3);
             }
@@ -147,7 +168,17 @@ $(document).ready(function() {
         var data = ret.responseJSON;
         if(ret.status==406){
             if(data.cause == 'close')$("#error_text").text("成绩查询目前不可用。请等待任务结束。");
-            else $("#error_text").text("成绩查询被禁用。")
+            else $("#error_text").text("成绩查询被禁用。");
+        }else if(ret.status==404){
+            $("#error_text").append($("<div></div>").text("没有找到成绩数据。"));
+            $("#error_text").append($("<div></div>").text("Tips:至少进行一次提交才会有成绩数据产生。"));
+        }else{
+            $("#error_text").append($("<div></div>").text("错误: " + ret.status));
+            var err = "";
+            for(var i in data){
+                err += " " + i + ": " + data[i] + "\n";
+            }
+            $("#error_text").append($("<div><pre>" + err + "</pre></div>"));
         }
       }
   })
