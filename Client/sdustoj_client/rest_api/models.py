@@ -17,6 +17,59 @@ def now_dt():
     return now
 
 
+class UserProfileIdentity(object):
+    __profile = None
+
+    def __init__(self, profile):
+        self.__profile = profile
+
+    @property
+    def is_student(self):
+        return self.__profile.has_identities(IdentityChoices.student)
+
+    @property
+    def is_student_up(self):
+        return self.__profile.has_identities(IdentityChoices.root, IdentityChoices.org_admin,
+                                             IdentityChoices.user_admin, IdentityChoices.edu_admin,
+                                             IdentityChoices.teacher, IdentityChoices.student)
+
+    @property
+    def is_else_student(self):
+        return self.__profile.has_identities(IdentityChoices.root, IdentityChoices.org_admin,
+                                             IdentityChoices.user_admin, IdentityChoices.edu_admin,
+                                             IdentityChoices.teacher)
+
+    @property
+    def is_teacher(self):
+        return self.__profile.has_identities(IdentityChoices.teacher)
+
+    @property
+    def is_teacher_up(self):
+        return self.__profile.has_identities(IdentityChoices.root, IdentityChoices.org_admin,
+                                             IdentityChoices.user_admin, IdentityChoices.edu_admin,
+                                             IdentityChoices.teacher),
+
+    @property
+    def is_else_teacher(self):
+        return self.__profile.has_identities(IdentityChoices.root, IdentityChoices.org_admin,
+                                             IdentityChoices.user_admin, IdentityChoices.edu_admin)
+
+    @property
+    def is_edu_admin(self):
+        return self.__profile.has_identities(IdentityChoices.edu_admin,
+                                             IdentityChoices.org_admin, IdentityChoices.root)
+
+    @property
+    def is_edu_admin_up(self):
+        return self.__profile.has_identities(IdentityChoices.root, IdentityChoices.org_admin,
+                                             IdentityChoices.user_admin, IdentityChoices.edu_admin)
+
+    @property
+    def is_else_edu_admin(self):
+        return self.__profile.has_identities(IdentityChoices.root, IdentityChoices.org_admin,
+                                             IdentityChoices.user_admin),
+
+
 # -- Resource ---------------------------------------------------------------------------
 
 class Resource(models.Model):
@@ -262,8 +315,16 @@ class UserProfile(Resource):
     courses = pg_fields.JSONField(default={})
     missions = pg_fields.JSONField(default={})
 
+    __identity_service = None
+
     def __str__(self):
         return "<Profile %s: %s>" % (self.username, self.name)
+
+    @property
+    def identity_service(self):
+        if self.__identity_service is None:
+            self.__identity_service = UserProfileIdentity(self)
+        return self.__identity_service
 
     @property
     def let_name(self):
@@ -410,7 +471,7 @@ class UserProfile(Resource):
     def update_missions_cache(self):
         """
         刷新缓存的任务与任务组的mid。
-        刷新策略：仅对T/S用户有效。查询关联的课程/课程组 - 课程单元 - 任务组 - 任务
+        刷新策略：仅对T/S用户有效。查询关联的课程/课程组 - 课程单元 - 任务组 - 任务。包含课程的课程组的内容。
         需要执行刷新的时机：为用户添加/删除课程/课程组，为课程组/课程添加/删除任务组，为任务组添加/删除任务。
         :return: 
         """
@@ -427,6 +488,9 @@ class UserProfile(Resource):
                     for c in courses.all():
                         unit = c.course_unit
                         course_units.append(unit)
+                        if hasattr(c, 'course_groups'):
+                            for g in c.course_groups.all():
+                                course_units.append(g.course_unit)
                 course_groups = getattr(teacher, 'course_groups', None)
                 if course_groups is not None:
                     for g in course_groups.all():
@@ -441,6 +505,9 @@ class UserProfile(Resource):
                     for c in courses.all():
                         unit = c.course_unit
                         course_units.append(unit)
+                        if hasattr(c, 'course_groups'):
+                            for g in c.course_groups.all():
+                                course_units.append(g.course_unit)
         for unit in course_units:
             for group in unit.mission_groups.all():
                 missions['groups'].append(group.id)
@@ -574,6 +641,7 @@ class UserProfile(Resource):
     def get_mission_groups(self, **kwargs):
         """
         获得该用户可以访问的全部任务组。通过缓存进行查询。
+        学生可以访问的任务组还需要包括可以访问的课程的课程组的任务组。
         :param kwargs: 
         :return: 
         """
@@ -762,6 +830,17 @@ class Organization(Resource):
         else:  # 无上级(错误),全题库
             return Category.objects
 
+    def get_sub_organizations(self):
+        """
+        返回所有子机构的迭代。
+        :return: 
+        """
+        if hasattr(self, 'children'):
+            for child in self.children.all():
+                yield child
+                for sub in child.get_sub_organizations():
+                    yield sub
+
     def __str__(self):
         return '<Organization %s: %s>' % (self.name, self.caption)
 
@@ -793,10 +872,14 @@ class CourseMeta(Resource):
         self.number_problems = sum(i.number_problem for i in self.categories.all())
         self.save()
 
-    def available_categories(self):
-        parent_available = self.organization.available_categories()
-        exist_id = [i.id for i in self.categories.all()]  # 获得该meta旗下的所有的已用题库的id-list
-        return parent_available.exclude(id__in=exist_id).all()
+    def available_categories(self, exists=False):
+        parent_available = self.organization.categories \
+            if hasattr(self.organization, 'categories') else Category.objects.none()
+        if exists:
+            return parent_available.all()
+        else:
+            exist_id = [i.id for i in self.categories.all()]  # 获得该meta旗下的所有的已用题库的id-list
+            return parent_available.exclude(id__in=exist_id).all()
 
 
 class CourseUnit(models.Model):
@@ -852,7 +935,7 @@ class CourseGroup(Resource):
     def meta_caption(self):
         return self.meta.caption
 
-    def available_teachers(self, filter_exists=False):
+    def available_teachers(self, filter_exists=False, share=True):
         """
         获得该课程组所有可用的教师的查询集。该查询集仅基于父机构的所有教师进行返回查询。
         如果指定了filter_exists，那么就会自动筛选掉已经在课程组中的教师。
@@ -861,6 +944,10 @@ class CourseGroup(Resource):
         org = self.organization
         if hasattr(org, 'teachers'):
             all_teachers = org.teachers.exclude(deleted=True).all()
+            if share:
+                for child_org in org.get_sub_organizations():
+                    if hasattr(child_org, 'teachers'):
+                        all_teachers = all_teachers | child_org.teachers.exclude(deleted=True).all()
             if filter_exists and hasattr(self, 'teachers'):
                 exists_teachers_id = [v['id'] for v in self.teachers.all().values('id')]
                 all_teachers = all_teachers.exclude(id__in=exists_teachers_id)
@@ -915,15 +1002,20 @@ class Course(Resource):
     def meta_caption(self):
         return self.meta.caption
 
-    def available_teachers(self, filter_exists=False):
+    def available_teachers(self, filter_exists=False, share=True):
         """
         获得该课程所有可用的教师的查询集。该查询集仅基于父机构的所有教师进行返回查询。
         如果指定了filter_exists，那么就会自动筛选掉已经在课程中的教师。
+        如果share为True，那么会包括子机构中的所有教师以实现共享。
         :return: QuerySet<[Teacher]>
         """
         org = self.organization
         if hasattr(org, 'teachers'):
             all_teachers = org.teachers.exclude(deleted=True).all()
+            if share:
+                for child_org in org.get_sub_organizations():
+                    if hasattr(child_org, 'teachers'):
+                        all_teachers = all_teachers | child_org.teachers.exclude(deleted=True).all()
             if filter_exists and hasattr(self, 'teachers'):
                 exists_teachers_id = [v['id'] for v in self.teachers.all().values('id')]
                 all_teachers = all_teachers.exclude(id__in=exists_teachers_id)
@@ -931,15 +1023,20 @@ class Course(Resource):
         else:
             return Teacher.objects.none()
 
-    def available_students(self, filter_exists=False):
+    def available_students(self, filter_exists=False, share=True):
         """
         获得该课程所有可用的学生的查询集。该查询集仅基于父机构的所有学生进行返回查询。
         如果指定了filter_exists，那么就会自动筛选掉已经在课程中的学生。
+        如果share为True，那么会包括子机构中的所有学生以实现共享。
         :return: QuerySet<[Teacher]>
         """
         org = self.organization
         if hasattr(org, 'students'):
             all_students = org.students.exclude(deleted=True).all()
+            if share:
+                for child_org in org.get_sub_organizations():
+                    if hasattr(child_org, 'students'):
+                        all_students = all_students | child_org.students.exclude(deleted=True).all()
             if filter_exists and hasattr(self, 'students'):
                 exists_students_id = [v['id'] for v in self.students.all().values('id')]
                 all_students = all_students.exclude(id__in=exists_students_id)
@@ -1292,6 +1389,11 @@ class Limit(models.Model):
     memory_limit = models.IntegerField(default=-1)
     # 代码长度限制
     length_limit = models.IntegerField(default=-1)
+
+    # 是否启用文件模板
+    is_temp = models.BooleanField(default=False)
+    # 文件模板的内容结构
+    template_list = pg_fields.JSONField(null=True, default=None)
 
     def __str__(self):
         return "<Limit %s: %s>" % (self.id, self.env_name)
