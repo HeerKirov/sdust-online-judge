@@ -12,6 +12,8 @@ from models import mysql_models
 
 from conf import judger_id
 
+import json
+
 MysqlSession = sessionmaker(bind=mysql_models.engine)
 mysql_session = MysqlSession()  # 获得一个mysql会话？
 
@@ -46,10 +48,17 @@ def update(**kwargs):
 
     limits = pg_session.query(pg_models.Limit).filter_by(problem_id=pid).all()
     # 查询编程限制。
+    templates = {}
+    makefiles = {}
 
     time_limit = 0
     memory_limit = 0
     for limit in limits:
+        env = pg_session.query(pg_models.Environment).filter_by(id=limit.environment_id).first()
+        if limit.is_temp:
+            templates[env.judge_id] = json.dumps(limit.template_list)
+        if limit.is_make:
+            makefiles[env.judge_id] = limit.makefile
         if limit.time_limit > time_limit:
             time_limit = limit.time_limit
         if limit.memory_limit > memory_limit:
@@ -59,7 +68,11 @@ def update(**kwargs):
     problems = []  # 置入格式:(问题本体，测试数据，特殊评测)
     for data in test_data:  # 遍历一下测试数据集。
         p_title = get_problem_title(pid, data.id)  # 按照规范获得有关这组测试数据的title。
+        try_remain = 1
+        p = None
         while True:
+            if try_remain <= 0:
+                break
             try:
                 p = mysql_session.query(mysql_models.Problem).filter_by(title=p_title).first()
                 # 查询该题目是否已经在hustoj数据库中
@@ -67,6 +80,7 @@ def update(**kwargs):
                 # MySQL数据库因为长连接断开。重连一次。
                 mysql_session = MysqlSession()
                 p = None
+            try_remain -= 1
             if p is not None:
                 break
         if p is not None:  # 已存在状态，更新时间限制/空间限制/特殊评测，
@@ -98,11 +112,13 @@ def update(**kwargs):
     judge.last_update = datetime.now()
     pg_session.commit()
     # 上面的代码似乎是在更新sdustoj中这道题目的最后judge时间。那个Judge表的实际作用暂且不明。
-
+    # todo 找个地方做temp和makefile的写入。
     for (p, t, s) in problems:
         redis_models.TestData.write(p.problem_id, t.test_in, t.test_out)  # 这句话调用到Client端，将测试数据写入Client文件系统。
         if s is not None:
             redis_models.SpecialJudge.write(p.problem_id, s.code)  # 将特殊评测写入。
+        redis_models.Template.write(p.problem_id, **templates)
+        redis_models.Makefile.write(p.problem_id, **makefiles)
         print('    Updated problem: ' + str(p.problem_id))
 
 
