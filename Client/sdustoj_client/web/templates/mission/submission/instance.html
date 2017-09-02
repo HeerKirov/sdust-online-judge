@@ -45,14 +45,17 @@
   <br>
   <h4>评测信息</h4>
   <table class="table">
+      {% if display_type == 'acm' %}
     <tr class="col-12 row">
       <td class="col-4"><b>评测状态</b></td>
       <td class="col-8" id="status"></td>
     </tr>
+      {% else %}
     <tr class="col-12 row">
       <td class="col-4"><b>完成度</b></td>
       <td class="col-8" id="score"></td>
     </tr>
+      {% endif %}
     <tr class="col-12 row">
       <td class="col-4"><b>时间</b></td>
       <td class="col-8" id="time"></td>
@@ -65,32 +68,32 @@
       <td class="col-4"><b>长度</b></td>
       <td class="col-8" id="length"></td>
     </tr>
-    <tr class="col-12 row">
+    <tr class="col-12 row" id="div_compile_info">
       <td class="col-4"><b>编译信息</b></td>
-      <td class="col-8" id="compile_info"></td>
+      <td class="col-8"><pre id="compile_info"></pre></td>
     </tr>
-    <tr class="col-12 row">
-      <td class="col-4"><b>详细数据</b></td>
-      <td class="col-8">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>测试数据ID</th>
-              <th>时间</th>
-              <th>内存</th>
-              <th>状态</th>
-            </tr>
-          </thead>
-          <tbody id="test_data">
-          </tbody>
-        </table>
-      </td>
-    </tr>
+{#    <tr class="col-12 row">#}
+{#      <td class="col-4"><b>详细数据</b></td>#}
+{#      <td class="col-8">#}
+{#        <table class="table">#}
+{#          <thead>#}
+{#            <tr>#}
+{#              <th>测试数据ID</th>#}
+{#              <th>时间</th>#}
+{#              <th>内存</th>#}
+{#              <th>状态</th>#}
+{#            </tr>#}
+{#          </thead>#}
+{#          <tbody id="test_data">#}
+{#          </tbody>#}
+{#        </table>#}
+{#      </td>#}
+{#    </tr>#}
   </table>
   <br>
   <h4>代码</h4>
   <div class="jumbotron">
-    <pre><code id="code"></code></pre>
+    <table id="code"></table>
   </div>
   </div>
   <div id="error_content">
@@ -111,9 +114,9 @@ $(document).ready(function() {
     url: "{% url 'api-mission-submission-detail' mid sid %}",
     dataType: "json",
     success: function(ret) {
-        $("#error_content").hide()
+      $("#error_content").hide()
       $("#id").text(("提交 -" + ret.id));
-      $("#sid").text(ret.sid);
+      $("#sid").text(ret.id);
       $("#problem").text(ret.problem_title);
       $("#language").text(ret.env_name);
       $("#user").text(ret.user_name);
@@ -124,51 +127,47 @@ $(document).ready(function() {
       iDate = new Date(ret.update_time)
       info = iDate.toLocaleString()
       $("#update_time").text(info);
-
+        {% if display_type == 'acm' %}
       $("#status").text(ret.status_word);
+        {% else %}
       $("#score").text(ret.score);
-      $("#time").text(ret.time);
-      $("#memory").text(ret.memory);
+        {% endif %}
+      $("#time").text(ret.time>=0?ret.time + ' MS':'');
+      $("#memory").text(ret.memory>=0?ret.memory + ' KB':'');
       $("#length").text(ret.length);
-      $("#compile_info").text(ret.compile_info);
+      if(ret.compile_info!=null&&ret.compile_info.length>0)$("#compile_info").text(ret.compile_info);
+      else $("#div_compile_info").hide();
       $("#source").text(ret.problem.source);
-      $("#code").text(ret.code.code);
-      $("#code").addClass(ret.env_name);
-      for(var i in ret.test_data_status)
-      {
-          var datas = ret.test_data_status;
-          var tr = $("<tr></tr>")
-          var td1 = $("<td></td>")
-          var td2 = $("<td></td>")
-          var td3 = $("<td></td>")
-          var td4 = $("<td></td>")
-          $(td1).text(i)
-          $(td2).text(datas[i].time + "毫秒")
-          $(td3).text(datas[i].memory + "KB")
-          $(td4).text(datas[i].status)
-          $(tr).append(td1)
-          $(tr).append(td2)
-          $(tr).append(td3)
-          $(tr).append(td4)
-          $("#test_data").append(tr)
+      var code_count = Object.keys(ret.code).length
+      if(code_count==1){
+            var x = null;
+            for(var c in ret.code)x=c;
+            $("#code").append($("<tr></tr>").append($('<td></td>').append($('<pre></pre>').text(ret.code[x]))));
+      }else if(code_count>1){
+          for(c in ret.code){
+            $("#code").append($("<tr><td><b>" + c + "</b></tr></td>"));
+            $("#code").append($("<tr></tr>").append($('<td></td>').append($('<pre></pre>').text(ret.code[c]))));
+          }
       }
-      for(var i in ret.problem.limit) {
-        var limits = ret.problem.limit[i]
-        var tr = $("<tr></tr>")
-        var td1 = $("<td></td>")
-        var td2 = $("<td></td>")
-        var td3 = $("<td></td>")
-        var td4 = $("<td></td>")
-        $(td1).text(limits.env_name)
-        $(td2).text(limits.time_limit + "毫秒")
-        $(td3).text(limits.memory_limit + "KB")
-        $(td4).text(limits.length_limit + "字节")
-        $(tr).append(td1)
-        $(tr).append(td2)
-        $(tr).append(td3)
-        $(tr).append(td4)
-        $("#limits").append(tr)
-      }
+
+{#      for(var i in ret.test_data_status)#}
+{#      {#}
+{#          var datas = ret.test_data_status;#}
+{#          var tr = $("<tr></tr>")#}
+{#          var td1 = $("<td></td>")#}
+{#          var td2 = $("<td></td>")#}
+{#          var td3 = $("<td></td>")#}
+{#          var td4 = $("<td></td>")#}
+{#          $(td1).text(i)#}
+{#          $(td2).text(datas[i].time + "毫秒")#}
+{#          $(td3).text(datas[i].memory + "KB")#}
+{#          $(td4).text(datas[i].status)#}
+{#          $(tr).append(td1)#}
+{#          $(tr).append(td2)#}
+{#          $(tr).append(td3)#}
+{#          $(tr).append(td4)#}
+{#          $("#test_data").append(tr)#}
+{#      }#}
     },
       error: function (ret) {
         $("#success_content").hide()
