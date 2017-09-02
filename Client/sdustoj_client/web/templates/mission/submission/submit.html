@@ -1,205 +1,191 @@
 {% extends "mission/adminBasic.html" %}
 {% load staticfiles %}
 
-{% block title %}提交记录{% endblock %}
+{% block title %}提交代码{% endblock %}
 
 {% block nav_submission %}active{% endblock %}
 
 {% block sub_content2 %}
-
   <div class="col-lg-8 col-md-10">
-    <form id="submitForm" method="POST" onsubmit="login();return false;">
-      <fieldset>
-        {% csrf_token %}
         <div class="form-group row">
-          <label class="col-lg-3 col-md-4 control-label">题目</label>
+          <label class="col-lg-3 col-md-4 control-label">题目ID</label>
           <div class="col-lg-9 col-md-8">
             <select name="problem_id" class="form-control" id ="problem">
-
+                {% for i in problems %}
+                    <option value="{{ i.id }}">{{ i.title }}</option>
+                {% endfor %}
             </select>
           </div>
         </div>
         <div class="form-group row">
           <label class="col-lg-3 col-md-4 control-label">语言</label>
           <div class="col-lg-9 col-md-8">
-            <select name="env_id" class="form-control" id="language">
-
+            <select name="env_id" class="form-control" id="select_env">
+              {% for i in limits %}
+              <option value="{{ i.environment_id }}">{{ i.env_name }}</option>
+              {% endfor %}
             </select>
           </div>
         </div>
         <div class="form-group row">
-          <label class="col-lg-3 col-md-4 control-label">代码</label>
-          <div class="col-lg-9 col-md-8">
-            <textarea name="code" class="form-control"></textarea>
-          </div>
+            <label class="col-lg-3 col-md-4 control-label">代码</label>
+            <table class="col-lg-9 col-md-8" id="table_code"></table>
         </div>
         <br/>
         <div class="input-group-btn">
-          <button type="submit" class="btn btn-primary" title="保存信息">保 存</button>
+          <button id="submit_btn" class="btn btn-primary" title="提交代码">提 交</button>
         </div>
-      </fieldset>
-    </form>
   </div>
-
 {% endblock %}
 
 {% block script %}
+<script src="/JudgeOnlineStatic/clipboard-js/dist/clipboard.min.js"></script>
+<script>
+$(document).ready(function () {
+    var None = null;
+    var templates = {{ templates|safe }};
+    var select_env = null;
+    var blocks = {};
 
-<script type="text/javascript">
-    var json = {}
-    var url
-    $(function (e) {
-       url = "{% url 'api-mission-problem-list' mid %}";
-        var data = {}
-            data.limit = 1000  // 可变的最大题目数量
-            $.ajax({
-           type: "GET",
-           url: url,
-           data: data,
-           success:function (ret) {
-               var pid;
-               if(-1 == {{ pid }})
-               {
-                   pid = ret.results[0].id
-               }
-               else
-               {
-                   pid = {{ pid }}
-               }
-               for(var i in ret.results)
-               {
-                   var pro = ret.results[i]
-                   var option = $("<option></option>")
-                   json[pro.problem_id] = pro.id
-                   if(pro.id == pid)
-                   {
-                       option.attr("value", pro.problem_id)
-                       option.attr("selected","selected")
-                       $.ajax({
-                       type: "GET",
-                       url: "{% url 'api-mission-problem-list' mid %}" + pid,
-                       success:function (ret) {
-                           var limit = ret.problem.limit
-                           if(limit.length == 0)
-                           {
-                               $("#language").empty()
-                               var option1 = $("<option></option>")
-                               var option2 = $("<option></option>")
-                               var option3 = $("<option></option>")
-                               var option4 = $("<option></option>")
-                               option1.attr("value", 1)
-                               option1.html("C")
-                               option2.attr("value", 2)
-                               option2.html("C++")
-                               option3.attr("value", 3)
-                               option3.html("Java")
-                               option4.attr("value", 4)
-                               option4.html("Python")
-                               $("#language").append(option1)
-                               $("#language").append(option2)
-                               $("#language").append(option3)
-                               $("#language").append(option4)
-                           }
-                           else
-                           {
-                               $("#language").empty()
-                               for(var i in limit)
-                               {
-                                   var option = $("<option></option>")
-                                   option.attr("value", limit[i].environment)
-                                   option.html(limit[i].env_name)
-                                   $("#language").append(option)
-                               }
-                           }
-                         },
-                      })
-                   }
-                   option.attr("value", pro.problem_id)
-                   option.html(pro.title)
-                   $("#problem").append(option)
-               }
-           },
-             error:function () {
-             }
+    function get_cilp_content(index){
+        var file = templates[select_env][index];
+        if(file){
+            var ret = "";
+            for(var i in file.code){
+                var item = file.code[i];
+                if(item.type=="block")ret += "# todo #";
+                else ret += item.content;
+            }
+            return ret;
+        }else return null;
+    }
 
-       });
 
-       $("#problem").change(function () {
-           var problem_id = $("#problem").val()
-           var id = json[problem_id]
-           $.ajax({
-               type: "GET",
-               url: "{% url 'api-mission-problem-list' mid %}" + id,
-               success:function (ret) {
-                   var limit = ret.problem.limit
-                   if(limit.length == 0)
-                   {
-                       $("#language").empty()
-                       var option1 = $("<option></option>")
-                       var option2 = $("<option></option>")
-                       var option3 = $("<option></option>")
-                       var option4 = $("<option></option>")
-                       option1.attr("value", 1)
-                       option1.html("C")
-                       option2.attr("value", 2)
-                       option2.html("C++")
-                       option3.attr("value", 3)
-                       option3.html("Java")
-                       option4.attr("value", 4)
-                       option4.html("Python")
-                       $("#language").append(option1)
-                       $("#language").append(option2)
-                       $("#language").append(option3)
-                       $("#language").append(option4)
-                   }
-                   else
-                   {
-                       $("#language").empty()
-                       for(var i in limit)
-                       {
-                           var option = $("<option></option>")
-                           option.attr("value", limit[i].environment)
-                           option.html(limit[i].env_name)
-                           $("#language").append(option)
-                       }
-                   }
-               },
-           })
+
+
+    function update_template(env_id) {
+        //切换模板到指定的id下。
+        var div = $("#table_code");
+        div.html("");
+        blocks = {};
+        var template = templates[env_id];
+        if (template === undefined) {
+            div.append($("<label></label>").text("找不到目标语言的模板。"))
+            select_env = null;
+        } else {
+            if (template === null) {//使用默认模板。
+                template = [{filename:null, code:[{type: "block", content: "code"}]}];
+            }
+            select_env = env_id;
+            //构造模板。
+            for (var i in template) {
+                var file = template[i];
+                //指定显示文件名的条件是文件名不为空。
+                //指定显示拷贝按钮的条件是本文件至少存在一个string类型的code。
+                var string_count = 0;
+                var code_content = $("<td></td>");
+                for(var j in file.code){
+                    var item = file.code[j];
+                    if(item.type=="block"){
+                        var block = $('<textarea class="form-control" rows="5"></textarea>');
+                        blocks[item.content] = block;
+                        code_content.append(block);
+                    }else{
+                        string_count++;
+                        var text = item.content;
+                        var next = file.code[parseInt(j)+1];
+                        if(text.length>0&&next){
+                            //这里做一个处理，当一个string后面还有block，且这个block的末尾是换行时，将换行替换为一个特别的箭头。
+                            var endchar = text[text.length-1];
+                            if(endchar==='\n'){
+                                text = text.slice(0, text.length-1) + '⇙';
+                            }
+                        }
+                        block = $('<pre></pre>').append($('<code></code>').text(text));
+                        code_content.append(block);
+                    }
+                }
+
+                var show_title = file['filename'] != null;
+                var show_clip_btn = Clipboard.isSupported()&&string_count>0;
+                if (i > 0) div.append($("<hr/>"));
+                var tooltip_clip = "拷贝" + (show_title?file.filename+"的代码模板":"该代码模板")+"到剪贴板";
+                div.append($('<tr></tr>').append($('<td></td>').append($('<div class="row justify-content-between"></div>').append(
+                    $('<div class="col-8"><b>' + (show_title ? file.filename : '') + '</b></div>')
+                ).append(
+                    show_clip_btn ?
+                        $('<div class="col-1">').append(
+                            $('<button id="' + i + '" class="btn btn-sm clip-btn" data-toggle="tooltip" title="'+tooltip_clip+'">' +
+                                '<i class="fa fa-file"></i></button>')
+                        ) : null
+                ))));
+                if(show_title||show_clip_btn) div.append($("<hr/>"));
+
+                div.append($("<tr></tr>").append(code_content));
+            }
+        }
+    }
+    $("#problem").change(function () {
+        var newvalue = $("#problem").val();
+        var oldvalue = {{ pid }};
+        if(newvalue!=oldvalue){
+            window.location = '{% url 'web-mission-submission-submit' mid %}?problem=' + newvalue;
+        }
+    })
+   $("#select_env").change(function () {
+       update_template($("#select_env").val());
+   });
+    $("#submit_btn").click(function () {
+        var code = {}
+        for(var i in blocks){
+            var block = blocks[i];
+            code[i] = block.val();
+        }
+        var data = {
+            problem: {{ pid }},
+            environment: $("#select_env").val(),
+            code: JSON.stringify(code),
+        };
+        $.ajax({
+            type: 'POST',
+            async: true,
+            url: "{% url 'api-mission-submission-list' mid %}",
+            data: data,
+            dataType: 'json',
+            success: function (ret) {
+                window.location = "{% url 'web-mission-submission-list' mid %}"
+            }, error: function (ret) {
+                var status = ret.status;
+                var content = ret.responseJSON;
+                var msg = "错误 " + status + ":\n";
+                for(var i in content){
+                    msg += i + ": " + content[i] + "\n";
+                }
+                alert(msg);
+            }
         })
     });
-</script>
 
-<script>
-function login() {
-  var form = $("#submitForm")
-  var init_data = getFormData(form)
-  var data = {}
-  data["problem"] = init_data.problem_id
-  data["environment"] = init_data.env_id
-  data["code"] = init_data.code
-  $.ajax({
-    type: "POST",
-    async: false,
-    url: "{% url 'api-mission-submission-list' mid %}",
-    data: data,
-    dataType: 'json',
-    success: function(ret) {
-      url = "{% url 'web-mission-submission-list' mid %}"
-      location.href = url
-    },
-    error: function(ret) {
-        var data = ret.responseJSON;
+   //init
+    new Clipboard('.clip-btn', {
+        text: function(trigger) {
+            if (trigger.getAttribute('id')) {
+                var content = get_cilp_content(trigger.getAttribute('id'));
+                if (content && content.length > 0) {
+                    alert("模板已经拷贝到剪贴板。");
+                    return content;
+                } else {
+                    alert('拷贝失败。');
+                    return null;
+                }
+            }
 
-      if(ret.status == 406){
-        if(data.cause == 'not_started')alert("任务尚未开始，无法进行提交。");
-        else alert("提交不可用。")
-      }else{
-          test_output(data)
-      }
-    }
-  })
+        }
+    });
+    $("#problem").val({{ pid }});
+    update_template({{ init }});
+});
 
-  return false
-}
+
 </script>
 {% endblock %}
