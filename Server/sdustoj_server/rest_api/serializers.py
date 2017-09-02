@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer, SlugRelatedField, CharField, PrimaryKeyRelatedField, FloatField
-from rest_framework.serializers import ListField
+from rest_framework.serializers import ListField, JSONField
 from rest_framework.serializers import FileField
 from rest_framework.serializers import ValidationError
 from rest_framework.serializers import BooleanField
@@ -21,6 +21,8 @@ from django.core.validators import RegexValidator
 from config import OJ_SETTINGS
 from .virtual_judge import vj, config as vj_config
 from .virtual_judge.utils import VirtualException
+
+import json
 
 
 _RESOURCE_READONLY = ('creator', 'updater', 'create_time', 'update_time')
@@ -304,7 +306,7 @@ class MetaProblemSerializers:
             class LimitField(ModelSerializer):
                 class Meta:
                     model = Limit
-                    exclude = ('problem', 'judge')
+                    exclude = ('problem', 'judge', 'template_list')
                     read_only_fields = _RESOURCE_READONLY + ('env_name',)
 
             class DescriptionField(ModelSerializer):
@@ -357,9 +359,14 @@ class MetaProblemSerializers:
         # -- Components -------------------------------------------------------
         class Limit:
             class LimitAdminListSerializer(ModelSerializer):
+                template = CharField(write_only=True, max_length=_INPUT_MAX,
+                                     style={'base_template': 'textarea.html'}, required=False)
+                makefile = CharField(write_only=True, max_length=_INPUT_MAX,
+                                     style={'base_template': 'textarea.html'}, required=False)
+
                 class Meta:
                     model = Limit
-                    exclude = ('problem', 'judge')
+                    exclude = ('problem', 'judge', 'template_list')
                     read_only_fields = _RESOURCE_READONLY + ('problem', 'env_name')
 
                 def create(self, validated_data):
@@ -370,12 +377,24 @@ class MetaProblemSerializers:
                     if problem.limits.filter(environment=environment).exists():
                         raise ValidationError('Environment exists.')
                     validated_data['env_name'] = environment.name
+                    if 'template' in validated_data:
+                        validated_data['template_list'] = Limit.analyse_template(validated_data['template'])
                     return super().create(validated_data)
 
             class LimitAdminInstanceSerializer(ModelSerializer):
+                template = CharField(max_length=_INPUT_MAX,
+                                     style={'base_template': 'textarea.html'}, required=False)
+                makefile = CharField(max_length=_INPUT_MAX,
+                                     style={'base_template': 'textarea.html'}, required=False)
+
+                def update(self, instance, validated_data):
+                    if 'template' in validated_data:
+                        validated_data['template_list'] = Limit.analyse_template(validated_data['template'])
+                    return super().update(instance, validated_data)
+
                 class Meta:
                     model = Limit
-                    exclude = ('problem', 'judge')
+                    exclude = ('problem', 'judge', 'template_list')
                     read_only_fields = _RESOURCE_READONLY + ('problem', 'environment', 'env_name',)
 
         class TestData:
@@ -462,9 +481,12 @@ class ProblemSerializers:
 
     class ProblemInstanceSerializer(ModelSerializer):
         class LimitField(ModelSerializer):
+            template = JSONField(source='template_list', read_only=True)
+
             class Meta:
                 model = Limit
-                fields = ('environment', 'env_name', 'time_limit', 'memory_limit', 'length_limit')
+                fields = ('environment', 'env_name', 'time_limit', 'memory_limit', 'length_limit',
+                          'template', 'is_temp')
 
         limits = LimitField(many=True, read_only=True)
         description = SlugRelatedField(many=False, read_only=True, slug_field='content')
@@ -497,9 +519,13 @@ class ProblemSerializers:
     class Admin:
         class ProblemAdminListSerializer(ModelSerializer):
             class LimitField(ModelSerializer):
+                makefile = CharField(required=False, allow_blank=True, allow_null=True)
+                template = CharField(required=False, allow_blank=True, allow_null=True)
+
                 class Meta:
                     model = Limit
-                    fields = ('environment', 'time_limit', 'memory_limit', 'length_limit')
+                    fields = ('environment', 'time_limit', 'memory_limit', 'length_limit',
+                              'is_make', 'is_temp', 'makefile', 'template')
 
             class TestDataField(ModelSerializer):
                 test_in = CharField(write_only=True, allow_null=True, max_length=_INPUT_MAX, default="",
@@ -657,6 +683,10 @@ class ProblemSerializers:
                     time_limit = limit.get('time_limit', -1)
                     memory_limit = limit.get('memory_limit', -1)
                     length_limit = limit.get('length_limit', -1)
+                    is_make = limit.get('is_make', False)
+                    is_temp = limit.get('is_temp', False)
+                    makefile = limit.get('makefile', None)
+                    template = limit.get('template', None)
                     limit = Limit(
                         creator=creator,
                         updater=updater,
@@ -667,7 +697,12 @@ class ProblemSerializers:
                         env_name=environment.name,
                         time_limit=time_limit,
                         memory_limit=memory_limit,
-                        length_limit=length_limit
+                        length_limit=length_limit,
+                        is_make=is_make,
+                        is_temp=is_temp,
+                        makefile=makefile,
+                        template=template,
+                        template_list=Limit.analyse_template(template)
                     )
                     limit_bulk_create.append(limit)
                 Limit.objects.bulk_create(limit_bulk_create)
@@ -862,7 +897,8 @@ class ProblemSerializers:
             class LimitField(ModelSerializer):
                 class Meta:
                     model = Limit
-                    fields = ('environment', 'env_name', 'time_limit', 'memory_limit', 'length_limit')
+                    fields = ('environment', 'env_name', 'time_limit', 'memory_limit', 'length_limit',
+                              'is_make', 'is_temp')
 
             limits = LimitField(many=True, read_only=True)
             description = SlugRelatedField(many=False, read_only=True, slug_field='content')
@@ -956,10 +992,17 @@ class SubmissionSerializers:
             queryset=Environment.objects.all(), source='environment', many=False, allow_null=False
         )
         environment = SlugRelatedField(many=False, read_only=True, slug_field='name')
-        code = CharField(allow_null=False, max_length=_INPUT_MAX, write_only=True,
-                         style={'base_template': 'textarea.html'})
+        # code = CharField(allow_null=False, max_length=_INPUT_MAX, write_only=True,
+        #                  style={'base_template': 'textarea.html'})
+        code = JSONField(allow_null=False, write_only=True)
         status_word = CharField(source='get_status_display', read_only=True)
         score = FloatField(read_only=True)
+
+        def validate_code(self, value):
+            for k, v in value.items():
+                if v is None or not isinstance(v, str) or len(v) > _INPUT_MAX:
+                    raise ValidationError("Illegal code format.")
+            return value
 
         class Meta:
             model = Submission
@@ -969,8 +1012,29 @@ class SubmissionSerializers:
                                 'submit_time', 'update_time', 'ip', 'score')
 
         def create(self, validated_data):
+            def calc_code(code_json):
+                ret = 0
+                for k, v in code_json.items():
+                    ret += len(v)
+                return ret
             code = validated_data.pop('code')
-            validated_data['length'] = len(code)
+            if isinstance(code, str):
+                code = json.loads(code)
+            validated_data['length'] = calc_code(code)
+
+            # 找出limit并检查模板正确性。
+            problem = validated_data['problem']
+            env = validated_data['environment']
+            limit = Limit.objects.filter(problem=problem, environment=env).first()
+            if limit is None:
+                raise ValidationError("This environment is not available.")
+            check, error = limit.check_code(code)
+            if not check:
+                error_log = "Code part(s) "
+                for e in error:
+                    error_log += str(e)
+                error_log += " not found."
+                raise ValidationError(error_log)
 
             instance = super().create(validated_data)
             # 创建编译信息
@@ -991,9 +1055,7 @@ class SubmissionSerializers:
             instance.test_data_status.save()
             # 录入提交代码
             instance.code = SubmissionCode()
-            instance.code.code = {
-                'code': code
-            }
+            instance.code.code = code  # 更换为这种提交手法。这意味着提交的code换成了json。
             instance.code.save()
             return instance
 
@@ -1005,11 +1067,16 @@ class SubmissionSerializers:
             queryset=Environment.objects.all(), source='environment', many=False, allow_null=False
         )
         environment = SlugRelatedField(many=False, read_only=True, slug_field='name')
-        code = CharField(allow_null=False, max_length=_INPUT_MAX, write_only=True,
-                         style={'base_template': 'textarea.html'})
+        code = JSONField(allow_null=False, write_only=True)
         status_word = CharField(source='get_status_display', read_only=True)
 
         score = FloatField(read_only=True)
+
+        def validate_code(self, value):
+            for k, v in value.items():
+                if v is None or not isinstance(v, str) or len(v) > _INPUT_MAX:
+                    raise ValidationError("Illegal code format.")
+            return value
 
         class Meta:
             model = Submission
@@ -1019,8 +1086,29 @@ class SubmissionSerializers:
                                 'submit_time', 'update_time', 'ip', 'judge', 'score')
 
         def create(self, validated_data):
+            def calc_code(code_json):
+                ret = 0
+                for k, v in code_json.items():
+                    ret += len(v)
+                return ret
             code = validated_data.pop('code')
-            validated_data['length'] = len(code)
+            if isinstance(code, str):
+                code = json.loads(code)
+            validated_data['length'] = calc_code(code)
+
+            # 找出limit并检查模板正确性。
+            problem = validated_data['problem']
+            env = validated_data['environment']
+            limit = Limit.objects.filter(problem=problem, environment=env).first()
+            if limit is None:
+                raise ValidationError("This environment is not available.")
+            check, error = limit.check_code(code)
+            if not check:
+                error_log = "Code part(s) "
+                for e in error:
+                    error_log += str(e)
+                error_log += " not found."
+                raise ValidationError(error_log)
 
             instance = super().create(validated_data)
             # 创建编译信息
@@ -1039,9 +1127,7 @@ class SubmissionSerializers:
             instance.test_data_status.save()
             # 录入提交代码
             instance.code = SubmissionCode()
-            instance.code.code = {
-                'code': code
-            }
+            instance.code.code = code
             instance.code.save()
             return instance
 
