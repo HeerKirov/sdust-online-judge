@@ -52,6 +52,10 @@ SDUST Online Judge Server
     * redis (2.10.5)
     
     * DRF Docs (0.0.11)
+    
+    * html2text (2016.9.19)
+    
+    * requests (2.18.1)
 
 ## 运行 & 部署
 

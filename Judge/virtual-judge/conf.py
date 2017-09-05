@@ -3,7 +3,7 @@
 # SDUSTOJ数据库的参数
 pg_db = {
     'user': 'heer',
-    'password': '262144',
+    'password': '1234',
     'host': 'localhost',
     'port': '5432',
     'database': 'sdustoj_server'
@@ -11,9 +11,9 @@ pg_db = {
 
 # 用于监听SDUSTOJ消息的Redis的参数
 redis_db = {
-    'host': '120.25.229.109',
+    'host': 'localhost',
     'port': '6379',
-    'password': '262144',
+    'password': '1234',
     'db': 0
 }
 
@@ -34,7 +34,7 @@ judger_id = 1
 # 本地数据库参数
 local_pg_db = {
     'user': 'heer',
-    'password': '262144',
+    'password': '1234',
     'host': 'localhost',
     'port': '5432',
     'database': 'virtual_judge'
@@ -42,10 +42,10 @@ local_pg_db = {
 
 # 本地进行通信的队列参数
 local_redis_db = {
-    'host': '120.25.229.109',
+    'host': 'localhost',
     'port': '6379',
-    'password': '262144',
-    'db': 8
+    'password': '1234',
+    'db': 1
 }
 
 # 本地进行消息通信的队列
@@ -57,8 +57,8 @@ local_queue = {
 
 # 保存所有可用oj的登陆账户信息
 oj_user_info = {
-    'hdu': ('HeerKirov', 'furandouru'),
-    'poj': ('HeerKirov', 'furandouru'),
+    'hdu': ('User', 'pw'),
+    'poj': ('User', 'pw'),
 }
 
 oj_env_message = {

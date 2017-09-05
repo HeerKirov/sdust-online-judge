@@ -4,14 +4,14 @@ PG_SETTINGS = {
     'port': '5432',
     'db': 'sdustoj_server',
     'user': 'heer',
-    'password': '262144'
+    'password': '1234'
 }
 
 REDIS_SETTINGS = {
-    'host': '120.25.229.109',
+    'host': 'localhost',
     'port': '6379',
-    'password': '262144',
-    'db': 10  # 这儿用一个大的数字进行测试
+    'password': '1234',
+    'db': 0  # 这儿用一个大的数字进行测试
 }
 
 # 系统初始根用户信息，密码仅在首次创建用户时设定

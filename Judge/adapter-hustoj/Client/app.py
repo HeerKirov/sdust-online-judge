@@ -4,7 +4,7 @@ import os
 from json import loads
 
 pool = redis.ConnectionPool(
-    host='120.25.229.109', port=6379, db=9, password='262144'
+    host='localhost', port=6379, db=0, password='1234'
 )
 r = redis.Redis(connection_pool=pool)
 

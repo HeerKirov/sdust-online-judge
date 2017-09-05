@@ -48,5 +48,5 @@ def handler(message):
         if info is not None:
             update(sid, language_str)
 
-# 启动一项订阅服务，订阅sdustoj的消息，从sdustoj提交并在上面的handler函数中进行sdustoj->hustoj的转换。
+# 启动一项订阅服务，订阅sdustoj的消息，从sdustoj提交并在上面的handler函数中进行sdustoj->vj的转换。
 get_subscribe(handler)

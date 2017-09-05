@@ -4,7 +4,7 @@
 # SDUSTOJ数据库的参数
 pg_db = {
     'user': 'heer',
-    'password': '262144',
+    'password': '1234',
     'host': 'localhost',
     'port': '5432',
     'database': 'sdustoj_server'
@@ -12,10 +12,10 @@ pg_db = {
 
 # 用于监听SDUSTOJ消息的Redis的参数
 redis_db = {
-    'host': '120.25.229.109',
+    'host': 'localhost',
     'port': '6379',
-    'password': '262144',
-    'db': 10
+    'password': '1234',
+    'db': 0
 }
 
 # 接受SDUSTOJ命令的队列
@@ -38,17 +38,17 @@ judger_id = 2
 # HUSTOJ数据库的参数
 mysql_db = {
     'user': 'heer',
-    'password': '262144',
+    'password': '1234',
     'host': 'localhost',
     'database': 'jol'
 }
 
 # 用于HUSTOJ服务器接受消息的Redis的参数
 local_redis_db = {
-    'host': '120.25.229.109',
+    'host': 'localhost',
     'port': '6379',
-    'password': '262144',
-    'db': 9
+    'password': '1234',
+    'db': 0
 }
 
 # 向HUSTOJ发送命令的队列
